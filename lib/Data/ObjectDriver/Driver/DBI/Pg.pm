@@ -23,21 +23,13 @@ sub sequence_name {
     my $driver = shift;
     my($class) = @_;
     return join '_', $class->datasource, 'seq';
-} 
+}
 
-sub generate_id {
+sub fetch_id {
     my $driver = shift;
-    my($class) = @_;
-    my $seq = $driver->sequence_name($class);
-    my $dbh = $driver->rw_handle($class->properties->{db});
-    my $sth = $dbh->prepare("SELECT NEXTVAL('$seq')")
-        or return $driver->error($dbh->errstr);
-    $sth->execute
-        or return $driver->error($dbh->errstr);
-    $sth->bind_columns(undef, \my($id));
-    $sth->fetch;
-    $sth->finish;
-    $id;
+    my($dbh, $sth) = @_;
+    $dbh->last_insert_id(undef, undef, undef, undef,
+        { sequence => $driver->sequence_name });
 }
 
 1;
