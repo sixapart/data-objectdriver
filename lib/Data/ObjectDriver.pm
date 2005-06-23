@@ -9,9 +9,7 @@ __PACKAGE__->mk_accessors(qw( pk_generator ));
 ## TODO:
 ## refactoring the DBI.pm code
 ##      - ability to define column => database for each value
-##      - plugin interface for doing things like audit
-##      - multiple column primary keys
-##      - SQL generation code belongs elsewhere
+##      - plugin interface for doing things like audit, filters
 ## test suite
 ## dbh needs to stay around at least as long as sth in iterator
 ## Memcached::search should fetchonly the IDs, then fetch objects from cache

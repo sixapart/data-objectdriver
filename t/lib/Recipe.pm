@@ -18,7 +18,8 @@ __PACKAGE__->install_properties({
 
 sub insert {
     my $obj = shift;
-## xxx Choose a cluster for this recipe.
+    ## Choose a cluster for this recipe. This isn't a very solid way of
+    ## doing this, but it works for testing.
     $obj->cluster_id(int(rand 2) + 1);
     $obj->SUPER::insert(@_);
 }
