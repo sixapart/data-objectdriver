@@ -82,12 +82,8 @@ sub clone {
 }
 
 sub column_names {
-    my $obj = shift;
-    my $props = $obj->properties;
-    my @cols = @{ $props->{columns} };
-    push @cols, qw( created_on modified_on )
-        if $props->{audit};
-    \@cols;
+    ## Reference to a copy.
+    [ @{ shift->properties->{columns} } ]
 }
 
 sub column_values { $_[0]->{'column_values'} }

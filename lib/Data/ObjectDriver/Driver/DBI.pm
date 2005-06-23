@@ -21,7 +21,7 @@ sub init {
     }
     ## Rebless the driver into the DSN-specific subclass (e.g. "mysql").
     my($type) = lc($driver->dsn) =~ /^dbi:(\w*)/;
-    my $class = __PACKAGE__ . '::' . $type;
+    my $class = ref($driver) . '::' . $type;
     eval "use $class";
     die $@ if $@;
     bless $driver, $class;
@@ -44,6 +44,22 @@ sub db_column_name {
 
 # Override in DB Driver to pass correct attributes to bind_param call
 sub bind_param_attributes { return undef }
+
+sub init_db {
+    my $driver = shift;
+    my $dbh;
+    eval {
+        local $SIG{ALRM} = sub { die "alarm\n" };
+        $dbh = DBI->connect($driver->dsn, $driver->username, $driver->password,
+            { RaiseError => 1, PrintError => 0, AutoCommit => 1 })
+            or Carp::croak("Connection error: " . $DBI::errstr);
+        alarm 0;
+    };
+    if ($@) {
+        Carp::croak(@$ eq "alarm\n" ? "Connection timeout" : $@);
+    }
+    $dbh;
+}
 
 sub rw_handle {
     my $driver = shift;
