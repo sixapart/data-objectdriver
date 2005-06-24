@@ -285,7 +285,7 @@ sub insert {
     ## Now, if we didn't have an object ID, we need to grab the
     ## newly-assigned ID.
     unless ($obj->has_primary_key) {
-        $obj->id($driver->fetch_id($dbh, $sth));
+        $obj->id($driver->fetch_id(ref($obj), $dbh, $sth));
     }
     1;
 }

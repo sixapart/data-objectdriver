@@ -27,9 +27,9 @@ sub sequence_name {
 
 sub fetch_id {
     my $driver = shift;
-    my($dbh, $sth) = @_;
+    my($class, $dbh, $sth) = @_;
     $dbh->last_insert_id(undef, undef, undef, undef,
-        { sequence => $driver->sequence_name });
+        { sequence => $driver->sequence_name($class) });
 }
 
 1;
