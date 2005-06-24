@@ -51,7 +51,7 @@ sub add_where {
     my $stmt = shift;
     ## xxx Need to support old range and transform behaviors.
     my($col, $val) = @_;
-    Carp::croak("Invalid/unsafe column name $col") if $col =~ /\W/;
+    Carp::croak("Invalid/unsafe column name $col") unless $col =~ /^[\w\.]+$/;
     my $term = '';
     if (ref($val) eq 'ARRAY') {
         $term = join ' OR ', ("$col = ?") x @$val;
