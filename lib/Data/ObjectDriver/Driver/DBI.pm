@@ -94,7 +94,7 @@ sub search {
     my $tmp = "SELECT ";
     $tmp .= "DISTINCT " if $args->{join} && $args->{join}[3]{unique};
    
-    $tmp .= join(', ', @cols) . "\n";
+    $tmp .= join(', ', map "$tbl.$_", @cols) . "\n";
     my $sql = $tmp . $stmt->as_sql;
     my $dbh = $driver->r_handle($class->properties->{db});
     warn $sql if (SQLDEBUG);
