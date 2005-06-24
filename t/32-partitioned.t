@@ -6,7 +6,7 @@ use lib 't/lib';
 
 use Recipe;
 use Ingredient;
-use Test::More tests => 46;
+use Test::More tests => 48;
 
 my($tmp, $iter);
 
@@ -17,20 +17,24 @@ ok($recipe->id, 'Recipe has an ID');
 ok($recipe->cluster_id, 'Recipe assigned to a cluster');
 is($recipe->title, 'Banana Milkshake', 'Title is Banana Milkshake');
 
+$recipe->title('My Banana Milkshake');
+ok($recipe->save, 'Object updated successfully');
+is($recipe->title, 'My Banana Milkshake', 'Title is My Banana Milkshake');
+
 $tmp = Recipe->lookup($recipe->id);
 is(ref $tmp, 'Recipe', 'lookup gave us a recipe');
-is($tmp->title, 'Banana Milkshake', 'Title is Banana Milkshake');
+is($tmp->title, 'My Banana Milkshake', 'Title is My Banana Milkshake');
 
 my @recipes = Recipe->search;
 is(scalar @recipes, 1, 'Got one recipe back from search');
-is($recipes[0]->title, 'Banana Milkshake', 'Title is Banana Milkshake');
+is($recipes[0]->title, 'My Banana Milkshake', 'Title is My Banana Milkshake');
 
 $iter = Recipe->search;
 ok($iter, 'Got an iterator object');
 $tmp = $iter->();
 ok(!$iter->(), 'Iterator gave us only one recipe');
 is(ref $tmp, 'Recipe', 'Iterator gave us a recipe');
-is($tmp->title, 'Banana Milkshake', 'Title is Banana Milkshake');
+is($tmp->title, 'My Banana Milkshake', 'Title is My Banana Milkshake');
 
 my $ingredient = Ingredient->new;
 $ingredient->recipe_id($recipe->id);

@@ -301,7 +301,8 @@ sub update {
     my $tbl = $obj->datasource;
     my $sql = "UPDATE $tbl SET\n";
     $sql .= join(', ', map $driver->db_column_name($tbl, $_) . " = ?", @$cols) . "\n";
-    my $stmt = $driver->prepare_statement(ref($obj), $obj->primary_key);
+    my $stmt = $driver->prepare_statement(ref($obj),
+        $driver->primary_key_to_terms(ref($obj), $obj->primary_key));
     $sql .= $stmt->as_sql_where;
     
     my $dbh = $driver->rw_handle($obj->properties->{db});
