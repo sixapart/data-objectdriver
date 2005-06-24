@@ -16,7 +16,6 @@ __PACKAGE__->mk_accessors(qw( pk_generator ));
 ## multiple column primary keys should allow passing in object,
 ##  and transparently getting correct column value based on pk column
 ## add in-memory cache driver (per Apache request)
-## refactor Memcached.pm into generic Cache.pm, with Memcached.pm override
 ## add in DBM.pm
 ## add in ObjectDriver filters
 
@@ -34,6 +33,17 @@ sub init {
     $driver;
 }
 
+1;
+__END__
+
+=head1 NAME
+
+Data::ObjectDriver - Simple, transparent data interface, with caching
+
+=head1 SYNOPSIS
+
+=head1 USAGE
+
 sub lookup;
 sub lookup_multi;
 sub exists;
@@ -42,4 +52,4 @@ sub update;
 sub remove;
 sub search;
 
-1;
+=cut
