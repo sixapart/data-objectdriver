@@ -20,7 +20,7 @@ sub init {
         $driver->$key($param{$key});
     }
     ## Rebless the driver into the DSN-specific subclass (e.g. "mysql").
-    my($type) = lc($driver->dsn) =~ /^dbi:(\w*)/;
+    my($type) = $driver->dsn =~ /^dbi:(\w*)/;
     my $class = ref($driver) . '::' . $type;
     eval "use $class";
     die $@ if $@;
