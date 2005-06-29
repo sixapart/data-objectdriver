@@ -382,9 +382,11 @@ sub prepare_statement {
     my($class, $terms, $args) = @_;
     my $stmt = Data::ObjectDriver::SQL->new;
     $stmt->from([ $class->datasource ]);
+    my $tbl = $class->datasource;
+    $stmt->from([ $tbl ]);
     if (defined($terms)) {
         for my $col (keys %$terms) {
-            $stmt->add_where($col, $terms->{$col});
+            $stmt->add_where(join('.', $tbl, $col), $terms->{$col});
         }
     }
     $stmt->limit($args->{limit});
