@@ -2,7 +2,7 @@
 
 use strict;
 
-use lib 't/lib/partitioned';
+use lib 't/lib/cached';
 
 use Recipe;
 use Ingredient;
@@ -14,7 +14,6 @@ my $recipe = Recipe->new;
 $recipe->title('Banana Milkshake');
 ok($recipe->save, 'Object saved successfully');
 ok($recipe->id, 'Recipe has an ID');
-ok($recipe->cluster_id, 'Recipe assigned to a cluster');
 is($recipe->title, 'Banana Milkshake', 'Title is Banana Milkshake');
 
 $recipe->title('My Banana Milkshake');
@@ -78,7 +77,6 @@ my $recipe2 = Recipe->new;
 $recipe2->title('Chocolate Chip Cookies');
 ok($recipe2->save, 'Object saved successfully');
 ok($recipe2->id, 'Recipe has an ID');
-ok($recipe2->cluster_id, 'Recipe assigned to a cluster');
 is($recipe2->title, 'Chocolate Chip Cookies', 'Title is Chocolate Chip Cookies');
 
 my $ingredient3 = Ingredient->new;
@@ -92,6 +90,10 @@ is($ingredient3->name, 'Chocolate Chips', 'Name is Chocolate Chips');
 
 $tmp = Ingredient->lookup([ $recipe2->id, 1 ]);
 is(ref $tmp, 'Ingredient', 'lookup gave us an ingredient');
+is($tmp->name, 'Chocolate Chips', 'Name is Chocolate Chips');
+
+$tmp = Ingredient->lookup([ $recipe2->id, 1 ]);
+is(ref $tmp, 'Ingredient', 'lookup again (for caching)');
 is($tmp->name, 'Chocolate Chips', 'Name is Chocolate Chips');
 
 ok($ingredient->remove, 'Ingredient removed successfully');
