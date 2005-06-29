@@ -39,7 +39,7 @@ sub offset_implemented { 1 }
 
 sub db_column_name {
     my ($driver, $table, $column) = @_; 
-    return $column;
+    return join '.', $table, $column;
 }
 
 # Override in DB Driver to pass correct attributes to bind_param call
@@ -94,7 +94,7 @@ sub search {
     my $tmp = "SELECT ";
     $tmp .= "DISTINCT " if $args->{join} && $args->{join}[3]{unique};
    
-    $tmp .= join(', ', map "$tbl.$_", @cols) . "\n";
+    $tmp .= join(', ', @cols) . "\n";
     my $sql = $tmp . $stmt->as_sql;
     my $dbh = $driver->r_handle($class->properties->{db});
     warn $sql if (SQLDEBUG);
@@ -150,6 +150,17 @@ sub lookup {
     my @obj = $driver->search($class,
         $driver->primary_key_to_terms($class, $id), { limit => 1 });
     $obj[0];
+}
+
+## xxx refactor to use an OR search
+sub lookup_multi {
+    my $driver = shift;
+    my($class, $ids) = @_;
+    my %got;
+    for my $id (@$ids) {
+        $got{$id} = $driver->lookup($class, $id);
+    }
+    \%got;
 }
 
 sub select_one {

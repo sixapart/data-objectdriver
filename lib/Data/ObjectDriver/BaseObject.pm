@@ -29,6 +29,11 @@ sub properties {
     $class->__properties;
 }
 
+sub driver {
+    my $class = shift;
+    $class->properties->{driver} = $_[0];
+}
+
 sub new { bless {}, shift }
 
 sub primary_key {
