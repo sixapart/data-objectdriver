@@ -381,7 +381,6 @@ sub prepare_statement {
     my $driver = shift;
     my($class, $terms, $args) = @_;
     my $stmt = Data::ObjectDriver::SQL->new;
-    $stmt->from([ $class->datasource ]);
     my $tbl = $class->datasource;
     $stmt->from([ $tbl ]);
     if (defined($terms)) {
