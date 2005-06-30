@@ -3,7 +3,7 @@
 use strict;
 
 use Data::ObjectDriver::SQL;
-use Test::More tests => 25;
+use Test::More tests => 33;
 
 my $stmt = ns();
 ok($stmt, 'Created SQL object');
@@ -67,5 +67,21 @@ is($stmt->as_sql_where, "WHERE (foo = ?) AND (baz = ?)\n");
 is(scalar @{ $stmt->bind }, 2);
 is($stmt->bind->[0], 'bar');
 is($stmt->bind->[1], 'quux');
+
+$stmt = ns();
+$stmt->add_where(foo => [ { op => '>', value => 'bar' },
+                          { op => '<', value => 'baz' } ]);
+is($stmt->as_sql_where, "WHERE (foo > ? OR foo < ?)\n");
+is(scalar @{ $stmt->bind }, 2);
+is($stmt->bind->[0], 'bar');
+is($stmt->bind->[1], 'baz');
+
+$stmt = ns();
+$stmt->add_where(foo => [ -and => { op => '>', value => 'bar' },
+                                  { op => '<', value => 'baz' } ]);
+is($stmt->as_sql_where, "WHERE (foo > ? AND foo < ?)\n");
+is(scalar @{ $stmt->bind }, 2);
+is($stmt->bind->[0], 'bar');
+is($stmt->bind->[1], 'baz');
 
 sub ns { Data::ObjectDriver::SQL->new }

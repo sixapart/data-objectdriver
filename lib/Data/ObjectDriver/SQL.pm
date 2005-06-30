@@ -52,20 +52,38 @@ sub add_where {
     ## xxx Need to support old range and transform behaviors.
     my($col, $val) = @_;
     Carp::croak("Invalid/unsafe column name $col") unless $col =~ /^[\w\.]+$/;
+    my($term, $bind) = _mk_term($col, $val);
+    push @{ $stmt->{where} }, "($term)";
+    push @{ $stmt->{bind} }, @$bind;
+}
+
+sub _mk_term {
+    my($col, $val) = @_;
     my $term = '';
+    my @bind;
     if (ref($val) eq 'ARRAY') {
-        $term = join ' OR ', ("$col = ?") x @$val;
-        push @{ $stmt->{bind} }, @$val;
+        my $logic = 'OR';
+        if ($val->[0] eq '-and') {
+            $logic = 'AND';
+            shift @$val;
+        }
+        my @terms;
+        for my $val (@$val) {
+            my($term, $bind) = _mk_term($col, $val);
+            push @terms, $term;
+            push @bind, @$bind;
+        }
+        $term = join " $logic ", @terms;
     } elsif (ref($val) eq 'HASH') {
         $term = "$col $val->{op} ?";
-        push @{ $stmt->{bind} }, $val->{value};
+        push @bind, $val->{value};
     } elsif (ref($val) eq 'SCALAR') {
         $term = "$col $$val";
     } else {
         $term = "$col = ?";
-        push @{ $stmt->{bind} }, $val;
+        push @bind, $val;
     }
-    push @{ $stmt->{where} }, "($term)";
+    ($term, \@bind);
 }
 
 1;

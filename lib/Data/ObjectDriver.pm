@@ -15,9 +15,7 @@ __PACKAGE__->mk_accessors(qw( pk_generator ));
 ## Memcached::search should fetchonly the IDs, then fetch objects from cache
 ## multiple column primary keys should allow passing in object,
 ##  and transparently getting correct column value based on pk column
-## add in-memory cache driver (per Apache request)
 ## add in DBM.pm
-## add in ObjectDriver filters
 
 sub new {
     my $class = shift;
