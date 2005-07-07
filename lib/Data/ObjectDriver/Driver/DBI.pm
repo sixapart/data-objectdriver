@@ -37,10 +37,7 @@ sub generate_pk {
 sub fetch_id { undef }
 sub offset_implemented { 1 }
 
-sub db_column_name {
-    my ($driver, $table, $column) = @_; 
-    return join '.', $table, $column;
-}
+sub db_column_name { $_[2] }
 
 # Override in DB Driver to pass correct attributes to bind_param call
 sub bind_param_attributes { return undef }
@@ -87,7 +84,7 @@ sub search {
         if ($args->{fetchonly}) {
             next unless $args->{fetchonly}{$col};
         }
-        my $dbcol  = $driver->db_column_name($tbl, $col);
+        my $dbcol = join '.', $tbl, $driver->db_column_name($tbl, $col);
         push @cols, $dbcol;
         push @bind, \$rec{$col};
     }
