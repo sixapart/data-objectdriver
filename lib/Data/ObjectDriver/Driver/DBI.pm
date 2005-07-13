@@ -11,7 +11,7 @@ use Data::ObjectDriver::SQL;
 __PACKAGE__->mk_accessors(qw( dsn username password dbh ));
 
 # set to 1 during development to get sql statements in the error log
-use constant SQLDEBUG => 0;
+use constant SQLDEBUG => 1;
 
 sub init {
     my $driver = shift;
@@ -20,7 +20,12 @@ sub init {
         $driver->$key($param{$key});
     }
     ## Rebless the driver into the DSN-specific subclass (e.g. "mysql").
-    my($type) = $driver->dsn =~ /^dbi:(\w*)/;
+    my $type;
+    if (my $dsn = $driver->dsn) {
+        ($type) = $dsn =~ /^dbi:(\w*)/;
+    } elsif (my $dbh = $driver->dbh) {
+        $type = $dbh->{Driver}{Name};
+    }
     my $class = ref($driver) . '::' . $type;
     eval "use $class";
     die $@ if $@;
@@ -162,7 +167,8 @@ sub lookup_multi {
 
 sub select_one {
     my $driver = shift;
-    my($dbh, $sql, $bind) = @_;
+    my($sql, $bind) = @_;
+    my $dbh = $driver->r_handle;
     my $sth = $dbh->prepare_cached($sql);
     $sth->execute(@$bind);
     $sth->bind_columns(undef, \my($val));
@@ -207,7 +213,7 @@ sub insert {
     }
     my $tbl = $obj->datasource;
     my $sql = "INSERT INTO $tbl\n";
-    $sql .= '(' . join(', ', map $driver->db_column_name($tbl, $_), @$cols) . ')' . "\n" .
+    $sql .= '(' . join(', ', map '`' . $driver->db_column_name($tbl, $_) . '`', @$cols) . ')' . "\n" .
             'VALUES (' . join(', ', ('?') x @$cols) . ')' . "\n";
     my $dbh = $driver->rw_handle($obj->properties->{db});
     warn $sql if (SQLDEBUG);
@@ -241,7 +247,7 @@ sub update {
     $cols = [ grep !$pk{$_}, @$cols ];
     my $tbl = $obj->datasource;
     my $sql = "UPDATE $tbl SET\n";
-    $sql .= join(', ', map $driver->db_column_name($tbl, $_) . " = ?", @$cols) . "\n";
+    $sql .= join(', ', map '`' . $driver->db_column_name($tbl, $_) . "` = ?", @$cols) . "\n";
     my $stmt = $driver->prepare_statement(ref($obj),
         $driver->primary_key_to_terms(ref($obj), $obj->primary_key));
     $sql .= $stmt->as_sql_where;
