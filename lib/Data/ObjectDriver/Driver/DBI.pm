@@ -8,7 +8,7 @@ use DBI;
 use Carp ();
 use Data::ObjectDriver::SQL;
 
-__PACKAGE__->mk_accessors(qw( dsn username password dbh ));
+__PACKAGE__->mk_accessors(qw( dsn username password dbh get_dbh ));
 
 # set to 1 during development to get sql statements in the error log
 use constant SQLDEBUG => 1;
@@ -24,6 +24,10 @@ sub init {
     if (my $dsn = $driver->dsn) {
         ($type) = $dsn =~ /^dbi:(\w*)/;
     } elsif (my $dbh = $driver->dbh) {
+        $type = $dbh->{Driver}{Name};
+    } elsif (my $getter = $driver->get_dbh) {
+## Ugly. Shouldn't have to connect just to get the driver name.
+        my $dbh = $getter->();
         $type = $dbh->{Driver}{Name};
     }
     my $class = ref($driver) . '::' . $type;
@@ -68,8 +72,12 @@ sub rw_handle {
     my $db = shift || 'main';
     my $dbh = $driver->dbh;
     unless ($dbh) {
-        $dbh = $driver->init_db($db) or die $driver->errstr;
-        $driver->dbh($dbh);
+        if (my $getter = $driver->get_dbh) {
+            $dbh = $getter->();
+        } else {
+            $dbh = $driver->init_db($db) or die $driver->errstr;
+            $driver->dbh($dbh);
+        }
     }
     $dbh;
 }
