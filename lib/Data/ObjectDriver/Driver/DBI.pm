@@ -180,13 +180,17 @@ sub select_one {
 sub exists {
     my $driver = shift;
     my($obj) = @_;
-    return unless $obj->id;
+    return unless $obj->has_primary_key;
     my $tbl = $obj->datasource;
-    my $sql = "SELECT 1 FROM $tbl WHERE id = ?";
+    my $stmt = $driver->prepare_statement(ref($obj),
+        $driver->primary_key_to_terms(ref($obj), $obj->primary_key),
+        { limit => 1 });
+    my $sql = "SELECT 1 FROM $tbl\n";
+    $sql .= $stmt->as_sql_where;
     my $dbh = $driver->r_handle($obj->properties->{db});
     warn $sql if (SQLDEBUG);
-    my $sth = $dbh->prepare_cached($sql) or return;
-    $sth->execute($obj->id) or return;
+    my $sth = $dbh->prepare_cached($sql);
+    $sth->execute(@{ $stmt->{bind} });
     my $exists = $sth->fetch;
     $sth->finish;
     $exists;
@@ -232,7 +236,9 @@ sub insert {
     ## Now, if we didn't have an object ID, we need to grab the
     ## newly-assigned ID.
     unless ($obj->has_primary_key) {
-        $obj->id($driver->fetch_id(ref($obj), $dbh, $sth));
+        my $pk = $obj->properties->{primary_key};
+        my $id_col = ref($pk) eq 'ARRAY' ? $pk->[0] : $pk;
+        $obj->$id_col($driver->fetch_id(ref($obj), $dbh, $sth));
     }
     1;
 }
