@@ -127,7 +127,6 @@ sub search {
         my $obj;
         $obj = $class->new;
         $obj->set_values(\%rec);
-        $obj->is_loaded(1);
         $obj;
     };
     

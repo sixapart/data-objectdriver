@@ -31,7 +31,12 @@ sub properties {
 
 sub driver {
     my $class = shift;
-    $class->properties->{driver} = $_[0];
+    $class->properties->{driver} ||= $class->properties->{get_driver}->();
+}
+
+sub get_driver {
+    my $class = shift;
+    $class->properties->{get_driver} = shift if @_;
 }
 
 sub new { bless {}, shift }
@@ -125,7 +130,7 @@ sub insert          { shift->_proxy('insert',       @_) }
 sub _proxy {
     my $obj = shift;
     my($meth, @args) = @_;
-    $obj->properties->{driver}->$meth($obj, @args);
+    $obj->driver->$meth($obj, @args);
 }
 
 our $AUTOLOAD;
