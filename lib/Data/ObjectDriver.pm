@@ -8,11 +8,12 @@ __PACKAGE__->mk_accessors(qw( pk_generator ));
 
 ## TODO:
 ## refactoring the DBI.pm code
-##      - ability to define column => database for each value
+##      - instead of using subclasses, implement mysql and Pg as drivers
 ##      - plugin interface for doing things like audit, filters, column_defs
 ## test suite
 ## dbh needs to stay around at least as long as sth in iterator
 ## Memcached::search should fetchonly the IDs, then fetch objects from cache
+## Memcached::lookup_multi should fallback for objects not in cache
 ## multiple column primary keys should allow passing in object,
 ##  and transparently getting correct column value based on pk column
 ## add in DBM.pm
