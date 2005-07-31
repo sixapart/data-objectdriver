@@ -20,6 +20,11 @@ sub install_properties {
     no strict 'refs';
     my($props) = @_;
     *{"${class}::__properties"} = sub { $props };
+    for my $col (@{$props->{columns}}) {
+        *{"$class\::$col"} = sub {
+            shift->column($col => @_);
+        };
+    }
     $props;
 }
 
@@ -131,18 +136,6 @@ sub _proxy {
     my $obj = shift;
     my($meth, @args) = @_;
     $obj->driver->$meth($obj, @args);
-}
-
-our $AUTOLOAD;
-sub AUTOLOAD {
-    my $obj = $_[0];
-    (my $col = $AUTOLOAD) =~ s!.+::!!;
-    no strict 'refs';
-    die "Cannot find method '$col' for class '$obj'" unless ref $obj;
-    *$AUTOLOAD = sub {
-        shift()->column($col, @_);
-    };
-    goto &$AUTOLOAD;
 }
 
 1;
