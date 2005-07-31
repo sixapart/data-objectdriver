@@ -18,7 +18,6 @@ use Carp ();
 
 sub install_properties {
     my $class = shift;
-    warn "---install_properties on $class";
     no strict 'refs';
     my($props) = @_;
     *{"${class}::__properties"} = sub { $props };
