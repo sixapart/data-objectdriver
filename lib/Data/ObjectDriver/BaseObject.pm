@@ -2,6 +2,7 @@
 
 package Data::ObjectDriver::BaseObject;
 use strict;
+use Carp ();
 
 =pod
 
@@ -17,14 +18,10 @@ use strict;
 
 sub install_properties {
     my $class = shift;
+    warn "---install_properties on $class";
     no strict 'refs';
     my($props) = @_;
     *{"${class}::__properties"} = sub { $props };
-    for my $col (@{$props->{columns}}) {
-        *{"$class\::$col"} = sub {
-            shift->column($col => @_);
-        };
-    }
     $props;
 }
 
@@ -96,6 +93,13 @@ sub clone {
     $clone;
 }
 
+sub has_column {
+    my $obj = shift;
+    my($col) = @_;
+    $obj->{__col_names} ||= { map { $_ => 1 } @{$obj->properties->{columns}} };
+    exists $obj->{__col_names}->{$col};
+}
+
 sub column_names {
     ## Reference to a copy.
     [ @{ shift->properties->{columns} } ]
@@ -136,6 +140,22 @@ sub _proxy {
     my $obj = shift;
     my($meth, @args) = @_;
     $obj->driver->$meth($obj, @args);
+}
+
+sub DESTROY { }
+
+our $AUTOLOAD;
+sub AUTOLOAD {
+    my $obj = $_[0];
+    (my $col = $AUTOLOAD) =~ s!.+::!!;
+    no strict 'refs';
+    Carp::croak("Cannot find method '$col' for class '$obj'") unless ref $obj;
+    Carp::carp("Cannot find column '$col' for class '" . ref($obj) . "'")
+        unless $obj->has_column($col);
+    *$AUTOLOAD = sub {
+        shift()->column($col, @_);
+    };
+    goto &$AUTOLOAD;
 }
 
 1;
