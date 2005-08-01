@@ -221,7 +221,7 @@ sub insert {
     }
     my $tbl = $obj->datasource;
     my $sql = "INSERT INTO $tbl\n";
-    $sql .= '(' . join(', ', map '`' . $driver->db_column_name($tbl, $_) . '`', @$cols) . ')' . "\n" .
+    $sql .= '(' . join(', ', map $driver->db_column_name($tbl, $_), @$cols) . ')' . "\n" .
             'VALUES (' . join(', ', ('?') x @$cols) . ')' . "\n";
     my $dbh = $driver->rw_handle($obj->properties->{db});
     $driver->debug($sql);
@@ -257,7 +257,7 @@ sub update {
     $cols = [ grep !$pk{$_}, @$cols ];
     my $tbl = $obj->datasource;
     my $sql = "UPDATE $tbl SET\n";
-    $sql .= join(', ', map '`' . $driver->db_column_name($tbl, $_) . "` = ?", @$cols) . "\n";
+    $sql .= join(', ', map $driver->db_column_name($tbl, $_) . " = ?", @$cols) . "\n";
     my $stmt = $driver->prepare_statement(ref($obj),
         $driver->primary_key_to_terms(ref($obj), $obj->primary_key));
     $sql .= $stmt->as_sql_where;
