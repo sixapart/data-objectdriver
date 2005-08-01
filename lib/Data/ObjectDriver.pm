@@ -4,7 +4,10 @@ package Data::ObjectDriver;
 use strict;
 use base qw( Class::Accessor::Fast );
 
-__PACKAGE__->mk_accessors(qw( pk_generator debug ));
+__PACKAGE__->mk_accessors(qw( pk_generator ));
+
+our $VERSION = '0.01';
+our $DEBUG = 0;
 
 ## TODO:
 ## refactoring the DBI.pm code
@@ -34,8 +37,9 @@ sub init {
     $driver;
 }
 
-sub _debug {
-    print STDERR @_ if shift->debug;
+sub debug {
+    my $driver = shift;
+    print STDERR @_ if $DEBUG;
 }
 
 1;

@@ -104,7 +104,7 @@ sub search {
     $tmp .= join(', ', @cols) . "\n";
     my $sql = $tmp . $stmt->as_sql;
     my $dbh = $driver->r_handle($class->properties->{db});
-    $driver->_debug($sql);
+    $driver->debug($sql);
     my $sth = $dbh->prepare_cached($sql);
     $sth->execute(@{ $stmt->{bind} });
     $sth->bind_columns(undef, @bind);
@@ -192,7 +192,7 @@ sub exists {
     my $sql = "SELECT 1 FROM $tbl\n";
     $sql .= $stmt->as_sql_where;
     my $dbh = $driver->r_handle($obj->properties->{db});
-    $driver->_debug($sql);
+    $driver->debug($sql);
     my $sth = $dbh->prepare_cached($sql);
     $sth->execute(@{ $stmt->{bind} });
     my $exists = $sth->fetch;
@@ -224,7 +224,7 @@ sub insert {
     $sql .= '(' . join(', ', map '`' . $driver->db_column_name($tbl, $_) . '`', @$cols) . ')' . "\n" .
             'VALUES (' . join(', ', ('?') x @$cols) . ')' . "\n";
     my $dbh = $driver->rw_handle($obj->properties->{db});
-    $driver->_debug($sql);
+    $driver->debug($sql);
     my $sth = $dbh->prepare_cached($sql);
     my $i = 1;
     my $col_defs = $obj->properties->{column_defs};
@@ -263,7 +263,7 @@ sub update {
     $sql .= $stmt->as_sql_where;
     
     my $dbh = $driver->rw_handle($obj->properties->{db});
-    $driver->_debug($sql);
+    $driver->debug($sql);
     my $sth = $dbh->prepare_cached($sql);
     my $i = 1;
     my $col_defs = $obj->properties->{column_defs};
@@ -294,7 +294,7 @@ sub remove {
         $driver->primary_key_to_terms(ref($obj), $obj->primary_key));
     $sql .= $stmt->as_sql_where;
     my $dbh = $driver->rw_handle($obj->properties->{db});
-    $driver->_debug($sql);
+    $driver->debug($sql);
     my $sth = $dbh->prepare_cached($sql);
     $sth->execute(@{ $stmt->{bind} });
     $sth->finish;
