@@ -34,12 +34,13 @@ sub lookup {
 sub lookup_multi {
     my $driver = shift;
     my($class, @ids) = @_;
-    my %got;
+    ## Use driver->lookup to look up each object in the cache, and fallback
+    ## to the backend driver if object isn't found in the cache.
+    my @got;
     for my $id (@ids) {
-        my $obj = $driver->get_from_cache($driver->cache_key($class, $id));
-        $got{$id} = $obj if $obj;
+        push @got, $driver->lookup($class, $id);
     }
-    \%got;
+    \@got;
 }
 
 sub update {

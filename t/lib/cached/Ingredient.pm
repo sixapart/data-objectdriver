@@ -17,8 +17,7 @@ __PACKAGE__->install_properties({
     primary_key => [ 'recipe_id', 'id' ],
     driver      => Data::ObjectDriver::Driver::Cache::Memcached->new(
         cache => Cache::Memcached->new({
-            servers => [ '192.168.100.2:11211' ],
-            debug   => 1,
+            servers => [ '127.0.0.1:11211' ],
         }),
         fallback => Data::ObjectDriver::Driver::DBI->new(
             dsn      => 'dbi:mysql:database=global',

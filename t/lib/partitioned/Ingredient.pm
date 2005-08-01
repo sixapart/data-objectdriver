@@ -7,7 +7,6 @@ use base qw( Data::ObjectDriver::BaseObject );
 use Carp ();
 use Data::ObjectDriver::Driver::Partition;
 use Data::ObjectDriver::Driver::DBI;
-use Data::ObjectDriver::Driver::Memcached;
 
 our %IDs;
 
@@ -20,20 +19,6 @@ __PACKAGE__->install_properties({
         pk_generator => \&generate_pk,
     ),
 });
-
-=pod
-
-    driver => Data::ObjectDriver::Driver::Memcached->new(
-        cache    => Cache::Memcached->new({
-            servers => [ 'admin.sfo.sixapart.com:11211' ],
-            debug   => 1,
-        }),
-        fallback => Data::ObjectDriver::Driver::Partition->new(
-            get_driver  => \&get_driver,
-        ),
-    ),
-
-=cut
 
 sub get_driver {
     my($terms) = @_;
