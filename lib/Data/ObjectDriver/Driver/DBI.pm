@@ -7,8 +7,9 @@ use base qw( Data::ObjectDriver Class::Accessor::Fast );
 use DBI;
 use Carp ();
 use Data::ObjectDriver::SQL;
+use Data::ObjectDriver::Driver::DBD;
 
-__PACKAGE__->mk_accessors(qw( dsn username password dbh get_dbh ));
+__PACKAGE__->mk_accessors(qw( dsn username password dbh get_dbh dbd ));
 
 sub init {
     my $driver = shift;
@@ -16,7 +17,7 @@ sub init {
     for my $key (keys %param) {
         $driver->$key($param{$key});
     }
-    ## Rebless the driver into the DSN-specific subclass (e.g. "mysql").
+    ## Create a DSN-specific driver (e.g. "mysql").
     my $type;
     if (my $dsn = $driver->dsn) {
         ($type) = $dsn =~ /^dbi:(\w*)/;
@@ -27,10 +28,7 @@ sub init {
         my $dbh = $getter->();
         $type = $dbh->{Driver}{Name};
     }
-    my $class = ref($driver) . '::' . $type;
-    eval "use $class";
-    die $@ if $@;
-    bless $driver, $class;
+    $driver->dbd(Data::ObjectDriver::Driver::DBD->new($type));
     $driver;
 }
 
@@ -40,13 +38,6 @@ sub generate_pk {
         return $generator->(@_);
     }
 }
-sub fetch_id { undef }
-sub offset_implemented { 1 }
-
-sub db_column_name { $_[2] }
-
-# Override in DB Driver to pass correct attributes to bind_param call
-sub bind_param_attributes { return undef }
 
 sub init_db {
     my $driver = shift;
@@ -61,6 +52,7 @@ sub init_db {
     if ($@) {
         Carp::croak(@$ eq "alarm\n" ? "Connection timeout" : $@);
     }
+    $driver->dbd->init_dbh($dbh);
     $dbh;
 }
 
@@ -90,11 +82,12 @@ sub search {
     my $cols = $class->column_names;
 
     my $primary_key = $class->properties->{primary_key};
+    my $dbd = $driver->dbd;
     for my $col (@$cols) {
         if ($args->{fetchonly}) {
             next unless $args->{fetchonly}{$col};
         }
-        my $dbcol = join '.', $tbl, $driver->db_column_name($tbl, $col);
+        my $dbcol = join '.', $tbl, $dbd->db_column_name($tbl, $col);
         push @cols, $dbcol;
         push @bind, \$rec{$col};
     }
@@ -110,13 +103,18 @@ sub search {
     $sth->bind_columns(undef, @bind);
 
     # need to slurp 'offset' rows for DBs that cannot do it themselves
-    if (!$driver->offset_implemented && $args->{offset}) {
+    if (!$driver->dbd->offset_implemented && $args->{offset}) {
         for (1..$args->{offset}) {
             $sth->fetch;
         }
     }
 
     my $iter = sub {
+        ## This is kind of a hack--we need $driver to stay in scope,
+        ## so that the DESTROY method isn't called. So we include it
+        ## in the scope of the closure.
+        $driver;
+
         unless ($sth->fetch) {
             $sth->finish;
             return;
@@ -162,11 +160,11 @@ sub lookup {
 sub lookup_multi {
     my $driver = shift;
     my($class, $ids) = @_;
-    my %got;
+    my @got;
     for my $id (@$ids) {
-        $got{$id} = $driver->lookup($class, $id);
+        push @got, $driver->lookup($class, $id);
     }
-    \%got;
+    \@got;
 }
 
 sub select_one {
@@ -221,7 +219,11 @@ sub insert {
     }
     my $tbl = $obj->datasource;
     my $sql = "INSERT INTO $tbl\n";
-    $sql .= '(' . join(', ', map $driver->db_column_name($tbl, $_), @$cols) . ')' . "\n" .
+    my $dbd = $driver->dbd;
+    $sql .= '(' . join(', ',
+                  map '`' . $dbd->db_column_name($tbl, $_) . '`',
+                  @$cols) .
+            ')' . "\n" .
             'VALUES (' . join(', ', ('?') x @$cols) . ')' . "\n";
     my $dbh = $driver->rw_handle($obj->properties->{db});
     $driver->debug($sql);
@@ -231,7 +233,7 @@ sub insert {
     for my $col (@$cols) {
         my $val = $obj->column($col);
         my $type = $col_defs->{$col} || 'char';
-        my $attr = $driver->bind_param_attributes($type);
+        my $attr = $dbd->bind_param_attributes($type);
         $sth->bind_param($i++, $val, $attr);
     }
     $sth->execute;
@@ -242,7 +244,7 @@ sub insert {
     unless ($obj->has_primary_key) {
         my $pk = $obj->properties->{primary_key};
         my $id_col = ref($pk) eq 'ARRAY' ? $pk->[0] : $pk;
-        $obj->$id_col($driver->fetch_id(ref($obj), $dbh, $sth));
+        $obj->$id_col($dbd->fetch_id(ref($obj), $dbh, $sth));
     }
     1;
 }
@@ -257,7 +259,10 @@ sub update {
     $cols = [ grep !$pk{$_}, @$cols ];
     my $tbl = $obj->datasource;
     my $sql = "UPDATE $tbl SET\n";
-    $sql .= join(', ', map $driver->db_column_name($tbl, $_) . " = ?", @$cols) . "\n";
+    my $dbd = $driver->dbd;
+    $sql .= join(', ',
+            map '`' . $dbd->db_column_name($tbl, $_) . "` = ?",
+            @$cols) . "\n";
     my $stmt = $driver->prepare_statement(ref($obj),
         $driver->primary_key_to_terms(ref($obj), $obj->primary_key));
     $sql .= $stmt->as_sql_where;
@@ -270,7 +275,7 @@ sub update {
     for my $col (@$cols) {
         my $val = $obj->column($col);
         my $type = $col_defs->{$col} || 'char';
-        my $attr = $driver->bind_param_attributes($type);
+        my $attr = $dbd->bind_param_attributes($type);
         $sth->bind_param($i++, $val, $attr);
     }
 

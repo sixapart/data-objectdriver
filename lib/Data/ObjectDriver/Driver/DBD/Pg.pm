@@ -1,18 +1,18 @@
 # $Id$
 
-package Data::ObjectDriver::Driver::DBI::Pg;
+package Data::ObjectDriver::Driver::DBD::Pg;
 use strict;
-use base qw( Data::ObjectDriver::Driver::DBI );
+use base qw( Data::ObjectDriver::Driver::DBD );
 
-sub init_db {
-    my $driver = shift;
-    my $dbh = $driver->SUPER::init_db(@_);
+sub init_dbh {
+    my $dbd = shift;
+    my($dbh) = @_;
     $dbh->do("set timezone to 'UTC'");
     $dbh;
 }
 
 sub bind_param_attributes {
-    my ($driver, $data_type) = @_;
+    my ($dbd, $data_type) = @_;
     if ($data_type && $data_type eq 'blob') {
         return { pg_type => DBD::Pg::PG_BYTEA() };
     }
@@ -20,16 +20,16 @@ sub bind_param_attributes {
 }
 
 sub sequence_name {
-    my $driver = shift;
+    my $dbd = shift;
     my($class) = @_;
     return join '_', $class->datasource, 'seq';
 }
 
 sub fetch_id {
-    my $driver = shift;
+    my $dbd = shift;
     my($class, $dbh, $sth) = @_;
     $dbh->last_insert_id(undef, undef, undef, undef,
-        { sequence => $driver->sequence_name($class) });
+        { sequence => $dbd->sequence_name($class) });
 }
 
 1;
