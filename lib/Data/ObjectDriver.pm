@@ -11,13 +11,9 @@ our $DEBUG = 0;
 
 ## TODO:
 ## refactoring the DBI.pm code
-##      - instead of using subclasses, implement mysql and Pg as drivers
 ##      - plugin interface for doing things like audit, filters, column_defs
-## test suite
-## disable class method for any cache driver
 ## dbh needs to stay around at least as long as sth in iterator
 ## Memcached::search should fetchonly the IDs, then fetch objects from cache
-## Memcached::lookup_multi should fallback for objects not in cache
 ## multiple column primary keys should allow passing in object,
 ##  and transparently getting correct column value based on pk column
 ## add in DBM.pm
