@@ -25,7 +25,7 @@ sub lookup {
     my $driver = shift;
     my($class, $id) = @_;
     return $driver->fallback->lookup($class, $id)
-        if (ref $driver)->Disabled;
+        if $driver->Disabled;
     my $key = $driver->cache_key($class, $id);
     my $obj = $driver->get_from_cache($key);
     unless ($obj) {
@@ -39,7 +39,7 @@ sub lookup_multi {
     my $driver = shift;
     my($class, $ids) = @_;
     return $driver->fallback->lookup_multi($class, @$ids)
-        if (ref $driver)->Disabled;
+        if $driver->Disabled;
     ## Use driver->lookup to look up each object in the cache, and fallback
     ## to the backend driver if object isn't found in the cache.
     my @got;
@@ -53,7 +53,7 @@ sub update {
     my $driver = shift;
     my($obj) = @_;
     return $driver->fallback->update($obj)
-        if (ref $driver)->Disabled;
+        if $driver->Disabled;
     my $key = $driver->cache_key(ref($obj), $obj->primary_key);
     $driver->update_cache($key, $obj->clone);
     $driver->fallback->update($obj);
@@ -63,7 +63,7 @@ sub remove {
     my $driver = shift;
     my($obj) = @_;
     return $driver->fallback->remove($obj)
-        if (ref $driver)->Disabled;
+        if $driver->Disabled;
     $driver->remove_from_cache($driver->cache_key(ref($obj), $obj->primary_key));
     $driver->fallback->remove($obj);
 }

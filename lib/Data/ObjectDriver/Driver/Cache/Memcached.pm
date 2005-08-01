@@ -16,7 +16,7 @@ sub lookup_multi {
     my $driver = shift;
     my($class, $ids) = @_;
     return $driver->fallback->lookup_multi($class, $ids)
-        if (ref $driver)->Disabled;
+        if $driver->Disabled;
 
     my %id2key = map { $_ => $driver->cache_key($class, $_) } @$ids;
     my $got = $driver->cache->get_multi(values %id2key);
