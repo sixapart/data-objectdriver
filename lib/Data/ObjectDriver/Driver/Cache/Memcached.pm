@@ -14,20 +14,22 @@ sub get_from_cache    { shift->cache->get(@_)    }
 
 sub lookup_multi {
     my $driver = shift;
-    my($class, @ids) = @_;
+    my($class, $ids) = @_;
+    return $driver->fallback->lookup_multi($class, $ids)
+        if (ref $driver)->Disabled;
 
-    my %id2key = map { $_ => $driver->cache_key($class, $_) } @ids;
+    my %id2key = map { $_ => $driver->cache_key($class, $_) } @$ids;
     my $got = $driver->cache->get_multi(values %id2key);
 
     ## If we got back all of the objects from the cache, return immediately.
-    if (scalar keys %$got == @ids) {
-        return [ map $got->{ $id2key{$_} }, @ids ];
+    if (scalar keys %$got == @$ids) {
+        return [ map $got->{ $id2key{$_} }, @$ids ];
     }
 
     ## Otherwise, look through the list of IDs to see what we're missing,
     ## and fall back to the backend to look up those objects.
     my @got;
-    for my $id (@ids) {
+    for my $id (@$ids) {
         if (my $obj = $got->{ $id2key{$id} }) {
             push @got, $obj;
         } else {

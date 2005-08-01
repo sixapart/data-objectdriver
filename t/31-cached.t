@@ -96,11 +96,11 @@ $tmp = Ingredient->lookup([ $recipe2->id, 1 ]);
 is(ref $tmp, 'Ingredient', 'lookup again (for caching)');
 is($tmp->name, 'Chocolate Chips', 'Name is Chocolate Chips');
 
-my $all = Ingredient->lookup_multi(
+my $all = Ingredient->lookup_multi([
         [ $recipe->id, 1 ],
         [ $recipe->id, 2 ],
         [ $recipe2->id, 1 ],
-);
+]);
 is(scalar @$all, 3, 'Got back 3 ingredients from lookup_multi');
 is($all->[0]->name, 'Vanilla Ice Cream', 'lookup_multi results in right order');
 is($all->[1]->name, 'Bananas', 'lookup_multi results in right order');
