@@ -63,6 +63,8 @@ sub cache_key {
     join ':', $class, ref($id) eq 'ARRAY' ? @$id : $id;
 }
 
+sub DESTROY { }
+
 our $AUTOLOAD;
 sub AUTOLOAD {
     my $driver = $_[0];
