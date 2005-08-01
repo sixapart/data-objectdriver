@@ -10,13 +10,9 @@ our $VERSION = '0.01';
 our $DEBUG = 0;
 
 ## TODO:
-## refactoring the DBI.pm code
-##      - plugin interface for doing things like audit, filters, column_defs
-## dbh needs to stay around at least as long as sth in iterator
 ## Memcached::search should fetchonly the IDs, then fetch objects from cache
 ## multiple column primary keys should allow passing in object,
-##  and transparently getting correct column value based on pk column
-## add in DBM.pm
+##     and transparently getting correct column value based on pk column
 
 sub new {
     my $class = shift;
