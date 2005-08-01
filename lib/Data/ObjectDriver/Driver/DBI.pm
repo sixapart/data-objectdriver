@@ -113,7 +113,7 @@ sub search {
         ## This is kind of a hack--we need $driver to stay in scope,
         ## so that the DESTROY method isn't called. So we include it
         ## in the scope of the closure.
-        $driver;
+        my $d = $driver;
 
         unless ($sth->fetch) {
             $sth->finish;
