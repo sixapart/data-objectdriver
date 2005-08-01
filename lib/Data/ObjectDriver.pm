@@ -4,13 +4,14 @@ package Data::ObjectDriver;
 use strict;
 use base qw( Class::Accessor::Fast );
 
-__PACKAGE__->mk_accessors(qw( pk_generator ));
+__PACKAGE__->mk_accessors(qw( pk_generator debug ));
 
 ## TODO:
 ## refactoring the DBI.pm code
 ##      - instead of using subclasses, implement mysql and Pg as drivers
 ##      - plugin interface for doing things like audit, filters, column_defs
 ## test suite
+## disable class method for any cache driver
 ## dbh needs to stay around at least as long as sth in iterator
 ## Memcached::search should fetchonly the IDs, then fetch objects from cache
 ## Memcached::lookup_multi should fallback for objects not in cache
@@ -29,7 +30,12 @@ sub init {
     my $driver = shift;
     my %param = @_;
     $driver->pk_generator($param{pk_generator});
+    $driver->debug($param{debug});
     $driver;
+}
+
+sub _debug {
+    print STDERR @_ if shift->debug;
 }
 
 1;
