@@ -6,6 +6,7 @@ use base qw( Data::ObjectDriver Class::Accessor::Fast );
 
 use DBI;
 use Carp ();
+use Data::Dumper;
 use Data::ObjectDriver::SQL;
 use Data::ObjectDriver::Driver::DBD;
 
@@ -93,11 +94,10 @@ sub search {
     }
     my $tmp = "SELECT ";
     $tmp .= "DISTINCT " if $args->{join} && $args->{join}[3]{unique};
-   
     $tmp .= join(', ', @cols) . "\n";
     my $sql = $tmp . $stmt->as_sql;
     my $dbh = $driver->r_handle($class->properties->{db});
-    $driver->debug($sql);
+    $driver->debug($sql, $stmt->{bind});
     my $sth = $dbh->prepare_cached($sql);
     $sth->execute(@{ $stmt->{bind} });
     $sth->bind_columns(undef, @bind);
@@ -190,7 +190,7 @@ sub exists {
     my $sql = "SELECT 1 FROM $tbl\n";
     $sql .= $stmt->as_sql_where;
     my $dbh = $driver->r_handle($obj->properties->{db});
-    $driver->debug($sql);
+    $driver->debug($sql, $stmt->{bind});
     my $sth = $dbh->prepare_cached($sql);
     $sth->execute(@{ $stmt->{bind} });
     my $exists = $sth->fetch;
@@ -226,7 +226,7 @@ sub insert {
             ')' . "\n" .
             'VALUES (' . join(', ', ('?') x @$cols) . ')' . "\n";
     my $dbh = $driver->rw_handle($obj->properties->{db});
-    $driver->debug($sql);
+    $driver->debug($sql, $obj->{column_values});
     my $sth = $dbh->prepare_cached($sql);
     my $i = 1;
     my $col_defs = $obj->properties->{column_defs};
@@ -268,7 +268,7 @@ sub update {
     $sql .= $stmt->as_sql_where;
     
     my $dbh = $driver->rw_handle($obj->properties->{db});
-    $driver->debug($sql);
+    $driver->debug($sql, $obj->{column_values});
     my $sth = $dbh->prepare_cached($sql);
     my $i = 1;
     my $col_defs = $obj->properties->{column_defs};
@@ -299,7 +299,7 @@ sub remove {
         $driver->primary_key_to_terms(ref($obj), $obj->primary_key));
     $sql .= $stmt->as_sql_where;
     my $dbh = $driver->rw_handle($obj->properties->{db});
-    $driver->debug($sql);
+    $driver->debug($sql, $stmt->{bind});
     my $sth = $dbh->prepare_cached($sql);
     $sth->execute(@{ $stmt->{bind} });
     $sth->finish;

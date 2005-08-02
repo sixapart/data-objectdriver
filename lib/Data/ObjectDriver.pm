@@ -9,6 +9,8 @@ __PACKAGE__->mk_accessors(qw( pk_generator ));
 our $VERSION = '0.01';
 our $DEBUG = 0;
 
+use Data::Dumper ();
+
 ## TODO:
 ## Memcached::search should fetchonly the IDs, then fetch objects from cache
 ## multiple column primary keys should allow passing in object,
@@ -25,14 +27,20 @@ sub init {
     my $driver = shift;
     my %param = @_;
     $driver->pk_generator($param{pk_generator});
-    $driver->debug($param{debug});
     $driver;
 }
 
 sub debug {
     my $driver = shift;
-    print STDERR @_ if $DEBUG;
+    return unless $DEBUG;
+    if (@_ == 1 && !ref($_[0])) {
+        print STDERR @_;
+    } else {
+        local $Data::Dumper::Indent = 1;
+        print STDERR Data::Dumper::Dumper(@_);
+    }
 }
+
 
 1;
 __END__
