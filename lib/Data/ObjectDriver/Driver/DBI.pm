@@ -93,7 +93,6 @@ sub search {
         push @bind, \$rec{$col};
     }
     my $tmp = "SELECT ";
-    $tmp .= "DISTINCT " if $args->{join} && $args->{join}[3]{unique};
     $tmp .= join(', ', @cols) . "\n";
     my $sql = $tmp . $stmt->as_sql;
     my $dbh = $driver->r_handle($class->properties->{db});
