@@ -330,4 +330,14 @@ where I<$object> is an instance of I<Class>.
 
     1;
 
+=head1 LICENSE
+
+I<Data::ObjectDriver> is free software; you may redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=head1 AUTHOR & COPYRIGHT
+
+Except where otherwise noted, I<Data::ObjectDriver> is Copyright 2005
+Six Apart, cpan@sixapart.com. All rights reserved.
+
 =cut
