@@ -1,0 +1,2 @@
+* multiple column primary keys should allow passing in object,
+  and transparently getting correct column value based on pk column

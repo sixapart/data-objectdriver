@@ -11,10 +11,6 @@ our $DEBUG = 0;
 
 use Data::Dumper ();
 
-## TODO:
-## multiple column primary keys should allow passing in object,
-##     and transparently getting correct column value based on pk column
-
 sub new {
     my $class = shift;
     my $driver = bless {}, $class;
