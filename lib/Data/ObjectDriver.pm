@@ -12,7 +12,6 @@ our $DEBUG = 0;
 use Data::Dumper ();
 
 ## TODO:
-## Memcached::search should fetchonly the IDs, then fetch objects from cache
 ## multiple column primary keys should allow passing in object,
 ##     and transparently getting correct column value based on pk column
 

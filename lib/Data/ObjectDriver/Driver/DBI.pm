@@ -84,9 +84,11 @@ sub search {
 
     my $primary_key = $class->properties->{primary_key};
     my $dbd = $driver->dbd;
+    my %fetch = $args->{fetchonly} ?
+        (map { $_ => 1 } @{ $args->{fetchonly} }) : ();
     for my $col (@$cols) {
-        if ($args->{fetchonly}) {
-            next unless $args->{fetchonly}{$col};
+        if (keys %fetch) {
+            next unless $fetch{$col};
         }
         my $dbcol = join '.', $tbl, $dbd->db_column_name($tbl, $col);
         push @cols, $dbcol;
