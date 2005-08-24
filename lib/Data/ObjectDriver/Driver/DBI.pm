@@ -6,7 +6,6 @@ use base qw( Data::ObjectDriver Class::Accessor::Fast );
 
 use DBI;
 use Carp ();
-use Data::Dumper;
 use Data::ObjectDriver::SQL;
 use Data::ObjectDriver::Driver::DBD;
 
@@ -258,6 +257,10 @@ sub update {
     $pk = [ $pk ] unless ref($pk) eq 'ARRAY';
     my %pk = map { $_ => 1 } @$pk;
     $cols = [ grep !$pk{$_}, @$cols ];
+
+    ## If there's no non-PK column, update() is no-op
+    @$cols or return 1;
+
     my $tbl = $obj->datasource;
     my $sql = "UPDATE $tbl SET\n";
     my $dbd = $driver->dbd;
