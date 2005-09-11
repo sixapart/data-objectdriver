@@ -95,7 +95,7 @@ sub clone {
 sub has_column {
     my $obj = shift;
     my($col) = @_;
-    $obj->{__col_names} ||= { map { $_ => 1 } @{$obj->properties->{columns}} };
+    $obj->{__col_names} ||= { map { $_ => 1 } @{ $obj->column_names } };
     exists $obj->{__col_names}->{$col};
 }
 
