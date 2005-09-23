@@ -6,12 +6,17 @@ use lib 't/lib';
 
 require 't/lib/db-common.pl';
 
+use Test::More;
+unless (eval { require DBD::SQLite }) {
+    plan skip_all => 'Tests require DBD::SQLite';
+}
+plan tests => 11;
+
 setup_dbs({
     global => [ qw( wines ) ],
 });
 
 use Wine;
-use Test::More tests => 11;
 
 my $wine = Wine->new;
 my %expected = ( name => 1, rating => 1, id => 1, cluster_id => 1 ); 

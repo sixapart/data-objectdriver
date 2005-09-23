@@ -6,13 +6,18 @@ use lib 't/lib/cached';
 
 require 't/lib/db-common.pl';
 
+use Test::More;
+unless (eval { require DBD::SQLite }) {
+    plan skip_all => 'Tests require DBD::SQLite';
+}
+plan tests => 52;
+
 setup_dbs({
     global   => [ qw( recipes ingredients ) ],
 });
 
 use Recipe;
 use Ingredient;
-use Test::More tests => 52;
 
 my($tmp, $iter);
 

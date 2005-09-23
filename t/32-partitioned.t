@@ -6,6 +6,12 @@ use lib 't/lib/partitioned';
 
 require 't/lib/db-common.pl';
 
+use Test::More;
+unless (eval { require DBD::SQLite }) {
+    plan skip_all => 'Tests require DBD::SQLite';
+}
+plan tests => 48;
+
 setup_dbs({
     global   => [ qw( recipes ) ],
     cluster1 => [ qw( ingredients ) ],
@@ -14,7 +20,6 @@ setup_dbs({
 
 use Recipe;
 use Ingredient;
-use Test::More tests => 48;
 
 my($tmp, $iter);
 
