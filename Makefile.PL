@@ -15,7 +15,6 @@ include('ExtUtils::AutoInstall');
 requires('DBI');
 requires('Class::Accessor::Fast');
 requires('Class::Data::Inheritable');
-requires('Cache::Memcached');
 
 auto_include();
 auto_install();
