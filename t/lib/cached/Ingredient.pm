@@ -6,8 +6,8 @@ use base qw( Data::ObjectDriver::BaseObject );
 
 use Carp ();
 use Data::ObjectDriver::Driver::DBI;
-use Data::ObjectDriver::Driver::Cache::Memcached;
-use Cache::Memcached;
+use Data::ObjectDriver::Driver::Cache::Cache;
+use Cache::Memory;
 
 our %IDs;
 
@@ -15,10 +15,8 @@ __PACKAGE__->install_properties({
     columns => [ 'id', 'recipe_id', 'name', 'quantity' ],
     datasource => 'ingredients',
     primary_key => [ 'recipe_id', 'id' ],
-    driver      => Data::ObjectDriver::Driver::Cache::Memcached->new(
-        cache => Cache::Memcached->new({
-            servers => [ '127.0.0.1:11211' ],
-        }),
+    driver      => Data::ObjectDriver::Driver::Cache::Cache->new(
+        cache => Cache::Memory->new,
         fallback => Data::ObjectDriver::Driver::DBI->new(
             dsn      => 'dbi:SQLite:dbname=global.db',
             pk_generator => \&generate_pk,
