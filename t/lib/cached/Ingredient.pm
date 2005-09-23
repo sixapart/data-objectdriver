@@ -20,8 +20,7 @@ __PACKAGE__->install_properties({
             servers => [ '127.0.0.1:11211' ],
         }),
         fallback => Data::ObjectDriver::Driver::DBI->new(
-            dsn      => 'dbi:mysql:database=global',
-            username => 'btrott',
+            dsn      => 'dbi:SQLite:dbname=global.db',
             pk_generator => \&generate_pk,
         ),
         pk_generator => \&generate_pk,

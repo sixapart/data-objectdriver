@@ -11,7 +11,7 @@ __PACKAGE__->install_properties({
     datasource => 'recipes',
     primary_key => 'id',
     driver => Data::ObjectDriver::Driver::DBI->new(
-        dsn      => 'dbi:mysql:database=global',
+        dsn      => 'dbi:SQLite:dbname=global.db',
         username => 'btrott',
     ),
 });

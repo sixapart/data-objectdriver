@@ -33,8 +33,7 @@ sub get_driver {
         $recipe = Recipe->lookup($terms->[0]);
     }
     Data::ObjectDriver::Driver::DBI->new(
-        dsn      => 'dbi:mysql:database=cluster' . $recipe->cluster_id,
-        username => 'btrott',
+        dsn      => 'dbi:SQLite:dbname=cluster' . $recipe->cluster_id . '.db',
         pk_generator => \&generate_pk,
     );
 }

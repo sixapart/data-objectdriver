@@ -4,6 +4,14 @@ use strict;
 
 use lib 't/lib/partitioned';
 
+require 't/lib/db-common.pl';
+
+setup_dbs({
+    global   => [ qw( recipes ) ],
+    cluster1 => [ qw( ingredients ) ],
+    cluster2 => [ qw( ingredients ) ],
+});
+
 use Recipe;
 use Ingredient;
 use Test::More tests => 48;
@@ -99,3 +107,5 @@ ok($ingredient2->remove, 'Ingredient removed successfully');
 ok($ingredient3->remove, 'Ingredient removed successfully');
 ok($recipe->remove, 'Recipe removed successfully');
 ok($recipe2->remove, 'Recipe removed successfully');
+
+teardown_dbs(qw( global cluster1 cluster2 ));

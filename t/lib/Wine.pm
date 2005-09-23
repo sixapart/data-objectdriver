@@ -22,8 +22,7 @@ __PACKAGE__->install_properties({
     datasource => 'wines',
     primary_key => 'id',
     driver => Data::ObjectDriver::Driver::DBI->new(
-        dsn      => 'dbi:mysql:database=yk-test-global',
-        username => 'root',
+        dsn      => 'dbi:SQLite:dbname=global.db',
     ),
 });
 

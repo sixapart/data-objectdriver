@@ -4,6 +4,12 @@ use strict;
 
 use lib 't/lib/cached';
 
+require 't/lib/db-common.pl';
+
+setup_dbs({
+    global   => [ qw( recipes ingredients ) ],
+});
+
 use Recipe;
 use Ingredient;
 use Test::More tests => 52;
@@ -111,3 +117,5 @@ ok($ingredient2->remove, 'Ingredient removed successfully');
 ok($ingredient3->remove, 'Ingredient removed successfully');
 ok($recipe->remove, 'Recipe removed successfully');
 ok($recipe2->remove, 'Recipe removed successfully');
+
+teardown_dbs(qw( global ));
