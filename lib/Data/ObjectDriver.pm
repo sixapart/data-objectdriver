@@ -265,13 +265,71 @@ where I<$object> is an instance of I<Class>.
 
 =head2 Class->search(\%terms [, \%options ])
 
+Searches for objects matching the terms I<%terms>. In list context, returns
+an array of matching objects; in scalar context, returns a reference to
+a subroutine that acts as an iterator object, like so:
+
+    my $iter = Ingredient->search({ recipe_id => 5 });
+    while (my $ingredient = $iter->()) {
+        ...
+    }
+
+The keys in I<%terms> should be column names for the database table
+modeled by I<Class> (and the values should be the desired values for those
+columns).
+
+I<%options> can contain:
+
+=over 4
+
+=item * sort
+
+The name of a column to use to sort the result set.
+
+Optional.
+
+=item * direction
+
+The direction in which you want to sort the result set. Must be either
+C<ascend> or C<descend>.
+
+Optional.
+
+=item * limit
+
+The value for a I<LIMIT> clause, to limit the size of the result set.
+
+Optional.
+
+=item * offset
+
+The offset to start at when limiting the result set.
+
+Optional.
+
+=item * fetchonly
+
+A reference to an array of column names to fetch in the I<SELECT> statement.
+
+Optional; the default is to fetch the values of all of the columns.
+
+=back
+
 =head2 $obj->save
 
-=head2 $obj->insert
+Saves the object I<$obj> to the database.
 
-=head2 $obj->update
+If the object is not yet in the database, I<save> will automatically
+generate a primary key and insert the record into the database table.
+Otherwise, it will update the existing record.
+
+If an error occurs, I<save> will I<croak>.
 
 =head2 $obj->remove
+
+Removes the object I<$obj> from the database.
+
+If an error occurs, I<save> will I<croak>.
 
 =head1 EXAMPLES
 
