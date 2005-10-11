@@ -89,28 +89,6 @@ Data::ObjectDriver - Simple, transparent data interface, with caching
     $ingredient->quantity(10);
     $ingredient->save;
 
-=head1 INTRODUCTION
-
-=head2 How to set it up
-
-=over 4
-
-=item I<Set up a database.>
-
-You must have an existing 
-
-=item I<Set up a cache. (optional)>
-
-If you'd like to use the built-in caching features, you'll need a cache.
-I<Data::ObjectDriver> supports I<Cache::Memcached> and any of the
-I<Cache.pm> subclasses.
-
-=item I<Set up a schema for your objects to be stored in.>
-
-=item I<Set up the classes for your objects.>
-
-=back
-
 =head1 METHODOLOGY
 
 I<Data::ObjectDriver> provides you with a framework for building
