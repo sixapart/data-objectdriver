@@ -89,6 +89,22 @@ Data::ObjectDriver - Simple, transparent data interface, with caching
     $ingredient->quantity(10);
     $ingredient->save;
 
+=head1 DESCRIPTION
+
+I<Data::ObjectDriver> is an object relational mapper, meaning that it maps
+object-oriented design concepts onto a relational database.
+
+It's inspired by, and descended from, the I<MT::ObjectDriver> classes in
+Six Apart's Movable Type and TypePad weblogging products. But it adds in
+caching and partitioning layers, allowing you to spread data across multiple
+physical databases, without your application code needing to know where the
+data is stored.
+
+It's currently considered ALPHA code. The API is largely fixed, but may seen
+some small changes in the future. For what it's worth, the likeliest area
+for changes are in the syntax for the I<search> method, and would most
+likely not break much in the way of backwards compatibility.
+
 =head1 METHODOLOGY
 
 I<Data::ObjectDriver> provides you with a framework for building
