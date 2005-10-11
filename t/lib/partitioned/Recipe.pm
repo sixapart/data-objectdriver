@@ -12,7 +12,6 @@ __PACKAGE__->install_properties({
     primary_key => 'id',
     driver => Data::ObjectDriver::Driver::DBI->new(
         dsn      => 'dbi:SQLite:dbname=global.db',
-        username => 'btrott',
     ),
 });
 
