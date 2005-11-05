@@ -6,7 +6,7 @@ use base qw( Class::Accessor::Fast );
 
 __PACKAGE__->mk_accessors(qw( pk_generator ));
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 our $DEBUG = 0;
 
 use Data::Dumper ();
@@ -309,6 +309,19 @@ Optional; the default is to fetch the values of all of the columns.
 
 =back
 
+=head2 Class->add_trigger($trigger, \&callback)
+
+Adds a trigger to all objects of class I<Class>, such that when the event
+I<$trigger> occurs to any of the objects, subroutine C<&callback> is run. Note
+that triggers will not occur for instances of E<subclasses> of I<Class>, only
+of I<Class> itself. See TRIGGERS for the available triggers.
+
+=head2 Class->call_trigger($trigger, [@callback_params])
+
+Invokes the triggers watching class I<Class>. The parameters to send to the
+callbacks (in addition to I<Class>) are specified in I<@callback_params>. See
+TRIGGERS for the available triggers.
+
 =head2 $obj->save
 
 Saves the object I<$obj> to the database.
@@ -323,7 +336,77 @@ If an error occurs, I<save> will I<croak>.
 
 Removes the object I<$obj> from the database.
 
-If an error occurs, I<save> will I<croak>.
+If an error occurs, I<remove> will I<croak>.
+
+=head2 $obj->add_trigger($trigger, \&callback)
+
+Adds a trigger to the object I<$obj>, such that when the event I<$trigger>
+occurs to the object, subroutine C<&callback> is run. See TRIGGERS for the
+available triggers. Triggers are invoked in the order in which they are added.
+
+=head2 $obj->call_trigger($trigger, [@callback_params])
+
+Invokes the triggers watching all objects of I<$obj>'s class and the object
+I<$obj> specifically for trigger event I<$trigger>. The additional parameters
+besides I<$obj>, if any, are passed as I<@callback_params>. See TRIGGERS for
+the available triggers.
+
+=head1 TRIGGERS
+
+I<Data::ObjectDriver> provides a trigger mechanism by which callbacks can be
+called at certain points in the life cycle of an object. These can be set on a
+class as a whole or individual objects (see USAGE).
+
+Triggers can be added and called for these events:
+
+=over 4
+
+=item * pre_save -> ($obj)
+
+Callbacks on the I<pre_save> trigger are called when the object is about to be
+saved to the database. For example, use this callback to translate special code
+strings into numbers for storage in an integer column in the database.
+
+Modifications to I<$obj> will affect the values passed to subsequent triggers
+and saved in the database, but not the original object on which the I<save>
+method was invoked.
+
+=item * post_load -> ($obj)
+
+Callbacks on the I<post_load> trigger are called when an object is being
+created from a database query, such as with the I<lookup> and I<search> class
+methods. For example, use this callback to translate the numbers your
+I<pre_save> callback caused to be saved I<back> into string codes.
+
+Modifications to I<$obj> will affect the object passed to subsequent triggers
+and returned from the loading method.
+
+Note I<pre_load> should only be used as a trigger on a class, as the object to
+which the load is occuring was not previously available for triggers to be
+added.
+
+=item * pre_search -> ($class, $terms, $args)
+
+Callbacks on the I<pre_search> trigger are called when a content addressed
+query for objects of class I<$class> is performed with the I<search> method.
+For example, use this callback to translate the entry in I<$terms> for your
+code string field to its appropriate integer value.
+
+Modifications to I<$terms> and I<$args> will affect the parameters to
+subsequent triggers and what objects are loaded, but not the original hash
+references used in the I<search> query.
+
+Note I<pre_search> should only be used as a trigger on a class, as I<search> is
+never invoked on specific objects.
+
+=over
+
+The return values from your callbacks are ignored.
+
+Note that the invocation of callbacks is the responsibility of the object
+driver. If you implement a driver that does not delegate to
+I<Data::ObjectDriver::Driver::DBI>, it is I<your> responsibility to invoke the
+appropriate callbacks with the I<call_trigger> method.
 
 =head1 EXAMPLES
 

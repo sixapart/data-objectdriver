@@ -4,6 +4,8 @@ package Data::ObjectDriver::BaseObject;
 use strict;
 use Carp ();
 
+use Class::Trigger qw( pre_save post_load pre_search );
+
 =pod
 
 =over 4

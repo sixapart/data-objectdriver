@@ -74,7 +74,12 @@ sub rw_handle {
 
 sub search {
     my $driver = shift;
-    my($class, $terms, $args) = @_;
+    my($class, $orig_terms, $orig_args) = @_;
+
+    ## Use (shallow) duplicates so the pre_search trigger can modify them.
+    my $terms = defined $orig_terms ? { %$orig_terms } : undef;
+    my $args  = defined $orig_args  ? { %$orig_args  } : undef;
+    $class->call_trigger('pre_search', $terms, $args);
 
     my $stmt = $driver->prepare_statement($class, $terms, $args);
     my $tbl = $class->datasource;
@@ -122,6 +127,9 @@ sub search {
         my $obj;
         $obj = $class->new;
         $obj->set_values(\%rec);
+        ## Don't need a duplicate as there's no previous version in memory
+        ## to preserve.
+        $obj->call_trigger('post_load');
         $obj;
     };
     
@@ -200,7 +208,12 @@ sub exists {
 
 sub insert {
     my $driver = shift;
-    my($obj) = @_;
+    my($orig_obj) = @_;
+
+    ## Use a duplicate so the pre_save trigger can modify it.
+    my $obj = $orig_obj->clone;
+    $obj->call_trigger('pre_save');
+    
     my $cols = $obj->column_names;
     unless ($obj->has_primary_key) {
         ## If we don't already have a primary key assigned for this object, we
@@ -209,8 +222,12 @@ sub insert {
         ## the new record; otherwise, we assume that the DB is using an
         ## auto-increment column of some sort, so we don't specify an ID
         ## at all.
-        my $generated = $driver->generate_pk($obj);
-        unless ($generated) {
+        if(my $generated = $driver->generate_pk($obj)) {
+            ## The ID is the only thing we *are* allowed to change on
+            ## the original object.
+            my $id_col = join '_', $obj->properties->{datasource}, 'id';
+            $orig_obj->$id_col($obj->$id_col);
+        } else {
             my $pk = $obj->properties->{primary_key};
             $pk = [ $pk ] unless ref($pk) eq 'ARRAY';
             my %pk = map { $_ => 1 } @$pk;
@@ -244,14 +261,23 @@ sub insert {
     unless ($obj->has_primary_key) {
         my $pk = $obj->properties->{primary_key};
         my $id_col = ref($pk) eq 'ARRAY' ? $pk->[0] : $pk;
-        $obj->$id_col($dbd->fetch_id(ref($obj), $dbh, $sth));
+        my $id = $dbd->fetch_id(ref($obj), $dbh, $sth);
+        $obj->$id_col($id);
+        ## The ID is the only thing we *are* allowed to change on
+        ## the original object.
+        $orig_obj->$id_col($id);
     }
     1;
 }
 
 sub update {
     my $driver = shift;
-    my($obj) = @_;
+    my($orig_obj) = @_;
+
+    ## Use a duplicate so the pre_save trigger can modify it.
+    my $obj = $orig_obj->clone;
+    $obj->call_trigger('pre_save');
+
     my $cols = $obj->column_names;
     my $pk = $obj->properties->{primary_key};
     $pk = [ $pk ] unless ref($pk) eq 'ARRAY';
