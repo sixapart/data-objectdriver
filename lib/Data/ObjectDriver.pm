@@ -313,7 +313,7 @@ Optional; the default is to fetch the values of all of the columns.
 
 Adds a trigger to all objects of class I<Class>, such that when the event
 I<$trigger> occurs to any of the objects, subroutine C<&callback> is run. Note
-that triggers will not occur for instances of E<subclasses> of I<Class>, only
+that triggers will not occur for instances of I<subclasses> of I<Class>, only
 of I<Class> itself. See TRIGGERS for the available triggers.
 
 =head2 Class->call_trigger($trigger, [@callback_params])
