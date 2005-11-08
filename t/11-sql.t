@@ -3,7 +3,7 @@
 use strict;
 
 use Data::ObjectDriver::SQL;
-use Test::More tests => 38;
+use Test::More tests => 44;
 
 my $stmt = ns();
 ok($stmt, 'Created SQL object');
@@ -23,6 +23,28 @@ is($stmt->as_sql, "FROM foo INNER JOIN baz ON foo.baz_id = baz.baz_id\n");
 $stmt->from([ 'foo', 'bar' ]);
 is($stmt->as_sql, "FROM foo INNER JOIN baz ON foo.baz_id = baz.baz_id, bar\n");
 
+## Testing GROUP BY
+$stmt = ns();
+$stmt->from([ 'foo' ]);
+$stmt->group({ column => 'baz' });
+is($stmt->as_sql, "FROM foo\nGROUP BY baz\n", 'single bare group by');
+
+$stmt = ns();
+$stmt->from([ 'foo' ]);
+$stmt->group({ column => 'baz', desc => 'DESC' });
+is($stmt->as_sql, "FROM foo\nGROUP BY baz DESC\n", 'single group by with desc');
+
+$stmt = ns();
+$stmt->from([ 'foo' ]);
+$stmt->group([ { column => 'baz' }, { column => 'quux' }, ]);
+is($stmt->as_sql, "FROM foo\nGROUP BY baz, quux\n", 'multiple group by');
+
+$stmt = ns();
+$stmt->from([ 'foo' ]);
+$stmt->group([ { column => 'baz',  desc => 'DESC' },
+               { column => 'quux', desc => 'DESC' }, ]);
+is($stmt->as_sql, "FROM foo\nGROUP BY baz DESC, quux DESC\n", 'multiple group by with desc');
+
 ## Testing ORDER BY
 $stmt = ns();
 $stmt->from([ 'foo' ]);
@@ -34,6 +56,13 @@ $stmt->from([ 'foo' ]);
 $stmt->order([ { column => 'baz',  desc => 'DESC' },
                { column => 'quux', desc => 'ASC'  }, ]);
 is($stmt->as_sql, "FROM foo\nORDER BY baz DESC, quux ASC\n", 'multiple order by');
+
+## Testing GROUP BY plus ORDER BY
+$stmt = ns();
+$stmt->from([ 'foo' ]);
+$stmt->group({ column => 'quux' });
+$stmt->order({ column => 'baz', desc => 'DESC' });
+is($stmt->as_sql, "FROM foo\nGROUP BY quux\nORDER BY baz DESC\n", 'group by with order by');
 
 ## Testing LIMIT and OFFSET
 $stmt = ns();

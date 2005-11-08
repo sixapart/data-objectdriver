@@ -4,7 +4,7 @@ package Data::ObjectDriver::SQL;
 use strict;
 use base qw( Class::Accessor::Fast );
 
-__PACKAGE__->mk_accessors(qw( from join where bind limit offset order ));
+__PACKAGE__->mk_accessors(qw( from join where bind limit offset group order ));
 
 sub new {
     my $class = shift;
@@ -29,11 +29,13 @@ sub as_sql {
     }
     $sql .= join(', ', @{ $stmt->from }) . "\n";
     $sql .= $stmt->as_sql_where;
-    if (my $order = $stmt->order) {
-        my $orders = (ref($order) eq 'ARRAY') ? $order : [ $order ];
-        $sql .= 'ORDER BY '
-            . join(', ', map { $_->{column} . ' ' . $_->{desc} } @$orders)
-            . "\n";
+    for my $set (qw( group order )) {
+        if (my $attribute = $stmt->$set()) {
+            my $elements = (ref($attribute) eq 'ARRAY') ? $attribute : [ $attribute ];
+            $sql .= uc($set) . ' BY '
+                . join(', ', map { $_->{column} . ($_->{desc} ? (' ' . $_->{desc}) : '') } @$elements)
+                . "\n";
+        }
     }
     if (my $n = $stmt->limit) {
         $n =~ s/\D//g;   ## Get rid of any non-numerics.
