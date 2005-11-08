@@ -30,7 +30,10 @@ sub as_sql {
     $sql .= join(', ', @{ $stmt->from }) . "\n";
     $sql .= $stmt->as_sql_where;
     if (my $order = $stmt->order) {
-        $sql .= 'ORDER BY ' . $order->{column} . ' ' . $order->{desc} . "\n";
+        my $orders = (ref($order) eq 'ARRAY') ? $order : [ $order ];
+        $sql .= 'ORDER BY '
+            . join(', ', map { $_->{column} . ' ' . $_->{desc} } @$orders)
+            . "\n";
     }
     if (my $n = $stmt->limit) {
         $n =~ s/\D//g;   ## Get rid of any non-numerics.

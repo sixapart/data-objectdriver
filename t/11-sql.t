@@ -27,7 +27,13 @@ is($stmt->as_sql, "FROM foo INNER JOIN baz ON foo.baz_id = baz.baz_id, bar\n");
 $stmt = ns();
 $stmt->from([ 'foo' ]);
 $stmt->order({ column => 'baz', desc => 'DESC' });
-is($stmt->as_sql, "FROM foo\nORDER BY baz DESC\n");
+is($stmt->as_sql, "FROM foo\nORDER BY baz DESC\n", 'single order by');
+
+$stmt = ns();
+$stmt->from([ 'foo' ]);
+$stmt->order([ { column => 'baz',  desc => 'DESC' },
+               { column => 'quux', desc => 'ASC'  }, ]);
+is($stmt->as_sql, "FROM foo\nORDER BY baz DESC, quux ASC\n", 'multiple order by');
 
 ## Testing LIMIT and OFFSET
 $stmt = ns();
