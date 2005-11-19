@@ -60,26 +60,18 @@ sub search {
     my $pk = $class->properties->{primary_key};
     my $old = $args->{fetchonly};
     $args->{fetchonly} = ref $pk eq 'ARRAY' ? $pk : [ $pk ];
-    my $iter = $driver->fallback->search($class, $terms, $args);
+    my @objs = $driver->fallback->search($class, $terms, $args);
 
-    ## Create a new iterator that knows how to get an object from
-    ## the backend, then look it up using this driver--that means
-    ## that we'll pull it from the cache if it's already there.
-    my $iter2 = sub {
-        my $obj = $iter->() or return;
-        return $driver->lookup($class, $obj->primary_key);
-    };
+    ## Load all of the objects using a lookup_multi, which is fast from
+    ## cache.
+    my $objs = $driver->lookup_multi($class, [ map $_->primary_key, @objs ]);
 
     ## Now emulate the standard search behavior of returning an
     ## iterator in scalar context, and the full list in list context.
     if (wantarray) {
-        my @objs;
-        while (my $obj = $iter2->()) {
-            push @objs, $obj;
-        }
-        return @objs;
+        return @$objs;
     } else {
-        return $iter2;
+        return sub { shift @$objs };
     }
 }
 
