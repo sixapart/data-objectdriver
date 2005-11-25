@@ -30,7 +30,6 @@ sub exists     { shift->_exec_partitioned('exists',     @_) }
 sub insert     { shift->_exec_partitioned('insert',     @_) }
 sub update     { shift->_exec_partitioned('update',     @_) }
 sub remove     { shift->_exec_partitioned('remove',     @_) }
-sub fetch      { shift->_exec_partitioned('fetch',      @_) }
 sub fetch_data { shift->_exec_partitioned('fetch_data', @_) }
 
 sub search {
