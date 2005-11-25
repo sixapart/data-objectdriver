@@ -49,6 +49,8 @@ sub lookup_multi {
     \@got;
 }
 
+sub fetch_data { die "not implemented yet" }
+
 sub search {
     my $driver = shift;
     return $driver->fallback->search(@_)
