@@ -222,14 +222,13 @@ sub insert {
         ## the new record; otherwise, we assume that the DB is using an
         ## auto-increment column of some sort, so we don't specify an ID
         ## at all.
+        my $pk = $obj->properties->{primary_key};
+        $pk = [ $pk ] unless ref($pk) eq 'ARRAY';
         if(my $generated = $driver->generate_pk($obj)) {
             ## The ID is the only thing we *are* allowed to change on
             ## the original object.
-            my $id_col = join '_', $obj->properties->{datasource}, 'id';
-            $orig_obj->$id_col($obj->$id_col);
+            $orig_obj->$_($obj->$_) for @$pk;
         } else {
-            my $pk = $obj->properties->{primary_key};
-            $pk = [ $pk ] unless ref($pk) eq 'ARRAY';
             my %pk = map { $_ => 1 } @$pk;
             $cols = [ grep !$pk{$_} || defined $obj->$_(), @$cols ];
         }
