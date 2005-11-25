@@ -18,9 +18,11 @@ use base qw( My::BaseObject );
 use Data::ObjectDriver::Driver::DBI;
 
 __PACKAGE__->install_properties({
-    columns => [ 'id', 'cluster_id', 'name' ], # rating is defined on the fly in My::BaseObject 
+    # rating is defined on the fly in My::BaseObject 
+    columns => [ 'id', 'cluster_id', 'name', 'content' ],
     datasource => 'wines',
     primary_key => 'id',
+    column_defs => { content => 'blob' },
     driver => Data::ObjectDriver::Driver::DBI->new(
         dsn      => 'dbi:SQLite:dbname=global.db',
     ),

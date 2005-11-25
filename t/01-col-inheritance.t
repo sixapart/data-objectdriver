@@ -10,7 +10,7 @@ use Test::More;
 unless (eval { require DBD::SQLite }) {
     plan skip_all => 'Tests require DBD::SQLite';
 }
-plan tests => 11;
+plan tests => 13;
 
 setup_dbs({
     global => [ qw( wines ) ],
@@ -19,7 +19,7 @@ setup_dbs({
 use Wine;
 
 my $wine = Wine->new;
-my %expected = ( name => 1, rating => 1, id => 1, cluster_id => 1 ); 
+my %expected = ( name => 1, rating => 1, id => 1, cluster_id => 1, content => 1 ); 
 my %data;
 # I know about Test::Deep. Do not ask...
 for my $col (@{ $wine->column_names }) {
