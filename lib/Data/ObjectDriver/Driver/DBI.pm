@@ -147,8 +147,7 @@ sub search {
 sub primary_key_to_terms {
     my $driver = shift;
     my($class, $id) = @_;
-    my $pk = $class->properties->{primary_key};
-    $pk = [ $pk ] unless ref($pk) eq 'ARRAY';
+    my $pk = $class->primary_key_tuple;
     $id = [ $id ] unless ref($id) eq 'ARRAY';
     my $i = 0;
     my %terms;
@@ -222,8 +221,7 @@ sub insert {
         ## the new record; otherwise, we assume that the DB is using an
         ## auto-increment column of some sort, so we don't specify an ID
         ## at all.
-        my $pk = $obj->properties->{primary_key};
-        $pk = [ $pk ] unless ref($pk) eq 'ARRAY';
+        my $pk = $obj->primary_key_tuple;
         if(my $generated = $driver->generate_pk($obj)) {
             ## The ID is the only thing we *are* allowed to change on
             ## the original object.
@@ -258,8 +256,8 @@ sub insert {
     ## Now, if we didn't have an object ID, we need to grab the
     ## newly-assigned ID.
     unless ($obj->has_primary_key) {
-        my $pk = $obj->properties->{primary_key};
-        my $id_col = ref($pk) eq 'ARRAY' ? $pk->[0] : $pk;
+        my $pk = $obj->primary_key_tuple;
+        my $id_col = $pk->[0];
         my $id = $dbd->fetch_id(ref($obj), $dbh, $sth);
         $obj->$id_col($id);
         ## The ID is the only thing we *are* allowed to change on
@@ -278,8 +276,7 @@ sub update {
     $obj->call_trigger('pre_save');
 
     my $cols = $obj->column_names;
-    my $pk = $obj->properties->{primary_key};
-    $pk = [ $pk ] unless ref($pk) eq 'ARRAY';
+    my $pk = $obj->primary_key_tuple;
     my %pk = map { $_ => 1 } @$pk;
     $cols = [ grep !$pk{$_}, @$cols ];
 

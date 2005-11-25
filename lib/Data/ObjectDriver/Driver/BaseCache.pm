@@ -57,9 +57,8 @@ sub search {
 
     ## Tell the fallback driver to fetch only the primary columns,
     ## then run the search using the fallback.
-    my $pk = $class->properties->{primary_key};
     my $old = $args->{fetchonly};
-    $args->{fetchonly} = ref $pk eq 'ARRAY' ? $pk : [ $pk ];
+    $args->{fetchonly} = $class->primary_key_tuple; 
     my @objs = $driver->fallback->search($class, $terms, $args);
 
     ## Load all of the objects using a lookup_multi, which is fast from

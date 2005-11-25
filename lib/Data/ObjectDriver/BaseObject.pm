@@ -44,10 +44,16 @@ sub get_driver {
 
 sub new { bless {}, shift }
 
-sub primary_key {
+sub primary_key_tuple {
     my $obj = shift;
     my $pk = $obj->properties->{primary_key};
     $pk = [ $pk ] unless ref($pk) eq 'ARRAY';
+    $pk;
+}
+
+sub primary_key {
+    my $obj = shift;
+    my $pk = $obj->primary_key_tuple;
     my @val = map $obj->$_(), @$pk;
     @val == 1 ? $val[0] : \@val;
 }
