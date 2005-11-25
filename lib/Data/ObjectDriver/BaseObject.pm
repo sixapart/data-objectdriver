@@ -142,6 +142,18 @@ sub search          { shift->_proxy('search',       @_) }
 sub remove          { shift->_proxy('remove',       @_) }
 sub update          { shift->_proxy('update',       @_) }
 sub insert          { shift->_proxy('insert',       @_) }
+sub fetch           { shift->_proxy('fetch',        @_) }
+sub fetch_data      { shift->_proxy('fetch_data',   @_) }
+
+sub refresh {
+    my $obj = shift; 
+    return unless $obj->has_primary_key;
+    my $fields = $obj->fetch_data;
+    $obj->set_values($fields);
+    # XXX not sure this is the right place
+    $obj->call_trigger('post_load');
+    return 1;
+}
 
 sub _proxy {
     my $obj = shift;

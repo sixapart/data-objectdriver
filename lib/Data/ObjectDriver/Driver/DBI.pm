@@ -72,14 +72,27 @@ sub rw_handle {
 }
 *r_handle = \&rw_handle;
 
-sub search {
+sub fetch_data {
+    my $driver = shift;
+    my($obj) = @_;
+    return unless $obj->has_primary_key;
+    my $terms = $driver->primary_key_to_terms(ref($obj), $obj->primary_key);
+    my $args  = { limit => 1 };
+    my ($sth, $rec) = $driver->fetch($obj, $terms, $args);
+    $sth->fetch;
+    $sth->finish;
+    return $rec;
+}
+
+sub fetch {
     my $driver = shift;
     my($class, $orig_terms, $orig_args) = @_;
-
+    
     ## Use (shallow) duplicates so the pre_search trigger can modify them.
     my $terms = defined $orig_terms ? { %$orig_terms } : undef;
     my $args  = defined $orig_args  ? { %$orig_args  } : undef;
     $class->call_trigger('pre_search', $terms, $args);
+
 
     my $stmt = $driver->prepare_statement($class, $terms, $args);
     my $tbl = $class->datasource;
@@ -114,6 +127,16 @@ sub search {
         }
     }
 
+    # xxx what happens if $sth goes out of scope without finish() being called ?
+    ($sth, \%rec);
+}
+
+sub search {
+    my($driver) = shift;
+    my($class, $terms, $args) = @_;
+
+    my ($sth, $rec) = $driver->fetch($class, $terms, $args);
+
     my $iter = sub {
         ## This is kind of a hack--we need $driver to stay in scope,
         ## so that the DESTROY method isn't called. So we include it
@@ -126,7 +149,7 @@ sub search {
         }
         my $obj;
         $obj = $class->new;
-        $obj->set_values(\%rec);
+        $obj->set_values($rec);
         ## Don't need a duplicate as there's no previous version in memory
         ## to preserve.
         $obj->call_trigger('post_load');
@@ -257,7 +280,7 @@ sub insert {
     ## newly-assigned ID.
     unless ($obj->has_primary_key) {
         my $pk = $obj->primary_key_tuple;
-        my $id_col = $pk->[0];
+        my $id_col = $pk->[0]; # XXX are we sure we will always use '0' ?
         my $id = $dbd->fetch_id(ref($obj), $dbh, $sth);
         $obj->$id_col($id);
         ## The ID is the only thing we *are* allowed to change on

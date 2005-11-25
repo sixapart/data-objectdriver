@@ -57,7 +57,7 @@ use Wine;
     $wine->save or die "Object did not save successfully";
 
     is $ran_callback, 1, 'callback ran exactly once';
-    ok defined $wine->id, 'object did receive ';
+    ok defined $wine->id, 'object did receive an id';
     
     my $saved_wine = Wine->lookup($wine->id)
         or die "Object just saved could not be retrieved successfully";
