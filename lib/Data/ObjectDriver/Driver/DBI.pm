@@ -78,7 +78,8 @@ sub fetch_data {
     return unless $obj->has_primary_key;
     my $terms = $driver->primary_key_to_terms(ref($obj), $obj->primary_key);
     my $args  = { limit => 1 };
-    my ($sth, $rec) = $driver->fetch($obj, $terms, $args);
+    my $rec = {};
+    my $sth = $driver->fetch($rec, $obj, $terms, $args);
     $sth->fetch;
     $sth->finish;
     return $rec;
@@ -86,7 +87,7 @@ sub fetch_data {
 
 sub fetch {
     my $driver = shift;
-    my($class, $orig_terms, $orig_args) = @_;
+    my($rec, $class, $orig_terms, $orig_args) = @_;
     
     ## Use (shallow) duplicates so the pre_search trigger can modify them.
     my $terms = defined $orig_terms ? { %$orig_terms } : undef;
@@ -96,7 +97,7 @@ sub fetch {
 
     my $stmt = $driver->prepare_statement($class, $terms, $args);
     my $tbl = $class->datasource;
-    my(%rec, @bind, @cols);
+    my(@bind, @cols);
     my $cols = $class->column_names;
 
     my $primary_key = $class->properties->{primary_key};
@@ -109,7 +110,7 @@ sub fetch {
         }
         my $dbcol = join '.', $tbl, $dbd->db_column_name($tbl, $col);
         push @cols, $dbcol;
-        push @bind, \$rec{$col};
+        push @bind, \$rec->{$col};
     }
     my $tmp = "SELECT ";
     $tmp .= join(', ', @cols) . "\n";
@@ -128,14 +129,15 @@ sub fetch {
     }
 
     # xxx what happens if $sth goes out of scope without finish() being called ?
-    ($sth, \%rec);
+    $sth;
 }
 
 sub search {
     my($driver) = shift;
     my($class, $terms, $args) = @_;
 
-    my ($sth, $rec) = $driver->fetch($class, $terms, $args);
+    my $rec = {};
+    my $sth = $driver->fetch($rec, $class, $terms, $args);
 
     my $iter = sub {
         ## This is kind of a hack--we need $driver to stay in scope,
