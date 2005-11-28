@@ -49,7 +49,12 @@ sub lookup_multi {
     \@got;
 }
 
-sub fetch_data { die "not implemented yet" }
+## We fallback by default
+sub fetch_data { 
+    my $driver = shift;
+    my ($obj) = @_;
+    return $driver->fallback->fetch_data($obj);
+}
 
 sub search {
     my $driver = shift;
