@@ -3,19 +3,23 @@
 use strict;
 
 use lib 't/lib';
+use lib 't/lib/cached';
 
 require 't/lib/db-common.pl';
 
 use Test::More;
+use Test::Exception;
 unless (eval { require DBD::SQLite }) {
     plan skip_all => 'Tests require DBD::SQLite';
 }
-plan tests => 3;
+plan tests => 17;
 
 use Wine;
+use Recipe;
+use Ingredient;
 
 setup_dbs({
-    global => [ qw( wines ) ],
+    global => [ qw( wines recipes ingredients) ],
 });
 
 # refresh
@@ -36,6 +40,50 @@ setup_dbs({
     $w1->refresh;
 
     cmp_ok $w1->name, 'eq', $new, "Refreshed";
+    ok $w1->remove;
+    ok $w2->remove;
 }
+
+# lookup with hash (single pk) 
+{
+    my $w = Wine->new;
+    $w->name("Veuve Cliquot");
+    $w->save;
+    my $id = $w->id;
+    undef $w;
+
+    # lookup test
+    lives_ok { $w = Wine->lookup({ id => $id })} "Alive !";
+    cmp_ok $w->name, 'eq', 'Veuve Cliquot', "simple data test";
+
+    ok $w;
+    ok $w->remove;
+}
+
+# lookup with hash (multiple pk) 
+{
+    my $r = Recipe->new;
+    $r->title("Good one");
+    ok $r->save;
+    my $rid = $r->id;
+    ok $rid;
+
+    my $i = Ingredient->new;
+    $i->recipe_id($rid);
+    $i->quantity(1);
+    $i->name('Chouchenn');
+    ok $i->save;
+    my $id = $i->id;
+    undef $i;
+    
+    # lookup test
+    dies_ok  { $i = Ingredient->lookup({ id => $id, quantity => 1 })} "Use Search !";
+    lives_ok { $i = Ingredient->lookup({ id => $id, recipe_id => $rid })} "Alive";
+    cmp_ok $i->name, 'eq', 'Chouchenn', "simple data test";
+
+    ok $r->remove;
+    ok $i->remove;
+}
+
 teardown_dbs(qw( global ));
 

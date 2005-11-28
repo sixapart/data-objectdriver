@@ -169,10 +169,27 @@ sub search {
     }
 }
 
+sub is_same_array {
+    my($a1, $a2) = @_;
+    return if ($#$a1 != $#$a2);
+    for (my $i = 0; $i <= $#$a1; $i++) {
+        return if $a1->[$i] ne $a2->[$i];
+    }
+    return 1;
+}
+
 sub primary_key_to_terms {
     my $driver = shift;
     my($class, $id) = @_;
     my $pk = $class->primary_key_tuple;
+    if (ref($id) eq 'HASH') {
+        my @keys = sort keys %$id;
+        unless (is_same_array(\@keys, [ sort @$pk ])) {
+            Carp::croak("keys don't match with primary keys: @keys");
+        }
+        return $id;
+    }
+
     $id = [ $id ] unless ref($id) eq 'ARRAY';
     my $i = 0;
     my %terms;
