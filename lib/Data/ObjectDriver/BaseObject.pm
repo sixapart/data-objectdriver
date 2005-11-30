@@ -168,8 +168,11 @@ sub AUTOLOAD {
     (my $col = $AUTOLOAD) =~ s!.+::!!;
     no strict 'refs';
     Carp::croak("Cannot find method '$col' for class '$obj'") unless ref $obj;
-    Carp::carp("Cannot find column '$col' for class '" . ref($obj) . "'")
-        unless $obj->has_column($col);
+    unless ($obj->has_column($col)) {
+        # xxx this *should* be croak, but some app still uses inexistent columns
+        Carp::carp("Cannot find column '$col' for class '" . ref($obj) . "'");
+        return;
+    }
     *$AUTOLOAD = sub {
         shift()->column($col, @_);
     };
