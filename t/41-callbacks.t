@@ -10,7 +10,7 @@ use Test::More;
 unless (eval { require DBD::SQLite }) {
     plan skip_all => 'Tests require DBD::SQLite';
 }
-plan tests => 10;
+plan tests => 15;
 
 setup_dbs({
     global => [ qw( wines ) ],
@@ -41,9 +41,9 @@ use Wine;
         my ($saving_wine) = @_;
         ## This is not the original object, so we can't test it that way.
         isa_ok $saving_wine, 'Wine', 'callback received correct kind of object';
-        ok $saving_wine->name eq "Saumur Champigny, Le Grand Clos 2001"
-            && $saving_wine->rating == 4
-            && !defined($saving_wine->id), 'callback received object with right data';
+        cmp_ok $saving_wine->name, 'eq', "Saumur Champigny, Le Grand Clos 2001";
+        cmp_ok $saving_wine->rating, '==', 4, "Rating";
+        ok !defined($saving_wine->id), 'wine id';
 
         ## Change rating to test immutability of original.
         $saving_wine->rating(5);
@@ -63,8 +63,26 @@ use Wine;
         or die "Object just saved could not be retrieved successfully";
     is $saved_wine->rating, 5, 'change in callback did change saved data';
     is $wine->rating, 4, 'change in callback did not change original object';
+
+#    Wine->remove_trigger('pre_save'); # doesn't exist
+    delete $wine->__triggers->{'pre_save'};
+    $wine->remove;
 };
 
+## test pre_search
+{
+    Wine->add_trigger('pre_search', sub { $_[1]->{rating} = $_[1]->{rating} * 2 } );
+    my $wine = Wine->new;
+    $wine->name('I will change rating');
+    $wine->rating(10);
+    $wine->save;
+
+    ($wine) = Wine->search({ rating => 5 });
+    ok $wine;
+    cmp_ok $wine->rating, '==', 10, "object has still the same rating";
+    cmp_ok $wine->name, 'eq', 'I will change rating', "indeed";
+    $wine->remove;
+}
 
 ## test post_load
 {
