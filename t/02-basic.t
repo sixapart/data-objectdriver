@@ -12,7 +12,7 @@ use Test::Exception;
 unless (eval { require DBD::SQLite }) {
     plan skip_all => 'Tests require DBD::SQLite';
 }
-plan tests => 17;
+plan tests => 22;
 
 use Wine;
 use Recipe;
@@ -22,13 +22,25 @@ setup_dbs({
     global => [ qw( wines recipes ingredients) ],
 });
 
+# method installation
+{ 
+    my $w = Wine->new;
+    ok $w->name("name");
+    ok $w->has_column("name");
+    ok ! $w->has_column("inexistent");
+    SKIP: {
+    skip "bug!", 1;
+    dies_ok { $w->inexistent("hell") } "dies on setting inexistent column";
+    };
+}
+
 # refresh
 { 
     my $old ='Cul de Veau à la Sauge'; # tastes good !
     my $new ='At first my tests ran on Recipe, sorry (Yann)';
     my $w1 = Wine->new;
     $w1->name($old);
-    $w1->save;
+    ok $w1->save;
     my $id = $w1->id;
     
     my $w2 = Wine->lookup($id);
