@@ -6,11 +6,12 @@ use lib 't/lib';
 
 require 't/lib/db-common.pl';
 
+$Data::ObjectDriver::DEBUG = 0;
 use Test::More;
 unless (eval { require DBD::SQLite }) {
     plan skip_all => 'Tests require DBD::SQLite';
 }
-plan tests => 3;
+plan tests => 7;
 
 setup_dbs({
     global => [ qw( wines ) ],
@@ -23,8 +24,9 @@ my $wine = Wine->new;
 $wine->name("Saumur Champigny, Le Grand Clos 2001");
 $wine->rating(4);
 
-# generate some binary data
+## generate some binary data (SQL_BLOB / MEDIUMBLOB)
 my $glouglou = { tanin => "beaucoup", caudalies => "4" };
+$wine->binchar("xxx\0yyy");
 $wine->content(Storable::nfreeze($glouglou));
 ok($wine->save, 'Object saved successfully');
 
@@ -34,5 +36,12 @@ $wine = Wine->lookup($wine_id);
 
 ok $wine;
 is_deeply Storable::thaw($wine->content), $glouglou;
+is $wine->binchar, "xxx\0yyy";
+
+## SQL_VARBINARY test (for binary CHAR)
+my @results = Wine->search({ binchar => "xxx\0yyy"});
+is scalar @results, 1;
+is $results[0]->rating, 4;
+is $results[0]->name, "Saumur Champigny, Le Grand Clos 2001";
 
 teardown_dbs(qw( global ));

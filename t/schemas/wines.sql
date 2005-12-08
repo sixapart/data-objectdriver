@@ -3,5 +3,6 @@ CREATE TABLE wines (
   cluster_id SMALLINT,
   name VARCHAR(50),
   content MEDIUMBLOB,
+  binchar CHAR(50),
   rating SMALLINT 
 )

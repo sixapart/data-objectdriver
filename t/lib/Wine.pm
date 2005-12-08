@@ -19,10 +19,10 @@ use Data::ObjectDriver::Driver::DBI;
 
 __PACKAGE__->install_properties({
     # rating is defined on the fly in My::BaseObject 
-    columns => [ 'id', 'cluster_id', 'name', 'content' ],
+    columns => [ 'id', 'cluster_id', 'name', 'content', 'binchar'],
     datasource => 'wines',
     primary_key => 'id',
-    column_defs => { content => 'blob' },
+    column_defs => { content => 'blob', binchar => 'binchar' },
     driver => Data::ObjectDriver::Driver::DBI->new(
         dsn      => 'dbi:SQLite:dbname=global.db',
     ),
