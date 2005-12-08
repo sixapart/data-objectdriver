@@ -36,7 +36,11 @@ $wine = Wine->lookup($wine_id);
 
 ok $wine;
 is_deeply Storable::thaw($wine->content), $glouglou;
-is $wine->binchar, "xxx\0yyy";
+SKIP: {
+    skip "Please upgrade to DBD::SQLite 1.11", 1
+        if $DBD::SQLite::VERSION < 1.11;
+    is $wine->binchar, "xxx\0yyy";
+};
 
 ## SQL_VARBINARY test (for binary CHAR)
 my @results = Wine->search({ binchar => "xxx\0yyy"});
