@@ -58,21 +58,21 @@ Data::ObjectDriver - Simple, transparent data interface, with caching
     ## Set up the classes for your recipe and ingredient objects.
     package Recipe;
     use base qw( Data::ObjectDriver::BaseObject );
-    __PACKAGE__->install_properties(
+    __PACKAGE__->install_properties({
         columns     => [ 'recipe_id', 'title' ],
         datasource  => 'recipe',
         primary_key => 'recipe_id',
         driver      => FoodDriver->driver,
-    );
+    });
 
     package Ingredient;
     use base qw( Data::ObjectDriver::BaseObject );
-    __PACKAGE__->install_properties(
+    __PACKAGE__->install_properties({
         columns     => [ 'ingredient_id', 'recipe_id', 'name', 'quantity' ],
         datasource  => 'ingredient',
         primary_key => [ 'recipe_id', 'ingredient_id' ],
         driver      => FoodDriver->driver,
-    );
+    });
 
     ## And now, use them!
     my $recipe = Recipe->new;
