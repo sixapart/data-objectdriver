@@ -3,7 +3,7 @@
 use strict;
 
 use Data::ObjectDriver::SQL;
-use Test::More tests => 44;
+use Test::More tests => 49;
 
 my $stmt = ns();
 ok($stmt, 'Created SQL object');
@@ -126,5 +126,21 @@ is(scalar @{ $stmt->bind }, 3);
 is($stmt->bind->[0], 'foo');
 is($stmt->bind->[1], 'bar');
 is($stmt->bind->[2], 'baz');
+
+$stmt = ns();
+$stmt->add_select(foo => 'foo');
+$stmt->add_select(bar => 'bar');
+$stmt->from([ qw( baz ) ]);
+is($stmt->as_sql, "SELECT foo, bar\nFROM baz\n");
+
+$stmt = ns();
+$stmt->add_select('f.foo' => 'foo');
+$stmt->add_select('COUNT(*)' => 'count');
+$stmt->from([ qw( baz ) ]);
+is($stmt->as_sql, "SELECT f.foo, COUNT(*)\nFROM baz\n");
+my $map = $stmt->select_map;
+is(scalar(keys %$map), 2);
+is($map->{'f.foo'}, 'foo');
+is($map->{'COUNT(*)'}, 'count');
 
 sub ns { Data::ObjectDriver::SQL->new }

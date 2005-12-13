@@ -94,27 +94,15 @@ sub fetch {
     my $args  = defined $orig_args  ? { %$orig_args  } : undef;
     $class->call_trigger('pre_search', $terms, $args);
 
-
     my $stmt = $driver->prepare_statement($class, $terms, $args);
-    my $tbl = $class->datasource;
-    my(@bind, @cols);
-    my $cols = $class->column_names;
 
-    my $primary_key = $class->properties->{primary_key};
-    my $dbd = $driver->dbd;
-    my %fetch = $args->{fetchonly} ?
-        (map { $_ => 1 } @{ $args->{fetchonly} }) : ();
-    for my $col (@$cols) {
-        if (keys %fetch) {
-            next unless $fetch{$col};
-        }
-        my $dbcol = join '.', $tbl, $dbd->db_column_name($tbl, $col);
-        push @cols, $dbcol;
-        push @bind, \$rec->{$col};
+    my @bind;
+    my $map = $stmt->select_map;
+    for my $col (@{ $stmt->select }) {
+        push @bind, \$rec->{ $map->{$col} };
     }
-    my $tmp = "SELECT ";
-    $tmp .= join(', ', @cols) . "\n";
-    my $sql = $tmp . $stmt->as_sql;
+
+    my $sql = $stmt->as_sql;
     my $dbh = $driver->r_handle($class->properties->{db});
     $driver->debug($sql, $stmt->{bind});
     my $sth = $dbh->prepare_cached($sql);
@@ -399,12 +387,28 @@ sub DESTROY {
 sub prepare_statement {
     my $driver = shift;
     my($class, $terms, $args) = @_;
-    my $stmt = Data::ObjectDriver::SQL->new;
-    my $tbl = $class->datasource;
-    $stmt->from([ $tbl ]);
-    if (defined($terms)) {
-        for my $col (keys %$terms) {
-            $stmt->add_where(join('.', $tbl, $col), $terms->{$col});
+
+    my $stmt = $args->{sql_statement} || Data::ObjectDriver::SQL->new;
+
+    if (my $tbl = $class->datasource) {
+        my $cols = $class->column_names;
+        my $dbd = $driver->dbd;
+        my %fetch = $args->{fetchonly} ?
+            (map { $_ => 1 } @{ $args->{fetchonly} }) : ();
+        for my $col (@$cols) {
+            if (keys %fetch) {
+                next unless $fetch{$col};
+            }
+            my $dbcol = join '.', $tbl, $dbd->db_column_name($tbl, $col);
+            $stmt->add_select($dbcol => $col);
+        }
+
+        $stmt->from([ $tbl ]);
+
+        if (defined($terms)) {
+            for my $col (keys %$terms) {
+                $stmt->add_where(join('.', $tbl, $col), $terms->{$col});
+            }
         }
     }
     $stmt->limit($args->{limit});

@@ -4,20 +4,34 @@ package Data::ObjectDriver::SQL;
 use strict;
 use base qw( Class::Accessor::Fast );
 
-__PACKAGE__->mk_accessors(qw( from join where bind limit offset group order ));
+__PACKAGE__->mk_accessors(qw( select select_map from join where bind limit offset group order ));
 
 sub new {
     my $class = shift;
     my $stmt = $class->SUPER::new(@_);
+    $stmt->select([]);
+    $stmt->select_map({});
     $stmt->bind([]);
     $stmt->from([]);
     $stmt->where([]);
     $stmt;
 }
 
+sub add_select {
+    my $stmt = shift;
+    my($term, $col) = @_;
+    push @{ $stmt->select }, $term;
+    $stmt->select_map->{$term} = $col;
+}
+
 sub as_sql {
     my $stmt = shift;
-    my $sql = 'FROM ';
+    my $sql = '';
+    if (@{ $stmt->select }) {
+        $sql .= 'SELECT ';
+        $sql .= join(', ', @{ $stmt->select }) . "\n";
+    }
+    $sql .= 'FROM ';
     if (my $join = $stmt->join) {
         ## If there's an actual JOIN statement, assume it's for joining with
         ## the main datasource for the object we're loading. So shift that
