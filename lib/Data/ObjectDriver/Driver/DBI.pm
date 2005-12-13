@@ -347,8 +347,13 @@ sub update {
 
 sub remove {
     my $driver = shift;
-    my($obj) = @_;
-    return unless $obj->has_primary_key;
+    my($orig_obj) = @_;
+    return unless $orig_obj->has_primary_key;
+
+    ## Use a duplicate so the pre_save trigger can modify it.
+    my $obj = $orig_obj->clone;
+    $obj->call_trigger('pre_save');
+
     my $tbl = $obj->datasource;
     my $sql = "DELETE FROM $tbl\n";
     my $stmt = $driver->prepare_statement(ref($obj),
