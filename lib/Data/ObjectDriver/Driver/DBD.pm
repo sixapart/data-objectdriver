@@ -6,6 +6,7 @@ use strict;
 sub new {
     my $class = shift;
     my($name) = @_;
+    die "No Driver" unless $name;
     my $subclass = join '::', $class, $name;
     eval "use $subclass";
     die $@ if $@;
