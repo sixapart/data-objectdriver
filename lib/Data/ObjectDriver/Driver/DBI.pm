@@ -241,7 +241,7 @@ sub insert {
 
     ## Use a duplicate so the pre_save trigger can modify it.
     my $obj = $orig_obj->clone;
-    $obj->call_trigger('pre_save');
+    $obj->call_trigger('pre_save', method => 'insert');
     
     my $cols = $obj->column_names;
     unless ($obj->has_primary_key) {
@@ -294,6 +294,8 @@ sub insert {
         ## the original object.
         $orig_obj->$id_col($id);
     }
+
+    $obj->call_trigger('post_save', method => 'insert');
     1;
 }
 
@@ -303,7 +305,7 @@ sub update {
 
     ## Use a duplicate so the pre_save trigger can modify it.
     my $obj = $orig_obj->clone;
-    $obj->call_trigger('pre_save');
+    $obj->call_trigger('pre_save', method => 'update');
 
     my $cols = $obj->column_names;
     my $pk = $obj->primary_key_tuple;
@@ -342,17 +344,27 @@ sub update {
 
     $sth->execute;
     $sth->finish;
+
+    $obj->call_trigger('post_save', method => 'update');
     1;
 }
 
 sub remove {
     my $driver = shift;
-    my($orig_obj) = @_;
+    my $orig_obj = shift;
+
+    ## If remove() is called on class method, we remove the record
+    ## using $term and won't create $object. This is for efficiency
+    ## and PK-less tables
+    unless (ref($orig_obj)) {
+        return $driver->direct_remove($orig_obj, @_);
+    }
+    
     return unless $orig_obj->has_primary_key;
 
     ## Use a duplicate so the pre_save trigger can modify it.
     my $obj = $orig_obj->clone;
-    $obj->call_trigger('pre_save');
+    $obj->call_trigger('pre_save', method => 'remove');
 
     my $tbl = $obj->datasource;
     my $sql = "DELETE FROM $tbl\n";
@@ -364,7 +376,33 @@ sub remove {
     my $sth = $dbh->prepare_cached($sql);
     $sth->execute(@{ $stmt->{bind} });
     $sth->finish;
+
+    # xxx do we need post_save here?
+    
     1;
+}
+
+sub direct_remove {
+    my $driver = shift;
+    my($class, $orig_terms, $orig_args) = @_;
+
+    ## Use (shallow) duplicates so the pre_search trigger can modify them.
+    my $terms = defined $orig_terms ? { %$orig_terms } : undef;
+    my $args  = defined $orig_args  ? { %$orig_args  } : undef;
+    $class->call_trigger('pre_search', $terms, $args);
+
+    my $stmt = $driver->prepare_statement($class, $terms, $args);
+    my $tbl  = $class->datasource;
+    my $sql  = "DELETE from $tbl\n";
+       $sql .= $stmt->as_sql_where;
+
+    my $dbh = $driver->rw_handle($class->properties->{db});
+    $driver->debug($sql, $stmt->{bind});
+    my $sth = $dbh->prepare_cached($sql);
+    $sth->execute(@{ $stmt->{bind} });
+    my $res = $sth->fetch;
+    $sth->finish;
+    $res;
 }
 
 sub commit {
