@@ -400,9 +400,9 @@ sub direct_remove {
     $driver->debug($sql, $stmt->{bind});
     my $sth = $dbh->prepare_cached($sql);
     $sth->execute(@{ $stmt->{bind} });
-    my $res = $sth->fetch;
     $sth->finish;
-    $res;
+
+    1;
 }
 
 sub commit {
