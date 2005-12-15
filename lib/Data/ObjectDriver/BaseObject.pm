@@ -4,7 +4,9 @@ package Data::ObjectDriver::BaseObject;
 use strict;
 use Carp ();
 
-use Class::Trigger qw( pre_save post_save post_load pre_search );
+use Class::Trigger qw( pre_save post_save post_load pre_search
+                       pre_insert post_insert pre_update post_update
+                       pre_remove post_remove );
 
 =pod
 
