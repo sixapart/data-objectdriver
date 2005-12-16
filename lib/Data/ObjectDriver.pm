@@ -338,6 +338,26 @@ Removes the object I<$obj> from the database.
 
 If an error occurs, I<remove> will I<croak>.
 
+=head2 Class->remove(\%terms, \%args)
+
+Removes objects found with the I<%terms>. So it's a shortcut of:
+
+  my @obj = Class->search(\%terms, \%args);
+  for my $obj (@obj) {
+      $obj->remove;
+  }
+
+However, when you pass C<nofetch> option set to C<%args>, it won't
+create objects with C<search>, but issues I<DELETE> SQL directly to
+the database.
+
+  ## issues "DELETE FROM tbl WHERE user_id = 2"
+  Class->remove({ user_id => 2 }, { nofetch => 1 });
+
+This might be much faster and useful for tables without Primary Key,
+but beware that in this case B<Triggers won't be fired> because no
+objects are instanciated.
+
 =head2 $obj->add_trigger($trigger, \&callback)
 
 Adds a trigger to the object I<$obj>, such that when the event I<$trigger>
@@ -365,11 +385,24 @@ Triggers can be added and called for these events:
 
 Callbacks on the I<pre_save> trigger are called when the object is about to be
 saved to the database. For example, use this callback to translate special code
-strings into numbers for storage in an integer column in the database.
+strings into numbers for storage in an integer column in the database. Note that this hook is also called when you C<remove> the object.
 
 Modifications to I<$obj> will affect the values passed to subsequent triggers
 and saved in the database, but not the original object on which the I<save>
 method was invoked.
+
+=item * post_save -> ($obj)
+
+Callbaks on the I<post_save> triggers are called after the object is
+saved to the database. Use this trigger when your hook needs primary
+key which is automatically assigned (like auto_increment and
+sequence). Note that this hooks is B<NOT> called when you remove the
+object.
+
+=item * pre_insert/post_insert/pre_update/post_update/pre_remove/post_remove -> ($obj)
+
+Those triggers are fired before and after $obj is created, updated and
+deleted.
 
 =item * post_load -> ($obj)
 

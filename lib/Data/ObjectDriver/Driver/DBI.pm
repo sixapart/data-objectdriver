@@ -357,11 +357,21 @@ sub remove {
     my $driver = shift;
     my $orig_obj = shift;
 
-    ## If remove() is called on class method, we remove the record
-    ## using $term and won't create $object. This is for efficiency
-    ## and PK-less tables
+    ## If remove() is called on class method and we have 'nofetch'
+    ## option, we remove the record using $term and won't create
+    ## $object. This is for efficiency and PK-less tables
+    ## Note: In this case, triggers won't be fired
+    ## Otherwise, Class->remove is a shortcut for search+remove
     unless (ref($orig_obj)) {
-        return $driver->direct_remove($orig_obj, @_);
+        if ($_[1] && $_[1]->{nofetch}) {
+            return $driver->direct_remove($orig_obj, @_);
+        } else {
+            my @obj = $driver->search($orig_obj, @_);
+            for my $obj (@obj) {
+                $obj->remove;
+            }
+            return 1;
+        }
     }
     
     return unless $orig_obj->has_primary_key;
