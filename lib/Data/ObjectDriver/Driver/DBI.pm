@@ -469,8 +469,8 @@ sub prepare_statement {
             }
         }
     }
-    $stmt->limit($args->{limit});
-    $stmt->offset($args->{offset});
+    $stmt->limit($args->{limit}) if $args->{limit};
+    $stmt->offset($args->{offset}) if $args->{offset};
     if ($args->{sort} || $args->{direction}) {
         my $order = $args->{sort} || 'id';
         my $dir = $args->{direction} &&

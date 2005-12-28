@@ -23,7 +23,7 @@ sub lookup {
 sub lookup_multi {
     my $driver = shift;
     my($class, @ids) = @_;
-    $driver->get_driver->(@ids)->lookup_multi($class, @ids);
+    $driver->get_driver->($ids[0])->lookup_multi($class, @ids);
 }
 
 sub exists     { shift->_exec_partitioned('exists',     @_) }
@@ -35,7 +35,7 @@ sub fetch_data { shift->_exec_partitioned('fetch_data', @_) }
 sub search {
     my $driver = shift;
     my($class, $terms, $args) = @_;
-    $driver->get_driver->($terms)->search($class, $terms, $args);
+    $driver->get_driver->($terms, $args)->search($class, $terms, $args);
 }
 
 sub _exec_partitioned {
