@@ -9,9 +9,15 @@ require 't/lib/db-common.pl';
 
 use Test::More;
 use Test::Exception;
-unless (eval { require DBD::SQLite }) {
-    plan skip_all => 'Tests require DBD::SQLite';
+BEGIN {
+    unless (eval { require DBD::SQLite }) {
+        plan skip_all => 'Tests require DBD::SQLite';
+    }
+    unless (eval { require Cache::Memory }) {
+        plan skip_all => 'Tests require Cache::Memory';
+    }
 }
+
 plan tests => 22;
 
 use Wine;

@@ -85,9 +85,9 @@ use Wine;
 }
 
 ## test post_load
-{
+#{
     ## ...but how do we remove the pre_save callback?
-};
+#};
 
 
 teardown_dbs(qw( global ));
