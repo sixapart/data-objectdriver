@@ -9,6 +9,7 @@ PREREQUISITES
     * DBI
     * Class::Accessor::Fast
     * Class::Data::Inheritable
+    * Class::Trigger
 
 INSTALLATION
 
