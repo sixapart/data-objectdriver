@@ -22,7 +22,9 @@ sub bind_param_attributes {
 sub sequence_name {
     my $dbd = shift;
     my($class) = @_;
-    join '_', $class->datasource, $class->properties->{primary_key}, 'seq';
+    join '_', $class->datasource,
+        $dbd->db_column_name($class->datasource, $class->properties->{primary_key}),
+        'seq';
 }
 
 sub fetch_id {

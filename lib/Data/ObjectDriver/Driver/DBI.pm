@@ -17,18 +17,20 @@ sub init {
     for my $key (keys %param) {
         $driver->$key($param{$key});
     }
-    ## Create a DSN-specific driver (e.g. "mysql").
-    my $type;
-    if (my $dsn = $driver->dsn) {
-        ($type) = $dsn =~ /^dbi:(\w*)/;
-    } elsif (my $dbh = $driver->dbh) {
-        $type = $dbh->{Driver}{Name};
-    } elsif (my $getter = $driver->get_dbh) {
+    if(!exists $param{dbd}) {
+        ## Create a DSN-specific driver (e.g. "mysql").
+        my $type;
+        if (my $dsn = $driver->dsn) {
+            ($type) = $dsn =~ /^dbi:(\w*)/;
+        } elsif (my $dbh = $driver->dbh) {
+            $type = $dbh->{Driver}{Name};
+        } elsif (my $getter = $driver->get_dbh) {
 ## Ugly. Shouldn't have to connect just to get the driver name.
-        my $dbh = $getter->();
-        $type = $dbh->{Driver}{Name};
+            my $dbh = $getter->();
+            $type = $dbh->{Driver}{Name};
+        }
+        $driver->dbd(Data::ObjectDriver::Driver::DBD->new($type));
     }
-    $driver->dbd(Data::ObjectDriver::Driver::DBD->new($type));
     $driver;
 }
 
@@ -465,7 +467,8 @@ sub prepare_statement {
 
         if (defined($terms)) {
             for my $col (keys %$terms) {
-                $stmt->add_where(join('.', $tbl, $col), $terms->{$col});
+                my $db_col = $dbd->db_column_name($tbl, $col);
+                $stmt->add_where(join('.', $tbl, $db_col), $terms->{$col});
             }
         }
     }
