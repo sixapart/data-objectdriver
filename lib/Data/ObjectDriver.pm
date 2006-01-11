@@ -53,6 +53,7 @@ Data::ObjectDriver - Simple, transparent data interface, with caching
             dsn      => 'dbi:mysql:dbname',
             username => 'username',
             password => 'password',
+        )
     }
 
     ## Set up the classes for your recipe and ingredient objects.

@@ -9,7 +9,7 @@ use Carp ();
 use Data::ObjectDriver::SQL;
 use Data::ObjectDriver::Driver::DBD;
 
-__PACKAGE__->mk_accessors(qw( dsn username password dbh get_dbh dbd ));
+__PACKAGE__->mk_accessors(qw( dsn username password connect_options dbh get_dbh dbd ));
 
 sub init {
     my $driver = shift;
@@ -47,7 +47,8 @@ sub init_db {
     eval {
         local $SIG{ALRM} = sub { die "alarm\n" };
         $dbh = DBI->connect($driver->dsn, $driver->username, $driver->password,
-            { RaiseError => 1, PrintError => 0, AutoCommit => 1 })
+            { RaiseError => 1, PrintError => 0, AutoCommit => 1,
+              %{$driver->connect_options || {}} })
             or Carp::croak("Connection error: " . $DBI::errstr);
         alarm 0;
     };
