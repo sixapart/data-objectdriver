@@ -472,18 +472,20 @@ sub prepare_statement {
                 $stmt->add_where(join('.', $tbl, $db_col), $terms->{$col});
             }
         }
+
+        ## Set statement's ORDER clause if any.
+        if ($args->{sort} || $args->{direction}) {
+            my $order = $args->{sort} || 'id';
+            my $dir = $args->{direction} &&
+                      $args->{direction} eq 'descend' ? 'DESC' : 'ASC';
+            $stmt->order({
+                column => $dbd->db_column_name($tbl, $order),
+                desc   => $dir,
+            });
+        }
     }
     $stmt->limit($args->{limit}) if $args->{limit};
     $stmt->offset($args->{offset}) if $args->{offset};
-    if ($args->{sort} || $args->{direction}) {
-        my $order = $args->{sort} || 'id';
-        my $dir = $args->{direction} &&
-                  $args->{direction} eq 'descend' ? 'DESC' : 'ASC';
-        $stmt->order({
-            column => $order,
-            desc   => $dir,
-        });
-    }
     $stmt;
 }
 
