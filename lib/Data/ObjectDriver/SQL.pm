@@ -71,12 +71,13 @@ sub add_where {
     ## xxx Need to support old range and transform behaviors.
     my($col, $val) = @_;
     Carp::croak("Invalid/unsafe column name $col") unless $col =~ /^[\w\.]+$/;
-    my($term, $bind) = _mk_term($col, $val);
+    my($term, $bind) = $stmt->_mk_term($col, $val);
     push @{ $stmt->{where} }, "($term)";
     push @{ $stmt->{bind} }, @$bind;
 }
 
 sub _mk_term {
+    my $stmt = shift;
     my($col, $val) = @_;
     my $term = '';
     my @bind;
@@ -88,7 +89,7 @@ sub _mk_term {
         }
         my @terms;
         for my $val (@$val) {
-            my($term, $bind) = _mk_term($col, $val);
+            my($term, $bind) = $stmt->_mk_term($col, $val);
             push @terms, $term;
             push @bind, @$bind;
         }
