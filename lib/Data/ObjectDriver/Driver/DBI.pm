@@ -145,7 +145,7 @@ sub search {
         $obj->set_values($rec);
         ## Don't need a duplicate as there's no previous version in memory
         ## to preserve.
-        $obj->call_trigger('post_load');
+        $obj->call_trigger('post_load') unless $args->{no_triggers};
         $obj;
     };
     

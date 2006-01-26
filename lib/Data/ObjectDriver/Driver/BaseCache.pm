@@ -66,6 +66,9 @@ sub search {
     ## then run the search using the fallback.
     my $old = $args->{fetchonly};
     $args->{fetchonly} = $class->primary_key_tuple; 
+    ## Disable triggers for this load. We don't want the post_load trigger
+    ## being called twice.
+    $args->{no_triggers} = 1;
     my @objs = $driver->fallback->search($class, $terms, $args);
 
     ## Load all of the objects using a lookup_multi, which is fast from
