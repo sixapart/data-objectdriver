@@ -83,12 +83,13 @@ sub _mk_term {
     my @bind;
     if (ref($val) eq 'ARRAY') {
         my $logic = 'OR';
+        my @val = @$val;
         if ($val->[0] eq '-and') {
             $logic = 'AND';
-            shift @$val;
+            shift @val;
         }
         my @terms;
-        for my $val (@$val) {
+        for my $val (@val) {
             my($term, $bind) = $stmt->_mk_term($col, $val);
             push @terms, $term;
             push @bind, @$bind;
