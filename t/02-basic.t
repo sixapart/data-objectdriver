@@ -18,7 +18,7 @@ BEGIN {
     }
 }
 
-plan tests => 22;
+plan tests => 23;
 
 use Wine;
 use Recipe;
@@ -34,7 +34,8 @@ setup_dbs({
     ok $w->name("name");
     ok $w->has_column("name");
     ok ! $w->has_column("inexistent");
-    dies_ok { $w->inexistent("hell") } "dies on setting inexistent column";
+    dies_ok { $w->inexistent("hell") } "dies on setting inexistent column : 'inexistent()'";
+    dies_ok { $w->column('inexistent') } "dies on setting inexistent column : 'column()'";
 }
 
 # refresh

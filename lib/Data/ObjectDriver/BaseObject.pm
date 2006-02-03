@@ -116,9 +116,16 @@ sub column_names {
 
 sub column_values { $_[0]->{'column_values'} }
 
+## In 0.1 version we didn't die on inexistent column
+## which might lead to silent bugs
+## You should override column if you want to find the old 
+## behaviour
 sub column {
     my $obj = shift;
     my $col = shift or return;
+    unless ($obj->has_column($col)) {
+        Carp::croak("Cannot find column '$col' for class '" . ref($obj) . "'");
+    }
     $obj->{column_values}->{$col} = shift if @_;
     $obj->{column_values}->{$col};
 }
