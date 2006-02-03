@@ -34,8 +34,7 @@ setup_dbs({
     ok $w->name("name");
     ok $w->has_column("name");
     ok ! $w->has_column("inexistent");
-    diag "FIX ME ('or die' is a hack)" for (1..3);
-    dies_ok { $w->inexistent("hell") or die } "dies on setting inexistent column";
+    dies_ok { $w->inexistent("hell") } "dies on setting inexistent column";
 }
 
 # refresh
