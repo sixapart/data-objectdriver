@@ -86,7 +86,7 @@ sub set_values {
 sub clone {
     my $obj = shift;
     my $clone = $obj->clone_all;
-    for my $pk ($obj->primary_key_tuple) {
+    for my $pk (@{ $obj->primary_key_tuple }) {
         $clone->$pk(undef);
     }
     $clone;
