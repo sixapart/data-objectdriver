@@ -8,18 +8,6 @@ use Class::Trigger qw( pre_save post_save post_load pre_search
                        pre_insert post_insert pre_update post_update
                        pre_remove post_remove );
 
-=pod
-
-=over 4
-
-=item * serves as a base class for all object classes
-
-=item * proxies retrieve/save/etc methods to the driver
-
-=back
-
-=cut
-
 sub install_properties {
     my $class = shift;
     no strict 'refs';
@@ -212,3 +200,57 @@ sub AUTOLOAD {
 }
 
 1;
+__END__
+
+=head1 NAME
+
+Data::ObjectDriver::BaseObject - base class for modeled objects
+
+=head1 SYNOPSIS
+
+See synopsis in I<Data::ObjectDriver>.
+
+=head1 DESCRIPTION
+
+I<Data::ObjectDriver::BaseObject> provides services to data objects modeled
+with the I<Data::ObjectDriver> object relational mapper.
+
+=head1 USAGE
+
+=head2 Class->install_properties({ ... })
+
+=head2 Class->properties
+
+=head2 Class->driver
+
+Returns the database driver for this class, invoking the class's I<get_driver>
+function if necessary.
+
+=head2 Class->get_driver($driver)
+
+Sets the function used to find the object driver for I<Class> objects.
+
+=head2 $obj->primary_key
+
+Returns the B<values> of the primary key fields of I<$obj>.
+
+=head2 Class->primary_key_tuple
+
+Returns the B<names> of the primary key fields for objects of class I<Class>.
+
+=head2 $obj->has_primary_key
+
+=head2 $obj->clone
+
+Returns a new object of the same class as I<$obj> containing the same data,
+except for primary keys, which are set to C<undef>.
+
+=head2 $obj->clone_all
+
+Returns a new object of the same class as I<$obj> containing the same data,
+including all key fields.
+
+=head2 $obj->...
+
+=cut
+
