@@ -96,6 +96,7 @@ sub clone_all {
     my $obj = shift;
     my $clone = ref($obj)->new();
     $clone->set_values($obj->column_values);
+    $clone->{changed_cols} = $obj->{changed_cols};
     $clone;
 }
 
