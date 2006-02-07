@@ -97,6 +97,15 @@ sub set_values {
 
 sub clone {
     my $obj = shift;
+    my $clone = $obj->clone_all;
+    for my $pk ($obj->primary_key_tuple) {
+        $clone->$pk(undef);
+    }
+    $clone;
+}
+
+sub clone_all {
+    my $obj = shift;
     my $clone = ref($obj)->new();
     $clone->set_values($obj->column_values);
     $clone;
@@ -126,8 +135,24 @@ sub column {
     unless ($obj->has_column($col)) {
         Carp::croak("Cannot find column '$col' for class '" . ref($obj) . "'");
     }
-    $obj->{column_values}->{$col} = shift if @_;
+
+    if (@_) {
+         $obj->{column_values}->{$col} = shift;
+        $obj->{changed_cols}->{$col}++;
+    }
+        
     $obj->{column_values}->{$col};
+}
+
+sub reset_changed_cols {
+    my $obj = shift;
+    $obj->{changed_cols} = {};
+    1;
+}
+
+sub changed_cols {
+    my $obj = shift;
+    keys %{$obj->{changed_cols}};
 }
 
 sub exists {

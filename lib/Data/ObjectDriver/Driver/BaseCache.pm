@@ -30,7 +30,7 @@ sub lookup {
     my $obj = $driver->get_from_cache($key);
     unless ($obj) {
         $obj = $driver->fallback->lookup($class, $id);
-        $driver->add_to_cache($key, $obj->clone) if $obj;
+        $driver->add_to_cache($key, $obj->clone_all) if $obj;
     }
     $obj;
 }
@@ -90,7 +90,7 @@ sub update {
     return $driver->fallback->update($obj)
         if $driver->Disabled;
     my $key = $driver->cache_key(ref($obj), $obj->primary_key);
-    $driver->update_cache($key, $obj->clone);
+    $driver->update_cache($key, $obj->clone_all);
     $driver->fallback->update($obj);
 }
 

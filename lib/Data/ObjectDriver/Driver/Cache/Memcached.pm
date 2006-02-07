@@ -36,7 +36,7 @@ sub lookup_multi {
             my $obj = $driver->fallback->lookup($class, $id);
             if ($obj) {
                 $driver->add_to_cache($driver->cache_key($class, $id),
-                                      $obj->clone);
+                                      $obj->clone_all);
                 push @got, $obj;
             }
         }

@@ -143,6 +143,7 @@ sub search {
         my $obj;
         $obj = $class->new;
         $obj->set_values($rec);
+        $obj->reset_changed_cols();
         ## Don't need a duplicate as there's no previous version in memory
         ## to preserve.
         $obj->call_trigger('post_load') unless $args->{no_triggers};
@@ -243,7 +244,7 @@ sub insert {
     my($orig_obj) = @_;
 
     ## Use a duplicate so the pre_save trigger can modify it.
-    my $obj = $orig_obj->clone;
+    my $obj = $orig_obj->clone_all;
     $obj->call_trigger('pre_save');
     $obj->call_trigger('pre_insert');
     
@@ -309,24 +310,24 @@ sub update {
     my($orig_obj) = @_;
 
     ## Use a duplicate so the pre_save trigger can modify it.
-    my $obj = $orig_obj->clone;
+    my $obj = $orig_obj->clone_all;
     $obj->call_trigger('pre_save');
     $obj->call_trigger('pre_update');
 
     my $cols = $obj->column_names;
-    my $pk = $obj->primary_key_tuple;
+    my $pk = $orig_obj->primary_key_tuple;
     my %pk = map { $_ => 1 } @$pk;
-    $cols = [ grep !$pk{$_}, @$cols ];
+    my @changed_cols = grep !$pk{$_}, $orig_obj->changed_cols;
 
-    ## If there's no non-PK column, update() is no-op
-    @$cols or return 1;
+    ## If there's no updated columns, update() is no-op
+    @changed_cols or return 1;
 
     my $tbl = $obj->datasource;
     my $sql = "UPDATE $tbl SET\n";
     my $dbd = $driver->dbd;
     $sql .= join(', ',
             map $dbd->db_column_name($tbl, $_) . " = ?",
-            @$cols) . "\n";
+            @changed_cols) . "\n";
     my $stmt = $driver->prepare_statement(ref($obj),
         $driver->primary_key_to_terms(ref($obj), $obj->primary_key));
     $sql .= $stmt->as_sql_where;
@@ -336,7 +337,7 @@ sub update {
     my $sth = $dbh->prepare_cached($sql);
     my $i = 1;
     my $col_defs = $obj->properties->{column_defs};
-    for my $col (@$cols) {
+    for my $col (@changed_cols) {
         my $val = $obj->column($col);
         my $type = $col_defs->{$col} || 'char';
         my $attr = $dbd->bind_param_attributes($type);
@@ -380,7 +381,7 @@ sub remove {
     return unless $orig_obj->has_primary_key;
 
     ## Use a duplicate so the pre_save trigger can modify it.
-    my $obj = $orig_obj->clone;
+    my $obj = $orig_obj->clone_all;
     $obj->call_trigger('pre_save');
     $obj->call_trigger('pre_remove');
 
