@@ -238,19 +238,12 @@ sub exists {
     $exists;
 }
 
-sub _clone_obj {
-    my ($obj) = @_;
-    my $clone = ref($obj)->new();
-    $clone->set_values($obj->column_values);
-    return $clone;
-}
-
 sub insert {
     my $driver = shift;
     my($orig_obj) = @_;
 
     ## Use a duplicate so the pre_save trigger can modify it.
-    my $obj = _clone_obj($orig_obj);
+    my $obj = $orig_obj->clone;
     $obj->call_trigger('pre_save');
     $obj->call_trigger('pre_insert');
     
@@ -316,7 +309,7 @@ sub update {
     my($orig_obj) = @_;
 
     ## Use a duplicate so the pre_save trigger can modify it.
-    my $obj = _clone_obj($orig_obj);
+    my $obj = $orig_obj->clone;
     $obj->call_trigger('pre_save');
     $obj->call_trigger('pre_update');
 
@@ -387,7 +380,7 @@ sub remove {
     return unless $orig_obj->has_primary_key;
 
     ## Use a duplicate so the pre_save trigger can modify it.
-    my $obj = _clone_obj($orig_obj);
+    my $obj = $orig_obj->clone;
     $obj->call_trigger('pre_save');
     $obj->call_trigger('pre_remove');
 
