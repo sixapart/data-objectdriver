@@ -15,6 +15,7 @@ include('ExtUtils::AutoInstall');
 requires('DBI');
 requires('Class::Accessor::Fast');
 requires('Class::Data::Inheritable');
+requires('Class::Trigger');
 
 auto_include();
 auto_install();
