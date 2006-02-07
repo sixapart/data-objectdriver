@@ -315,9 +315,9 @@ sub update {
     $obj->call_trigger('pre_update');
 
     my $cols = $obj->column_names;
-    my $pk = $orig_obj->primary_key_tuple;
+    my $pk = $obj->primary_key_tuple;
     my %pk = map { $_ => 1 } @$pk;
-    my @changed_cols = grep !$pk{$_}, $orig_obj->changed_cols;
+    my @changed_cols = grep !$pk{$_}, $obj->changed_cols;
 
     ## If there's no updated columns, update() is no-op
     @changed_cols or return 1;
