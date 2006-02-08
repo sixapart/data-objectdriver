@@ -10,7 +10,7 @@ use Test::More;
 unless (eval { require DBD::SQLite }) {
     plan skip_all => 'Tests require DBD::SQLite';
 }
-plan tests => 15;
+plan tests => 19;
 
 setup_dbs({
     global => [ qw( wines ) ],
@@ -36,16 +36,21 @@ use Wine;
 
     my $ran_callback = 0;
     my $test_pre_save = sub {
-        is scalar(@_), 1, 'callback received correct number of parameters';
+        is scalar(@_), 2, 'callback received correct number of parameters';
         
-        my ($saving_wine) = @_;
+        my ($saving_wine, $orig_wine) = @_;
         ## This is not the original object, so we can't test it that way.
         isa_ok $saving_wine, 'Wine', 'callback received correct kind of object';
         cmp_ok $saving_wine->name, 'eq', "Saumur Champigny, Le Grand Clos 2001";
-        cmp_ok $saving_wine->rating, '==', 4, "Rating";
-        ok !defined($saving_wine->id), 'wine id';
+        cmp_ok $saving_wine->rating, '==', 4, "modifiable Wine has a rating";
+        ok !defined($saving_wine->id), 'modifiable Wine has no id yet';
 
-        ## Change rating to test immutability of original.
+        isa_ok $orig_wine, 'Wine', 'callback received correct kind of object';
+        cmp_ok $orig_wine->name, 'eq', "Saumur Champigny, Le Grand Clos 2001";
+        cmp_ok $orig_wine->rating, '==', 4, "original Wine has a rating";
+        ok !defined($orig_wine->id), 'original Wine has no id yet either';
+
+        ## Change rating of modifiable Wine to test immutability of original.
         $saving_wine->rating(5);
 
         $ran_callback++;

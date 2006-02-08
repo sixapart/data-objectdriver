@@ -42,7 +42,7 @@ use Ingredient;
 
     my $ran_callback = 0;
     my $test_pre_save = sub {
-        is scalar(@_), 1, 'callback received correct number of parameters';
+        is scalar(@_), 2, 'callback received correct number of parameters';
         
         my ($saving) = @_;
         ## This is not the original object, so we can't test it that way.

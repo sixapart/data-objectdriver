@@ -382,7 +382,7 @@ Triggers can be added and called for these events:
 
 =over 4
 
-=item * pre_save -> ($obj)
+=item * pre_save -> ($obj, $orig_obj)
 
 Callbacks on the I<pre_save> trigger are called when the object is about to be
 saved to the database. For example, use this callback to translate special code
@@ -392,7 +392,7 @@ Modifications to I<$obj> will affect the values passed to subsequent triggers
 and saved in the database, but not the original object on which the I<save>
 method was invoked.
 
-=item * post_save -> ($obj)
+=item * post_save -> ($obj, $orig_obj)
 
 Callbaks on the I<post_save> triggers are called after the object is
 saved to the database. Use this trigger when your hook needs primary
@@ -400,7 +400,7 @@ key which is automatically assigned (like auto_increment and
 sequence). Note that this hooks is B<NOT> called when you remove the
 object.
 
-=item * pre_insert/post_insert/pre_update/post_update/pre_remove/post_remove -> ($obj)
+=item * pre_insert/post_insert/pre_update/post_update/pre_remove/post_remove -> ($obj, $orig_obj)
 
 Those triggers are fired before and after $obj is created, updated and
 deleted.

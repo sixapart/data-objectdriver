@@ -244,8 +244,8 @@ sub insert {
 
     ## Use a duplicate so the pre_save trigger can modify it.
     my $obj = $orig_obj->clone_all;
-    $obj->call_trigger('pre_save');
-    $obj->call_trigger('pre_insert');
+    $obj->call_trigger('pre_save', $orig_obj);
+    $obj->call_trigger('pre_insert', $orig_obj);
     
     my $cols = $obj->column_names;
     unless ($obj->has_primary_key) {
@@ -299,8 +299,8 @@ sub insert {
         $orig_obj->$id_col($id);
     }
 
-    $obj->call_trigger('post_save');
-    $obj->call_trigger('post_insert');
+    $obj->call_trigger('post_save', $orig_obj);
+    $obj->call_trigger('post_insert', $orig_obj);
     1;
 }
 
@@ -310,8 +310,8 @@ sub update {
 
     ## Use a duplicate so the pre_save trigger can modify it.
     my $obj = $orig_obj->clone_all;
-    $obj->call_trigger('pre_save');
-    $obj->call_trigger('pre_update');
+    $obj->call_trigger('pre_save', $orig_obj);
+    $obj->call_trigger('pre_update', $orig_obj);
 
     my $cols = $obj->column_names;
     my $pk = $obj->primary_key_tuple;
@@ -356,8 +356,8 @@ sub update {
     $sth->execute;
     $sth->finish;
 
-    $obj->call_trigger('post_save');
-    $obj->call_trigger('post_update');
+    $obj->call_trigger('post_save', $orig_obj);
+    $obj->call_trigger('post_update', $orig_obj);
     1;
 }
 
@@ -386,8 +386,8 @@ sub remove {
 
     ## Use a duplicate so the pre_save trigger can modify it.
     my $obj = $orig_obj->clone_all;
-    $obj->call_trigger('pre_save');
-    $obj->call_trigger('pre_remove');
+    $obj->call_trigger('pre_save', $orig_obj);
+    $obj->call_trigger('pre_remove', $orig_obj);
 
     my $tbl = $obj->datasource;
     my $sql = "DELETE FROM $tbl\n";
@@ -400,7 +400,7 @@ sub remove {
     $sth->execute(@{ $stmt->{bind} });
     $sth->finish;
 
-    $obj->call_trigger('post_remove');
+    $obj->call_trigger('post_remove', $orig_obj);
     
     1;
 }
