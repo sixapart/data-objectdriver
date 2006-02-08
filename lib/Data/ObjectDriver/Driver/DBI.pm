@@ -319,7 +319,12 @@ sub update {
     my @changed_cols = grep !$pk{$_}, $obj->changed_cols;
 
     ## If there's no updated columns, update() is no-op
-    @changed_cols or return 1;
+    ## but we should call post_* triggers
+    unless (@changed_cols) {
+        $obj->call_trigger('post_save');
+        $obj->call_trigger('post_update');
+        return 1;
+    }
 
     my $tbl = $obj->datasource;
     my $sql = "UPDATE $tbl SET\n";
