@@ -79,7 +79,7 @@ sub set_values {
     my @cols = @{ $obj->column_names };
     for my $col (@cols) {
         next unless exists $values->{$col};
-        $obj->column($col, $values->{$col});
+        $obj->column($col, $values->{$col}, { no_changed_flag => 1 });
     }
 }
 
@@ -127,16 +127,12 @@ sub column {
 
     if (@_) {
          $obj->{column_values}->{$col} = shift;
-        $obj->{changed_cols}->{$col}++;
-    }
+         unless ($_[0] && ref($_[0]) eq 'HASH' && $_[0]->{no_changed_flag}) {
+             $obj->{changed_cols}->{$col}++;
+         }
+     }
         
     $obj->{column_values}->{$col};
-}
-
-sub reset_changed_cols {
-    my $obj = shift;
-    $obj->{changed_cols} = {};
-    1;
 }
 
 sub changed_cols {
