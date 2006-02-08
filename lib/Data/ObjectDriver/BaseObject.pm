@@ -75,11 +75,23 @@ sub columns_of_type {
 
 sub set_values {
     my $obj = shift;
-    my($values) = @_;
-    my @cols = @{ $obj->column_names };
-    for my $col (@cols) {
-        next unless exists $values->{$col};
-        $obj->column($col, $values->{$col}, { no_changed_flag => 1 });
+    my $values = shift;
+    for my $col (keys %$values) {
+        unless ( $obj->has_column($col) ) {
+            Carp::croak("You tried to set inexistent column $col to value $values->{$col} on " . ref($obj));
+        }
+        $obj->column($col => $values->{$col});
+    }
+}
+
+sub set_values_internal {
+    my $obj = shift;
+    my $values = shift;
+    for my $col (keys %$values) {
+        unless ( $obj->has_column($col) ) {
+            Carp::croak("You tried to set inexistent column $col to value $values->{$col} on " . ref($obj));
+        }
+        $obj->column($col => $values->{$col}, { no_changed_flag => 1 });
     }
 }
 
@@ -95,7 +107,7 @@ sub clone {
 sub clone_all {
     my $obj = shift;
     my $clone = ref($obj)->new();
-    $clone->set_values($obj->column_values);
+    $clone->set_values_internal($obj->column_values);
     $clone->{changed_cols} = $obj->{changed_cols};
     $clone;
 }
@@ -167,7 +179,7 @@ sub refresh {
     my $obj = shift; 
     return unless $obj->has_primary_key;
     my $fields = $obj->fetch_data;
-    $obj->set_values($fields);
+    $obj->set_values_internal($fields);
     # XXX not sure this is the right place
     $obj->call_trigger('post_load');
     return 1;

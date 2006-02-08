@@ -142,7 +142,7 @@ sub search {
         }
         my $obj;
         $obj = $class->new;
-        $obj->set_values($rec);
+        $obj->set_values_internal($rec);
         ## Don't need a duplicate as there's no previous version in memory
         ## to preserve.
         $obj->call_trigger('post_load') unless $args->{no_triggers};
