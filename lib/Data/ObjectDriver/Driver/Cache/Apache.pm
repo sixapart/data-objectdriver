@@ -16,7 +16,7 @@ sub r {
     if ($INC{"mod_perl.pm"}) {
         return Apache->request;
     } elsif ($INC{"mod_perl2.pm"}) {
-        return Apache2->request;
+        return Apache2::RequestUtil->request;
     } else {
         die "Not running on mod_perl environment.";
     }
