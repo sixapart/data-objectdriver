@@ -2,9 +2,25 @@
 
 Revision history for Data::ObjectDriver
 
-0.02  
-    - ...
-    - Pod fix (Koichi Taniguchi)
+0.02  2006.02.21
+    - Added Data::ObjectDriver::BaseView, a base class for creating "views"
+      across multiple tables, or involving more complex aggregate queries.
+    - Added trigger/callback support for common operations. See the
+      Data::ObjectDriver documentation for more details.
+    - Added GROUP BY support in Data::ObjectDriver::SQL.
+    - Data::ObjectDriver::BaseCache->search now uses lookup_multi to do a
+      very fast PK lookup, which will hit the cache first before the
+      backend DB.
+    - Fixed bugs with BLOB columns in SQLite driver.
+    - Added connect_options option to Data::ObjectDriver::Driver::DBI, for
+      passing in custom options for a DBI->connect call.
+    - Data::ObjectDriver::BaseObject->remove now works as a class method.
+    - Added Data::ObjectDriver::BaseObject->primary_key_tuple for retrieving
+      the primary key value(s) for an object.
+    - Added Data::ObjectDriver::BaseObject->refresh to reload an object from
+      the database.
+    - Added lots of test cases.
+    - Pod fix (Thanks to Koichi Taniguchi)
 
 0.01  2005.09.23
     - Initial distribution.

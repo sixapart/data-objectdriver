@@ -506,7 +506,7 @@ it under the same terms as Perl itself.
 
 =head1 AUTHOR & COPYRIGHT
 
-Except where otherwise noted, I<Data::ObjectDriver> is Copyright 2005
+Except where otherwise noted, I<Data::ObjectDriver> is Copyright 2005-2006
 Six Apart, cpan@sixapart.com. All rights reserved.
 
 =cut
