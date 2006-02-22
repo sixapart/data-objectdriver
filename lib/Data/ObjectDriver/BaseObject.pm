@@ -152,6 +152,18 @@ sub changed_cols {
     keys %{$obj->{changed_cols}};
 }
 
+sub is_changed {
+    my $obj = shift;
+    if (@_) {
+        return exists $obj->{changed_cols}->{$_[0]};
+    } else {
+        my $pk = $obj->primary_key_tuple;
+        my %pk = map { $_ => 1 } @$pk;
+        my @changed_cols = grep !$pk{$_}, $obj->changed_cols;
+        return @changed_cols > 0;
+    }
+}
+
 sub exists {
     my $obj = shift;
     return 0 unless $obj->has_primary_key;
