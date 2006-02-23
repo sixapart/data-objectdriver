@@ -9,7 +9,7 @@ use Carp ();
 sub search {
     my $class = shift;
     my($terms, $args) = @_;
-    $args->{sql_statement} = $class->base_statement;
+    $args->{sql_statement} = $class->base_statement($terms, $args);
     $class->_proxy('search', $terms, $args)
 }
 
