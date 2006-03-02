@@ -4,7 +4,7 @@ package Data::ObjectDriver::SQL;
 use strict;
 use base qw( Class::Accessor::Fast );
 
-__PACKAGE__->mk_accessors(qw( select select_map from join where bind limit offset group order ));
+__PACKAGE__->mk_accessors(qw( select select_map from join where bind limit offset group order having ));
 
 sub new {
     my $class = shift;
@@ -14,6 +14,7 @@ sub new {
     $stmt->bind([]);
     $stmt->from([]);
     $stmt->where([]);
+    $stmt->having([]);
     $stmt;
 }
 
@@ -29,7 +30,10 @@ sub as_sql {
     my $sql = '';
     if (@{ $stmt->select }) {
         $sql .= 'SELECT ';
-        $sql .= join(', ', @{ $stmt->select }) . "\n";
+        $sql .= join(', ',  map {
+            my $alias = $stmt->select_map->{$_};
+            $alias ne $_ ? "$_ $alias" : $_;
+        } @{ $stmt->select }) . "\n";
     }
     $sql .= 'FROM ';
     if (my $join = $stmt->join) {
@@ -43,14 +47,11 @@ sub as_sql {
     }
     $sql .= join(', ', @{ $stmt->from }) . "\n";
     $sql .= $stmt->as_sql_where;
-    for my $set (qw( group order )) {
-        if (my $attribute = $stmt->$set()) {
-            my $elements = (ref($attribute) eq 'ARRAY') ? $attribute : [ $attribute ];
-            $sql .= uc($set) . ' BY '
-                . join(', ', map { $_->{column} . ($_->{desc} ? (' ' . $_->{desc}) : '') } @$elements)
-                . "\n";
-        }
-    }
+
+    $sql .= $stmt->as_aggregate('group');
+    $sql .= $stmt->as_sql_having;
+    $sql .= $stmt->as_aggregate('order');
+
     if (my $n = $stmt->limit) {
         $n =~ s/\D//g;   ## Get rid of any non-numerics.
         $sql .= sprintf "LIMIT %d%s\n", $n,
@@ -59,10 +60,29 @@ sub as_sql {
     $sql;
 }
 
+sub as_aggregate {
+    my $stmt = shift;
+    my($set) = @_;
+        
+    if (my $attribute = $stmt->$set()) {
+        my $elements = (ref($attribute) eq 'ARRAY') ? $attribute : [ $attribute ];
+        return uc($set) . ' BY '
+            . join(', ', map { $_->{column} . ($_->{desc} ? (' ' . $_->{desc}) : '') } @$elements)
+                . "\n";
+    }
+}
+
 sub as_sql_where {
     my $stmt = shift;
     $stmt->where && @{ $stmt->where } ?
         'WHERE ' . join(' AND ', @{ $stmt->where }) . "\n" :
+        '';
+}
+
+sub as_sql_having {
+    my $stmt = shift;
+    $stmt->having && @{ $stmt->having } ?
+        'HAVING ' . join(' AND ', @{ $stmt->having }) . "\n" :
         '';
 }
 
@@ -73,6 +93,16 @@ sub add_where {
     Carp::croak("Invalid/unsafe column name $col") unless $col =~ /^[\w\.]+$/;
     my($term, $bind) = $stmt->_mk_term($col, $val);
     push @{ $stmt->{where} }, "($term)";
+    push @{ $stmt->{bind} }, @$bind;
+}
+
+sub add_having {
+    my $stmt = shift;
+    my($col, $val) = @_;
+#    Carp::croak("Invalid/unsafe column name $col") unless $col =~ /^[\w\.]+$/;
+
+    my($term, $bind) = $stmt->_mk_term($col, $val);
+    push @{ $stmt->{having} }, "($term)";
     push @{ $stmt->{bind} }, @$bind;
 }
 

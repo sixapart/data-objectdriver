@@ -138,11 +138,11 @@ sub column {
     }
 
     if (@_) {
-         $obj->{column_values}->{$col} = shift;
-         unless ($_[0] && ref($_[0]) eq 'HASH' && $_[0]->{no_changed_flag}) {
-             $obj->{changed_cols}->{$col}++;
-         }
-     }
+        $obj->{column_values}->{$col} = shift;
+        unless ($_[0] && ref($_[0]) eq 'HASH' && $_[0]->{no_changed_flag}) {
+            $obj->{changed_cols}->{$col}++;
+        }
+    }
         
     $obj->{column_values}->{$col};
 }

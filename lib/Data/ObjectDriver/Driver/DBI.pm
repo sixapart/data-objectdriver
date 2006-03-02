@@ -495,6 +495,13 @@ sub prepare_statement {
     }
     $stmt->limit($args->{limit}) if $args->{limit};
     $stmt->offset($args->{offset}) if $args->{offset};
+
+    if (my $terms = $args->{having}) {
+        for my $col (keys %$terms) {
+            $stmt->add_having($col => $terms->{$col});
+        }
+    }
+
     $stmt;
 }
 
