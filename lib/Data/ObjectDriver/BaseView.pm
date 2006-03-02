@@ -17,6 +17,7 @@ sub search {
     my %having;
     for my $key (keys %$terms) {
         if ($cols{$key}) {
+            next unless $args->{sql_statement}->aggregates->{$key};
             # Don't need to delete from $term, because D::OD ignores
             # it anyway when used as View class
             $having{$key} = $terms->{$key};
