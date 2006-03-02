@@ -32,7 +32,7 @@ sub as_sql {
         $sql .= 'SELECT ';
         $sql .= join(', ',  map {
             my $alias = $stmt->select_map->{$_};
-            $alias ne $_ ? "$_ $alias" : $_;
+            $alias && /(?:^|\.)\Q$alias\E$/ ? $_ : "$_ $alias";
         } @{ $stmt->select }) . "\n";
     }
     $sql .= 'FROM ';
@@ -70,6 +70,8 @@ sub as_aggregate {
             . join(', ', map { $_->{column} . ($_->{desc} ? (' ' . $_->{desc}) : '') } @$elements)
                 . "\n";
     }
+
+    return '';
 }
 
 sub as_sql_where {

@@ -5,6 +5,7 @@ use strict;
 use base qw( Data::ObjectDriver::BaseObject );
 
 use Carp ();
+use Storable;
 
 sub search {
     my $class = shift;
