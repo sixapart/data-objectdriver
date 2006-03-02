@@ -3,7 +3,7 @@
 use strict;
 
 use Data::ObjectDriver::SQL;
-use Test::More tests => 51;
+use Test::More tests => 52;
 
 my $stmt = ns();
 ok($stmt, 'Created SQL object');
@@ -151,4 +151,25 @@ is(scalar(keys %$map), 2);
 is($map->{'f.foo'}, 'foo');
 is($map->{'COUNT(*)'}, 'count');
 
+# HAVING
+$stmt = ns();
+$stmt->add_select(foo => 'foo');
+$stmt->add_select('COUNT(*)' => 'count');
+$stmt->from([ qw(baz) ]);
+$stmt->add_where(foo => 1);
+$stmt->group({ column => 'baz' });
+$stmt->order({ column => 'foo', desc => 'DESC' });
+$stmt->limit(2);
+$stmt->add_having(foo => 'bar');
+
+is($stmt->as_sql, <<SQL);
+SELECT foo, COUNT(*) count
+FROM baz
+WHERE (foo = ?)
+GROUP BY baz
+HAVING (foo = ?)
+ORDER BY foo DESC
+LIMIT 2
+SQL
+    
 sub ns { Data::ObjectDriver::SQL->new }
