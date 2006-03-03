@@ -4,15 +4,13 @@ package Data::ObjectDriver::SQL;
 use strict;
 use base qw( Class::Accessor::Fast );
 
-__PACKAGE__->mk_accessors(qw( select select_map aggregates from join where bind 
-                              limit offset group order having ));
+__PACKAGE__->mk_accessors(qw( select select_map from join where bind limit offset group order having ));
 
 sub new {
     my $class = shift;
     my $stmt = $class->SUPER::new(@_);
     $stmt->select([]);
     $stmt->select_map({});
-    $stmt->aggregates({});
     $stmt->bind([]);
     $stmt->from([]);
     $stmt->where([]);
@@ -24,9 +22,6 @@ sub add_select {
     my $stmt = shift;
     my($term, $col) = @_;
     push @{ $stmt->select }, $term;
-    if ($term =~ /(?:COUNT|MIN|MAX|SUM)\(/i) {
-        $stmt->aggregates->{$col} = 1;
-    }
     $stmt->select_map->{$term} = $col;
 }
 
@@ -36,7 +31,6 @@ sub as_sql {
     if (@{ $stmt->select }) {
         $sql .= 'SELECT ';
         $sql .= join(', ',  map {
-            # avoid realias 'table.col' to 'col' or 'col' to 'col'
             my $alias = $stmt->select_map->{$_};
             $alias && /(?:^|\.)\Q$alias\E$/ ? $_ : "$_ $alias";
         } @{ $stmt->select }) . "\n";
@@ -108,7 +102,7 @@ sub add_having {
     my $stmt = shift;
     my($col, $val) = @_;
 #    Carp::croak("Invalid/unsafe column name $col") unless $col =~ /^[\w\.]+$/;
-
+    
     my($term, $bind) = $stmt->_mk_term($col, $val);
     push @{ $stmt->{having} }, "($term)";
     push @{ $stmt->{bind} }, @$bind;

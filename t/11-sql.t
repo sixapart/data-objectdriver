@@ -160,16 +160,16 @@ $stmt->add_where(foo => 1);
 $stmt->group({ column => 'baz' });
 $stmt->order({ column => 'foo', desc => 'DESC' });
 $stmt->limit(2);
-$stmt->add_having(count => 2);
+$stmt->add_having(foo => 'bar');
 
 is($stmt->as_sql, <<SQL);
 SELECT foo, COUNT(*) count
 FROM baz
 WHERE (foo = ?)
 GROUP BY baz
-HAVING (count = ?)
+HAVING (foo = ?)
 ORDER BY foo DESC
 LIMIT 2
 SQL
-
+    
 sub ns { Data::ObjectDriver::SQL->new }

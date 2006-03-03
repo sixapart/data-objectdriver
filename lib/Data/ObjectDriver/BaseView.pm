@@ -17,10 +17,6 @@ sub search {
     my %having;
     for my $key (keys %$terms) {
         if ($cols{$key}) {
-            next unless ( 
-                $args->{sql_statement}->aggregates->{$key}
-                or grouped($args->{sql_statement}->group, $key)
-            );
             # Don't need to delete from $term, because D::OD ignores
             # it anyway when used as View class
             $having{$key} = $terms->{$key};
@@ -31,14 +27,4 @@ sub search {
     $class->_proxy('search', $terms, $args)
 }
 
-# ulgy shortcut... why group is a { column =>, desc => } ??
-sub grouped {
-    my ($groups, $key) = @_;
-    if (ref $groups ne 'ARRAY') {
-        $groups = [ $groups ];    
-    }
-    foreach (@$groups) {
-        return 1 if $_->{column} eq $key;
-    }
-}
 1;
