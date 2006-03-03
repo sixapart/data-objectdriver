@@ -38,7 +38,7 @@ sub grouped {
         $groups = [ $groups ];    
     }
     foreach ($groups) {
-        return 1 if $groups->{column}{$key};
+        return 1 if $_->{column}{$key};
     }
 }
 1;
