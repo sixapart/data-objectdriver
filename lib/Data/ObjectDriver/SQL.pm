@@ -4,16 +4,18 @@ package Data::ObjectDriver::SQL;
 use strict;
 use base qw( Class::Accessor::Fast );
 
-__PACKAGE__->mk_accessors(qw( select select_map from join where bind limit offset group order having ));
+__PACKAGE__->mk_accessors(qw( select select_map select_map_reverse from join where bind limit offset group order having where_values ));
 
 sub new {
     my $class = shift;
     my $stmt = $class->SUPER::new(@_);
     $stmt->select([]);
     $stmt->select_map({});
+    $stmt->select_map_reverse({});
     $stmt->bind([]);
     $stmt->from([]);
     $stmt->where([]);
+    $stmt->where_values({});
     $stmt->having([]);
     $stmt;
 }
@@ -23,6 +25,7 @@ sub add_select {
     my($term, $col) = @_;
     push @{ $stmt->select }, $term;
     $stmt->select_map->{$term} = $col;
+    $stmt->select_map_reverse->{$col} = $term;
 }
 
 sub as_sql {
@@ -96,12 +99,25 @@ sub add_where {
     my($term, $bind) = $stmt->_mk_term($col, $val);
     push @{ $stmt->{where} }, "($term)";
     push @{ $stmt->{bind} }, @$bind;
+    $stmt->where_values->{$col} = $val;
+}
+
+sub has_where {
+    my $stmt = shift;
+    my($col, $val) = @_;
+
+    # TODO: should check if the value is same with $val?
+    exists $stmt->where_values->{$col};
 }
 
 sub add_having {
     my $stmt = shift;
     my($col, $val) = @_;
 #    Carp::croak("Invalid/unsafe column name $col") unless $col =~ /^[\w\.]+$/;
+
+    if (my $orig = $stmt->select_map_reverse->{$col}) {
+        $col = $orig;
+    }
     
     my($term, $bind) = $stmt->_mk_term($col, $val);
     push @{ $stmt->{having} }, "($term)";
