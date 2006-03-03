@@ -34,11 +34,11 @@ sub search {
 # ulgy shortcut... why group is a { column =>, desc => } ??
 sub grouped {
     my ($groups, $key) = @_;
-    if (ref $groups ne 'ARRAY'){
+    if (ref $groups ne 'ARRAY') {
         $groups = [ $groups ];    
     }
-    foreach ($groups) {
-        return 1 if $_->{column}{$key};
+    foreach (@$groups) {
+        return 1 if $_->{column} eq $key;
     }
 }
 1;
