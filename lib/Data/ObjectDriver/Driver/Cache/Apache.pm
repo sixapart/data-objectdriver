@@ -22,9 +22,24 @@ sub r {
     }
 }
 
-sub get_from_cache    { $_[0]->r->pnotes($_[1]) }
-sub add_to_cache      { $_[0]->r->pnotes($_[1], $_[2]) }
-sub update_cache      { $_[0]->r->pnotes($_[1], $_[2]) }
-sub remove_from_cache { delete $_[0]->r->pnotes->{$_[1]} }
+sub get_from_cache {
+    my $r = $_[0]->r or return;
+    $r->pnotes($_[1]);
+}
+
+sub add_to_cache {
+    my $r = $_[0]->r or return;
+    $r->pnotes($_[1], $_[2]);
+}
+
+sub update_cache {
+    my $r = $_[0]->r or return;
+    $r->pnotes($_[1], $_[2]);
+}
+
+sub remove_from_cache {
+    my $r = $_[0]->r or return;
+    delete $r->pnotes->{$_[1]};
+}
 
 1;
