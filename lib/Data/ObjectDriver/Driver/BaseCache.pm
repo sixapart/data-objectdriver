@@ -35,17 +35,59 @@ sub lookup {
     $obj;
 }
 
+sub get_multi_from_cache {
+    my $driver = shift;
+    my(@keys) = @_;
+    ## Use driver->get_from_cache to look up each object in the cache.
+    ## We don't fall back here, because we only want to find items that
+    ## are already cached.
+    my %got;
+    for my $key (@keys) {
+        my $obj = $driver->get_from_cache($key) or next;
+        $got{$key} = $obj;
+    }
+    \%got;
+}
+
 sub lookup_multi {
     my $driver = shift;
     my($class, $ids) = @_;
-    return $driver->fallback->lookup_multi($class, @$ids)
+    return $driver->fallback->lookup_multi($class, $ids)
         if $driver->Disabled;
-    ## Use driver->lookup to look up each object in the cache, and fallback
-    ## to the backend driver if object isn't found in the cache.
-    my @got;
-    for my $id (@$ids) {
-        push @got, $driver->lookup($class, $id);
+
+    my %id2key = map { $_ => $driver->cache_key($class, $_) } @$ids;
+    my $got = $driver->get_multi_from_cache(values %id2key);
+
+    ## If we got back all of the objects from the cache, return immediately.
+    if (scalar keys %$got == @$ids) {
+        return [ map $got->{ $id2key{$_} }, @$ids ];
     }
+
+    ## Otherwise, look through the list of IDs to see what we're missing,
+    ## and fall back to the backend to look up those objects.
+    my($i, @got, @need, %need2got) = (0);
+    for my $id (@$ids) {
+        if (my $obj = $got->{ $id2key{$id} }) {
+            push @got, $obj;
+        } else {
+            push @got, undef;
+            push @need, $id;
+            $need2got{$#need} = $i;
+        }
+        $i++;
+    }
+
+    my $more = $driver->fallback->lookup_multi($class, \@need);
+    $i = 0;
+    for my $obj (@$more) {
+        $got[ $need2got{$i++} ] = $obj;
+        if ($obj) {
+            my $id = $obj->primary_key_tuple;
+            $driver->add_to_cache($driver->cache_key($class, $id),
+                                  $obj->clone_all);
+        }
+    }
+
     \@got;
 }
 
@@ -62,9 +104,13 @@ sub search {
         if $driver->Disabled;
     my($class, $terms, $args) = @_;
 
+    ## If the caller has asked only for certain columns, assume that
+    ## he knows what he's doing, and fall back to the backend.
+    return $driver->fallback->search(@_)
+        if $args->{fetchonly};
+
     ## Tell the fallback driver to fetch only the primary columns,
     ## then run the search using the fallback.
-    my $old = $args->{fetchonly};
     $args->{fetchonly} = $class->primary_key_tuple; 
     ## Disable triggers for this load. We don't want the post_load trigger
     ## being called twice.
