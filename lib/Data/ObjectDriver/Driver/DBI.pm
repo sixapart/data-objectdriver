@@ -196,13 +196,19 @@ sub lookup {
     $obj[0];
 }
 
-## xxx refactor to use an OR search
 sub lookup_multi {
     my $driver = shift;
     my($class, $ids) = @_;
     my @got;
-    for my $id (@$ids) {
-        push @got, $driver->lookup($class, $id);
+    ## If it's a single-column PK, assume it's in one partition, and
+    ## use an OR search.
+    unless (ref($ids->[0])) {
+        my $terms = $driver->primary_key_to_terms($class, [ $ids ]);
+        @got = $driver->search($class, $terms);
+    } else {
+        for my $id (@$ids) {
+            push @got, $class->lookup($id);
+        }
     }
     \@got;
 }
