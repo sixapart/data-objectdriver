@@ -19,6 +19,15 @@ Revision history for Data::ObjectDriver
       the primary key value(s) for an object.
     - Added Data::ObjectDriver::BaseObject->refresh to reload an object from
       the database.
+    - Added support for HAVING clauses in Data::ObjectDriver::SQL. For views
+      that are not attached to a particular datasource, any terms passed in
+      to the query will automatically be turned into HAVING clauses.
+    - Improved the lookup_multi method for all BaseCache subclasses: we now
+      allow the subclass to look up multiple values in the cache and return
+      any already-cached items, then make a list of the remaining IDs and
+      send them to fallback->lookup_multi.
+    - Driver::DBI->lookup_multi will now use an OR clause to look up
+      multiple values in one query.
     - Added lots of test cases.
     - Pod fix (Thanks to Koichi Taniguchi)
 
