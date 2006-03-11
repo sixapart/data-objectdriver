@@ -24,7 +24,7 @@ sub bind_param_attributes {
 
 =head1 NAME
 
-Data::ObjectDriver SQLite driver
+Data::ObjectDriver::Driver::DBD::SQLite - SQLite driver
 
 =head2 DESCRIPTION
 
