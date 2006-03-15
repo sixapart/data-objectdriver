@@ -280,7 +280,7 @@ sub insert {
     $obj->call_trigger('post_save', $orig_obj);
     $obj->call_trigger('post_insert', $orig_obj);
 
-    $obj->{changed_cols} = {};
+    $orig_obj->{changed_cols} = {};
     1;
 }
 
@@ -338,7 +338,7 @@ sub update {
     $obj->call_trigger('post_save', $orig_obj);
     $obj->call_trigger('post_update', $orig_obj);
 
-    $obj->{changed_cols} = {};
+    $orig_obj->{changed_cols} = {};
     1;
 }
 

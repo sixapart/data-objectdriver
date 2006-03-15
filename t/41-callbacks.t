@@ -10,7 +10,7 @@ use Test::More;
 unless (eval { require DBD::SQLite }) {
     plan skip_all => 'Tests require DBD::SQLite';
 }
-plan tests => 19;
+plan tests => 23;
 
 setup_dbs({
     global => [ qw( wines ) ],
@@ -63,6 +63,7 @@ use Wine;
 
     is $ran_callback, 1, 'callback ran exactly once';
     ok defined $wine->id, 'object did receive an id';
+    ok ! $wine->is_changed, "not changed, since we've just saved the obj";
     
     my $saved_wine = Wine->lookup($wine->id)
         or die "Object just saved could not be retrieved successfully";
@@ -76,7 +77,9 @@ use Wine;
 
 ## test pre_search
 {
-    Wine->add_trigger('pre_search', sub { $_[1]->{rating} = $_[1]->{rating} * 2 } );
+    Wine->add_trigger('pre_search', 
+        sub { return unless $_[1]->{rating}; $_[1]->{rating} = $_[1]->{rating} * 2; }
+    );
     my $wine = Wine->new;
     $wine->name('I will change rating');
     $wine->rating(10);
@@ -87,12 +90,28 @@ use Wine;
     cmp_ok $wine->rating, '==', 10, "object has still the same rating";
     cmp_ok $wine->name, 'eq', 'I will change rating', "indeed";
     $wine->remove;
+
+#    Wine->remove_trigger('pre_search'); # doesn't exist
+    delete $wine->__triggers->{'pre_search'};
 }
 
 ## test post_load
-#{
-    ## ...but how do we remove the pre_save callback?
-#};
+{
+    Wine->add_trigger('post_load', 
+        sub { $_[0]->rating($_[0]->rating * 3, {no_changed_flag => 1}); }
+    );
+    my $wine = Wine->new;
+    $wine->name('I will change rating');
+    $wine->rating(10);
+    $wine->save;
+    $wine = Wine->lookup($wine->id);
+    ok $wine, "loaded";
+    cmp_ok $wine->rating, '==', 30, "post_load in action";
+    ok ! $wine->is_changed, "wine hasn't changed";
+
+#    Wine->remove_trigger('post_load'); # doesn't exist
+    delete $wine->__triggers->{'post_load'};
+};
 
 
 teardown_dbs(qw( global ));

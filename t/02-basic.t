@@ -18,7 +18,7 @@ BEGIN {
     }
 }
 
-plan tests => 23;
+plan tests => 27;
 
 use Wine;
 use Recipe;
@@ -99,6 +99,18 @@ setup_dbs({
 
     ok $r->remove;
     ok $i->remove;
+}
+
+# is_changed interface 
+{
+    my $w = Wine->new;
+    $w->name("Veuve Cliquot");
+    $w->save;
+    ok ! $w->is_changed;
+    $w->name("veuve champenoise");
+    ok $w->is_changed;
+    ok $w->is_changed('name');
+    ok ! $w->is_changed('content');
 }
 
 teardown_dbs(qw( global ));
