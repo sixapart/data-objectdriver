@@ -367,7 +367,6 @@ sub remove {
 
     ## Use a duplicate so the pre_save trigger can modify it.
     my $obj = $orig_obj->clone_all;
-    $obj->call_trigger('pre_save', $orig_obj);
     $obj->call_trigger('pre_remove', $orig_obj);
 
     my $tbl = $obj->datasource;
