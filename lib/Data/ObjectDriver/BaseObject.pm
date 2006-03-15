@@ -34,6 +34,13 @@ sub get_driver {
 
 sub new { bless {}, shift }
 
+sub is_pkless {
+    my $obj = shift;
+    my $prop_pk = $obj->properties->{primary_key};
+    return 1 if ! $prop_pk;
+    return 1 if ref $prop_pk eq 'ARRAY' && ! @$prop_pk;
+}
+
 sub primary_key_tuple {
     my $obj = shift;
     my $pk = $obj->properties->{primary_key};
@@ -80,6 +87,7 @@ sub primary_key_to_terms {
 
 sub has_primary_key {
     my $obj = shift;
+    return unless @{$obj->primary_key_tuple};
     my $val = $obj->primary_key;
     $val = [ $val ] unless ref($val) eq 'ARRAY';
     for my $v (@$val) {

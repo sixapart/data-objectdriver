@@ -18,17 +18,48 @@ BEGIN {
     }
 }
 
-plan tests => 12;
+plan tests => 17;
 
 use Wine;
 use Recipe;
 use Ingredient;
+use PkLess; 
 
 setup_dbs({
-    global => [ qw( wines recipes ingredients) ],
+    global => [ qw( wines recipes ingredients pkless) ],
 });
 
-## TODO: test primary_key and has_primary_key
+## TODO: test primary_key
+
+# test correct behaviour of has_primary_key
+{
+    my $w = Wine->new;
+    $w->save;
+    ok $w->has_primary_key, "wine has pk";
+
+    my $r = Recipe->new;
+    $r->save;
+    ok $r->has_primary_key, "recipe has pk";;
+    
+    my $i = Ingredient->new;
+    $i->recipe_id($r->id);
+    $i->save;
+    ok $i->has_primary_key, "ingredient has (multi) pk";
+
+    ## PK less
+    my $p = PkLess->new;
+    $p->anything("x");
+    $p->save;
+    ok ! $p->has_primary_key, "pkless has no pk";;
+
+    my $p2 = PkLess->new;
+    $p2->anything("y");
+    $p2->save;
+
+    ## save behaves correctly (there's never an UPDATE)
+    my @res = PkLess->search();
+    is scalar @res, 2, "Pk-less populated correctly";
+}
 
 # simple class pk fields
 {
