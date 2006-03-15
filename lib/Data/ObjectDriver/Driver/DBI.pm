@@ -79,7 +79,7 @@ sub fetch_data {
     my $driver = shift;
     my($obj) = @_;
     return unless $obj->has_primary_key;
-    my $terms = $driver->primary_key_to_terms(ref($obj), $obj->primary_key);
+    my $terms = $obj->primary_key_to_terms;
     my $args  = { limit => 1 };
     my $rec = {};
     my $sth = $driver->fetch($rec, $obj, $terms, $args);
@@ -160,39 +160,11 @@ sub search {
     }
 }
 
-sub is_same_array {
-    my($a1, $a2) = @_;
-    return if ($#$a1 != $#$a2);
-    for (my $i = 0; $i <= $#$a1; $i++) {
-        return if $a1->[$i] ne $a2->[$i];
-    }
-    return 1;
-}
-
-sub primary_key_to_terms {
-    my $driver = shift;
-    my($class, $id) = @_;
-    my $pk = $class->primary_key_tuple;
-    if (ref($id) eq 'HASH') {
-        my @keys = sort keys %$id;
-        unless (is_same_array(\@keys, [ sort @$pk ])) {
-            Carp::croak("keys don't match with primary keys: @keys");
-        }
-        return $id;
-    }
-
-    $id = [ $id ] unless ref($id) eq 'ARRAY';
-    my $i = 0;
-    my %terms;
-    @terms{@$pk} = @$id;
-    \%terms;
-}
-
 sub lookup {
     my $driver = shift;
     my($class, $id) = @_;
     my @obj = $driver->search($class,
-        $driver->primary_key_to_terms($class, $id), { limit => 1 });
+        $class->primary_key_to_terms($id, { limit => 1 }));
     $obj[0];
 }
 
@@ -203,7 +175,7 @@ sub lookup_multi {
     ## If it's a single-column PK, assume it's in one partition, and
     ## use an OR search.
     unless (ref($ids->[0])) {
-        my $terms = $driver->primary_key_to_terms($class, [ $ids ]);
+        my $terms = $class->primary_key_to_terms([ $ids ]);
         @got = $driver->search($class, $terms);
     } else {
         for my $id (@$ids) {
@@ -231,7 +203,7 @@ sub exists {
     return unless $obj->has_primary_key;
     my $tbl = $obj->datasource;
     my $stmt = $driver->prepare_statement(ref($obj),
-        $driver->primary_key_to_terms(ref($obj), $obj->primary_key),
+        $obj->primary_key_to_terms,
         { limit => 1 });
     my $sql = "SELECT 1 FROM $tbl\n";
     $sql .= $stmt->as_sql_where;
@@ -340,8 +312,7 @@ sub update {
     $sql .= join(', ',
             map $dbd->db_column_name($tbl, $_) . " = ?",
             @changed_cols) . "\n";
-    my $stmt = $driver->prepare_statement(ref($obj),
-        $driver->primary_key_to_terms(ref($obj), $obj->primary_key));
+    my $stmt = $driver->prepare_statement(ref($obj), $obj->primary_key_to_terms);
     $sql .= $stmt->as_sql_where;
     
     my $dbh = $driver->rw_handle($obj->properties->{db});
@@ -401,8 +372,7 @@ sub remove {
 
     my $tbl = $obj->datasource;
     my $sql = "DELETE FROM $tbl\n";
-    my $stmt = $driver->prepare_statement(ref($obj),
-        $driver->primary_key_to_terms(ref($obj), $obj->primary_key));
+    my $stmt = $driver->prepare_statement(ref($obj), $obj->primary_key_to_terms);
     $sql .= $stmt->as_sql_where;
     my $dbh = $driver->rw_handle($obj->properties->{db});
     $driver->debug($sql, $stmt->{bind});

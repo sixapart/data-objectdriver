@@ -18,7 +18,7 @@ BEGIN {
     }
 }
 
-plan tests => 8;
+plan tests => 12;
 
 use Wine;
 use Recipe;
@@ -34,12 +34,14 @@ setup_dbs({
 {
     isa_ok(Wine->primary_key_tuple(), 'ARRAY', q(Wine's primary key tuple is an arrayref));
     is_deeply(Wine->primary_key_tuple(), ['id'], q(Wine's primary key tuple contains the string 'id'));
+    is_deeply(Wine->primary_key_to_terms([100]), { id => 100 });
 }
 
 # complex class pk fields
 {
     isa_ok(Ingredient->primary_key_tuple, 'ARRAY', q(Ingredient's primary key tuple is an arrayref));
     is_deeply(Ingredient->primary_key_tuple, ['recipe_id', 'id'], q(Ingredient instance's primary key tuple contains 'recipe_id' and 'id'));
+    is_deeply(Ingredient->primary_key_to_terms([100, 1000]), { recipe_id => 100, id => 1000 });
 }
 
 # simple instance pk fields
@@ -47,6 +49,7 @@ setup_dbs({
     my $w = Wine->new;
     isa_ok $w->primary_key_tuple, 'ARRAY', q(Wine instance's primary key tuple is an arrayref);
     is_deeply $w->primary_key_tuple, ['id'], q(Wine instance's primary key tuple contains the string 'id');
+    is_deeply($w->primary_key_to_terms, { id => $w->id });
 }
 
 # complex instance pk fields
@@ -54,6 +57,7 @@ setup_dbs({
     my $i = Ingredient->new;
     is ref $i->primary_key_tuple, 'ARRAY', q(Ingredient instance's primary key tuple is an arrayref);
     is_deeply $i->primary_key_tuple, ['recipe_id', 'id'], q(Ingredient instance's primary key tuple contains 'recipe_id' and 'id');
+    is_deeply($i->primary_key_to_terms, { recipe_id => $i->recipe_id, id => $i->id });
 }
 
 teardown_dbs(qw( global ));

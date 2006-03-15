@@ -48,6 +48,36 @@ sub primary_key {
     @val == 1 ? $val[0] : \@val;
 }
 
+sub is_same_array {
+    my($a1, $a2) = @_;
+    return if ($#$a1 != $#$a2);
+    for (my $i = 0; $i <= $#$a1; $i++) {
+        return if $a1->[$i] ne $a2->[$i];
+    }
+    return 1;
+}
+
+sub primary_key_to_terms {
+    my($obj, $id) = @_;
+    my $pk = $obj->primary_key_tuple;
+    if (! $id) { 
+        $id = $obj->primary_key;
+    } else {
+        if (ref($id) eq 'HASH') {
+            my @keys = sort keys %$id;
+            unless (is_same_array(\@keys, [ sort @$pk ])) {
+                Carp::croak("keys don't match with primary keys: @keys");
+            }
+            return $id;
+        }
+    }
+    $id = [ $id ] unless ref($id) eq 'ARRAY';
+    my $i = 0;
+    my %terms;
+    @terms{@$pk} = @$id;
+    \%terms;
+}
+
 sub has_primary_key {
     my $obj = shift;
     my $val = $obj->primary_key;
