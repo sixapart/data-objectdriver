@@ -18,7 +18,7 @@ BEGIN {
     }
 }
 
-plan tests => 17;
+plan tests => 20;
 
 use Wine;
 use Recipe;
@@ -89,6 +89,18 @@ setup_dbs({
     is ref $i->primary_key_tuple, 'ARRAY', q(Ingredient instance's primary key tuple is an arrayref);
     is_deeply $i->primary_key_tuple, ['recipe_id', 'id'], q(Ingredient instance's primary key tuple contains 'recipe_id' and 'id');
     is_deeply($i->primary_key_to_terms, { recipe_id => $i->recipe_id, id => $i->id });
+}
+
+# 0 might be a valid pk
+{ 
+    Wine->remove({});
+    my $wine = Wine->new;
+    $wine->id(0);
+    $wine->name("zero");
+    ok $wine->save;
+    $wine = Wine->lookup(0);
+    ok $wine;
+    is $wine->name, "zero";
 }
 
 teardown_dbs(qw( global ));
