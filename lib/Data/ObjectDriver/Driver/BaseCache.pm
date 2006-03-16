@@ -152,6 +152,9 @@ sub remove {
 sub cache_key {
     my $driver = shift;
     my($class, $id) = @_;
+    if ($class->can('cache_class')) {
+        $class = $class->cache_class;
+    }
     join ':', $class, ref($id) eq 'ARRAY' ? @$id : $id;
 }
 
