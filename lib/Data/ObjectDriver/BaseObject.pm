@@ -67,7 +67,7 @@ sub is_same_array {
 sub primary_key_to_terms {
     my($obj, $id) = @_;
     my $pk = $obj->primary_key_tuple;
-    if (! $id) { 
+    if (! defined $id) { 
         $id = $obj->primary_key;
     } else {
         if (ref($id) eq 'HASH') {
@@ -91,7 +91,7 @@ sub has_primary_key {
     my $val = $obj->primary_key;
     $val = [ $val ] unless ref($val) eq 'ARRAY';
     for my $v (@$val) {
-        return 0 unless defined $v;
+        return unless defined $v;
     }
     1;
 }

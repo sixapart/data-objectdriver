@@ -163,7 +163,7 @@ sub search {
 sub lookup {
     my $driver = shift;
     my($class, $id) = @_;
-    return unless $id;
+    return unless defined $id;
     my @obj = $driver->search($class,
         $class->primary_key_to_terms($id, { limit => 1 }));
     $obj[0];
