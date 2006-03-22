@@ -441,7 +441,9 @@ sub prepare_statement {
         my $dbd = $driver->dbd;
         my %fetch = $args->{fetchonly} ?
             (map { $_ => 1 } @{ $args->{fetchonly} }) : ();
+        my $skip = $stmt->select_map_reverse;
         for my $col (@$cols) {
+            next if $skip->{$col};
             if (keys %fetch) {
                 next unless $fetch{$col};
             }
