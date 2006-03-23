@@ -241,6 +241,17 @@ sub _proxy {
     $obj->driver->$meth($obj, @args);
 }
 
+sub deflate { { columns => shift->column_values } }
+
+sub inflate {
+    my $class = shift;
+    my($deflated) = @_;
+    my $obj = $class->new;
+    $obj->set_values_internal($deflated->{columns});
+    $obj->{changed_cols} = {};
+    $obj;
+}
+
 sub DESTROY { }
 
 our $AUTOLOAD;
@@ -309,7 +320,17 @@ except for primary keys, which are set to C<undef>.
 Returns a new object of the same class as I<$obj> containing the same data,
 including all key fields.
 
-=head2 $obj->...
+=head2 $obj->deflate
+
+Returns a minimal representation of the object, for use in caches where
+you might want to preserve space (like memcached). Can also be overridden
+by subclasses to store the optimal representation of an object in the
+cache. For example, if you have metadata attached to an object, you might
+want to store that in the cache, as well.
+
+=head2 $class->inflate($deflated)
+
+Inflates the deflated representation of the object I<$deflated> into a
+proper object in the class I<$class>.
 
 =cut
-
