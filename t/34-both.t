@@ -18,7 +18,7 @@ BEGIN {
     }
 }
 
-plan tests => 23;
+plan tests => 40;
 
 use Recipe;
 use Ingredient;
@@ -70,6 +70,7 @@ is $r2->title, $recipe->title;
 ## by inflate.
 my $ingredients = $r2->{__ingredients};
 isa_ok $ingredients, 'ARRAY';
+is scalar(@$ingredients), 1;
 isa_ok $ingredients->[0], 'Ingredient';
 is $ingredients->[0]->id, $ingredient->id;
 is $ingredients->[0]->recipe_id, $ingredient->recipe_id;
@@ -104,12 +105,42 @@ $i3->name('Flour');
 $i3->quantity(10);
 $i3->save;
 
-my @is = Ingredient->search({ recipe_id => $recipe->id });
+## Try loading with fetchonly first. The driver shouldn't cache the results.
+my @is = Ingredient->search({ recipe_id => $recipe->id }, { fetchonly => [ 'recipe_id', 'id' ] });
+is scalar(@is), 3;
+
+## Flour should not yet be cached.
+my $i4 = Ingredient->lookup([ $recipe->id, $i3->id ]);
+ok !$i4->{__cached};
+is $i4->name, 'Flour';
+
+@is = Ingredient->search({ recipe_id => $recipe->id });
 is scalar(@is), 3;
 
 ## Flour should now be cached.
-my $i4 = Ingredient->lookup([ $recipe->id, $i3->id ]);
+$i4 = Ingredient->lookup([ $recipe->id, $i3->id ]);
 ok $i4->{__cached};
 is $i4->name, 'Flour';
+
+## Now look up the recipe, so that we make sure it gets cached...
+my $r3 = Recipe->lookup($recipe->id);
+ok !$r3->{__cached};
+is $r3->id, $recipe->id;
+is $r3->title, $recipe->title;
+
+## Now look it up again. We should get the cached version, and it
+## should get inflated.
+$r3 = Recipe->lookup($recipe->id);
+ok $r3->{__cached};
+is $r3->id, $recipe->id;
+is $r3->title, $recipe->title;
+$ingredients = $r3->{__ingredients};
+isa_ok $ingredients, 'ARRAY';
+is scalar(@$ingredients), 3;
+isa_ok $ingredients->[0], 'Ingredient';
+is $ingredients->[0]->id, $ingredient->id;
+is $ingredients->[0]->recipe_id, $ingredient->recipe_id;
+is $ingredients->[0]->name, $ingredient->name;
+is $ingredients->[0]->quantity, $ingredient->quantity;
 
 teardown_dbs(qw( global cluster1 cluster2 ));

@@ -237,10 +237,15 @@ sub lookup_multi {
 
 sub search {
     my $class = shift;
+    my($terms, $args) = @_;
     my $driver = $class->driver;
-    my @objs = $driver->search($class, @_) or return;
-    for my $obj (@objs) {
-        $driver->cache_object($obj) if $obj && !$obj->{__cached};
+    my @objs = $driver->search($class, $terms, $args) or return;
+    ## Don't attempt to cache objects where the caller specified fetchonly,
+    ## because they won't be complete.
+    unless ($args->{fetchonly}) {
+        for my $obj (@objs) {
+            $driver->cache_object($obj) if $obj && !$obj->{__cached};
+        }
     }
     $driver->list_or_iterator(\@objs);
 }
