@@ -24,6 +24,16 @@ sub init {
     $driver;
 }
 
+sub cache_object {
+    my $driver = shift;
+    my($obj) = @_;
+    $driver->add_to_cache(
+            $driver->cache_key(ref($obj), $obj->primary_key),
+            $driver->deflate($obj)
+        );
+    $driver->fallback->cache_object($obj);
+}
+
 sub lookup {
     my $driver = shift;
     my($class, $id) = @_;
@@ -36,7 +46,6 @@ sub lookup {
         $obj->{__cached} = 1;
     } else {
         $obj = $driver->fallback->lookup($class, $id);
-        $driver->add_to_cache($key, $driver->deflate($obj)) if $obj;
     }
     $obj;
 }
@@ -95,11 +104,6 @@ sub lookup_multi {
     $i = 0;
     for my $obj (@$more) {
         $got[ $need2got{$i++} ] = $obj;
-        if ($obj) {
-            my $id = $obj->primary_key;
-            $driver->add_to_cache($driver->cache_key($class, $id),
-                                  $driver->deflate($obj));
-        }
     }
 
     \@got;

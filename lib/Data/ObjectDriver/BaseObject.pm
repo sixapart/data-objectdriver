@@ -217,8 +217,24 @@ sub save {
     }
 }
 
-sub lookup          { shift->_proxy('lookup',       @_) }
-sub lookup_multi    { shift->_proxy('lookup_multi', @_) }
+sub lookup {
+    my $class = shift;
+    my $driver = $class->driver;
+    my $obj = $driver->lookup($class, @_) or return;
+    $driver->cache_object($obj) unless $obj->{__cached};
+    $obj;
+}
+
+sub lookup_multi {
+    my $class = shift;
+    my $driver = $class->driver;
+    my $objs = $driver->lookup_multi($class, @_) or return;
+    for my $obj (@$objs) {
+        $driver->cache_object($obj) if $obj && !$obj->{__cached};
+    }
+    $objs;
+}
+
 sub search          { shift->_proxy('search',       @_) }
 sub remove          { shift->_proxy('remove',       @_) }
 sub update          { shift->_proxy('update',       @_) }

@@ -41,7 +41,7 @@ is $r2->title, $recipe->title;
 
 ## Install some deflate/inflate in the Cache driver.
 {
-    local $^W = 0;
+    no warnings 'once';
     *Data::ObjectDriver::Driver::Cache::Cache::deflate = sub {
         $_[1]->deflate;
     };

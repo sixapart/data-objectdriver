@@ -36,6 +36,7 @@ sub debug {
     }
 }
 
+sub cache_object { }
 
 1;
 __END__
