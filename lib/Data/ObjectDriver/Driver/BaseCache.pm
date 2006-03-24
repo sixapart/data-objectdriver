@@ -10,6 +10,9 @@ use Carp ();
 __PACKAGE__->mk_accessors(qw( cache fallback ));
 __PACKAGE__->mk_classdata(qw( Disabled ));
 
+sub deflate { $_[1]->clone_all }
+sub inflate { $_[2] }
+
 sub init {
     my $driver = shift;
     $driver->SUPER::init(@_);
@@ -28,9 +31,12 @@ sub lookup {
         if $driver->Disabled;
     my $key = $driver->cache_key($class, $id);
     my $obj = $driver->get_from_cache($key);
-    unless ($obj) {
+    if ($obj) {
+        $obj = $driver->inflate($class, $obj);
+        $obj->{__cached} = 1;
+    } else {
         $obj = $driver->fallback->lookup($class, $id);
-        $driver->add_to_cache($key, $obj->clone_all) if $obj;
+        $driver->add_to_cache($key, $driver->deflate($obj)) if $obj;
     }
     $obj;
 }
@@ -60,7 +66,13 @@ sub lookup_multi {
 
     ## If we got back all of the objects from the cache, return immediately.
     if (scalar keys %$got == @$ids) {
-        return [ map $got->{ $id2key{$_} }, @$ids ];
+        my @objs;
+        for my $id (@$ids) {
+            my $obj = $driver->inflate($class, $got->{ $id2key{$id} });
+            $obj->{__cached} = 1;
+            push @objs, $obj;
+        }
+        return \@objs;
     }
 
     ## Otherwise, look through the list of IDs to see what we're missing,
@@ -68,6 +80,8 @@ sub lookup_multi {
     my($i, @got, @need, %need2got) = (0);
     for my $id (@$ids) {
         if (my $obj = $got->{ $id2key{$id} }) {
+            $obj = $driver->inflate($class, $obj);
+            $obj->{__cached} = 1;
             push @got, $obj;
         } else {
             push @got, undef;
@@ -82,9 +96,9 @@ sub lookup_multi {
     for my $obj (@$more) {
         $got[ $need2got{$i++} ] = $obj;
         if ($obj) {
-            my $id = $obj->primary_key_tuple;
+            my $id = $obj->primary_key;
             $driver->add_to_cache($driver->cache_key($class, $id),
-                                  $obj->clone_all);
+                                  $driver->deflate($obj));
         }
     }
 
@@ -136,7 +150,7 @@ sub update {
     return $driver->fallback->update($obj)
         if $driver->Disabled;
     my $key = $driver->cache_key(ref($obj), $obj->primary_key);
-    $driver->update_cache($key, $obj->clone_all);
+    $driver->update_cache($key, $driver->deflate($obj));
     $driver->fallback->update($obj);
 }
 
@@ -165,8 +179,12 @@ sub AUTOLOAD {
     my $driver = $_[0];
     (my $meth = $AUTOLOAD) =~ s/.+:://;
     no strict 'refs';
+    my $fallback = $driver->fallback;
+    ## Check for invalid methods, but make sure we still allow
+    ## chaining 2 caching drivers together.
     Carp::croak("Cannot call method '$meth' on object '$driver'")
-        unless $driver->fallback->can($meth);
+        unless $fallback->can($meth) ||
+               UNIVERSAL::isa($fallback, __PACKAGE__);
     *$AUTOLOAD = sub {
         shift->fallback->$meth(@_);
     };
