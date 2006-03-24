@@ -98,4 +98,18 @@ is scalar(@$is), 2;
 ok $is->[0]{__cached};
 ok $is->[1]{__cached};
 
+my $i3 = Ingredient->new;
+$i3->recipe_id($recipe->id);
+$i3->name('Flour');
+$i3->quantity(10);
+$i3->save;
+
+my @is = Ingredient->search({ recipe_id => $recipe->id });
+is scalar(@is), 3;
+
+## Flour should now be cached.
+my $i4 = Ingredient->lookup([ $recipe->id, $i3->id ]);
+ok $i4->{__cached};
+is $i4->name, 'Flour';
+
 teardown_dbs(qw( global cluster1 cluster2 ));

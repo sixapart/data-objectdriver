@@ -139,13 +139,7 @@ sub search {
     ## cache.
     my $objs = $driver->lookup_multi($class, [ map $_->primary_key, @objs ]);
 
-    ## Now emulate the standard search behavior of returning an
-    ## iterator in scalar context, and the full list in list context.
-    if (wantarray) {
-        return @$objs;
-    } else {
-        return sub { shift @$objs };
-    }
+    $driver->list_or_iterator($objs);
 }
 
 sub update {

@@ -235,7 +235,16 @@ sub lookup_multi {
     $objs;
 }
 
-sub search          { shift->_proxy('search',       @_) }
+sub search {
+    my $class = shift;
+    my $driver = $class->driver;
+    my @objs = $driver->search($class, @_) or return;
+    for my $obj (@objs) {
+        $driver->cache_object($obj) if $obj && !$obj->{__cached};
+    }
+    $driver->list_or_iterator(\@objs);
+}
+
 sub remove          { shift->_proxy('remove',       @_) }
 sub update          { shift->_proxy('update',       @_) }
 sub insert          { shift->_proxy('insert',       @_) }

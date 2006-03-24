@@ -36,6 +36,18 @@ sub debug {
     }
 }
 
+sub list_or_iterator {
+    my $driver = shift;
+    my($objs) = @_;
+    ## Emulate the standard search behavior of returning an
+    ## iterator in scalar context, and the full list in list context.
+    if (wantarray) {
+        return @$objs;
+    } else {
+        return sub { shift @$objs };
+    }
+}
+
 sub cache_object { }
 
 1;
