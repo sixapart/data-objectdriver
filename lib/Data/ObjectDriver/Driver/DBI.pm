@@ -180,7 +180,7 @@ sub lookup_multi {
         @got = $driver->search($class, $terms);
     } else {
         for my $id (@$ids) {
-            push @got, $class->lookup($id);
+            push @got, $class->driver->lookup($class, $id);
         }
     }
     \@got;
