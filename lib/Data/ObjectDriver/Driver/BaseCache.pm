@@ -27,13 +27,15 @@ sub init {
 sub cache_object {
     my $driver = shift;
     my($obj) = @_;
+    ## If it's already cached in this layer, assume it's already cached in
+    ## all layers below this, as well.
     unless (exists $obj->{__cached} && $obj->{__cached}{ref $driver}) {
         $driver->add_to_cache(
                 $driver->cache_key(ref($obj), $obj->primary_key),
                 $driver->deflate($obj)
             );
+        $driver->fallback->cache_object($obj);
     }
-    $driver->fallback->cache_object($obj);
 }
 
 sub lookup {
@@ -131,7 +133,7 @@ sub search {
 
     ## Tell the fallback driver to fetch only the primary columns,
     ## then run the search using the fallback.
-    $args->{fetchonly} = $class->primary_key_tuple; 
+    local $args->{fetchonly} = $class->primary_key_tuple; 
     ## Disable triggers for this load. We don't want the post_load trigger
     ## being called twice.
     $args->{no_triggers} = 1;
