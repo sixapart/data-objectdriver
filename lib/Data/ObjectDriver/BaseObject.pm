@@ -221,7 +221,7 @@ sub lookup {
     my $class = shift;
     my $driver = $class->driver;
     my $obj = $driver->lookup($class, @_) or return;
-    $driver->cache_object($obj) unless $obj->{__cached};
+    $driver->cache_object($obj);
     $obj;
 }
 
@@ -230,7 +230,7 @@ sub lookup_multi {
     my $driver = $class->driver;
     my $objs = $driver->lookup_multi($class, @_) or return;
     for my $obj (@$objs) {
-        $driver->cache_object($obj) if $obj && !$obj->{__cached};
+        $driver->cache_object($obj) if $obj;
     }
     $objs;
 }
@@ -244,7 +244,7 @@ sub search {
     ## because they won't be complete.
     unless ($args->{fetchonly}) {
         for my $obj (@objs) {
-            $driver->cache_object($obj) if $obj && !$obj->{__cached};
+            $driver->cache_object($obj) if $obj;
         }
     }
     $driver->list_or_iterator(\@objs);

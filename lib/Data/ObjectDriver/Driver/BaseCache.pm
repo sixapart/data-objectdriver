@@ -10,7 +10,7 @@ use Carp ();
 __PACKAGE__->mk_accessors(qw( cache fallback ));
 __PACKAGE__->mk_classdata(qw( Disabled ));
 
-sub deflate { $_[1]->clone_all }
+sub deflate { $_[1] }
 sub inflate { $_[2] }
 
 sub init {
@@ -27,10 +27,12 @@ sub init {
 sub cache_object {
     my $driver = shift;
     my($obj) = @_;
-    $driver->add_to_cache(
-            $driver->cache_key(ref($obj), $obj->primary_key),
-            $driver->deflate($obj)
-        );
+    unless (exists $obj->{__cached} && $obj->{__cached}{ref $driver}) {
+        $driver->add_to_cache(
+                $driver->cache_key(ref($obj), $obj->primary_key),
+                $driver->deflate($obj)
+            );
+    }
     $driver->fallback->cache_object($obj);
 }
 
@@ -43,7 +45,7 @@ sub lookup {
     my $obj = $driver->get_from_cache($key);
     if ($obj) {
         $obj = $driver->inflate($class, $obj);
-        $obj->{__cached} = 1;
+        $obj->{__cached}{ref $driver} = 1;
     } else {
         $obj = $driver->fallback->lookup($class, $id);
     }
@@ -78,7 +80,7 @@ sub lookup_multi {
         my @objs;
         for my $id (@$ids) {
             my $obj = $driver->inflate($class, $got->{ $id2key{$id} });
-            $obj->{__cached} = 1;
+            $obj->{__cached}{ref $driver} = 1;
             push @objs, $obj;
         }
         return \@objs;
@@ -90,7 +92,7 @@ sub lookup_multi {
     for my $id (@$ids) {
         if (my $obj = $got->{ $id2key{$id} }) {
             $obj = $driver->inflate($class, $obj);
-            $obj->{__cached} = 1;
+            $obj->{__cached}{ref $driver} = 1;
             push @got, $obj;
         } else {
             push @got, undef;
