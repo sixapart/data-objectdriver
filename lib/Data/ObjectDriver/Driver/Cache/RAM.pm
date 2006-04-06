@@ -2,9 +2,11 @@
 
 package Data::ObjectDriver::Driver::Cache::RAM;
 use strict;
+use warnings;
+
 use base qw( Data::ObjectDriver::Driver::BaseCache );
 
-our %Cache;
+my %Cache;
 
 sub init {
     my $driver = shift;
