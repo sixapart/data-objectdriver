@@ -2,6 +2,8 @@
 
 package Data::ObjectDriver::BaseObject;
 use strict;
+use warnings;
+
 use Carp ();
 
 use Class::Trigger qw( pre_save post_save post_load pre_search
@@ -51,7 +53,7 @@ sub primary_key_tuple {
 sub primary_key {
     my $obj = shift;
     my $pk = $obj->primary_key_tuple;
-    my @val = map $obj->$_(), @$pk;
+    my @val = map {$obj->$_()} @$pk;
     @val == 1 ? $val[0] : \@val;
 }
 
@@ -197,7 +199,7 @@ sub is_changed {
     } else {
         my $pk = $obj->primary_key_tuple;
         my %pk = map { $_ => 1 } @$pk;
-        my @changed_cols = grep !$pk{$_}, $obj->changed_cols;
+        my @changed_cols = grep {!$pk{$_}}  $obj->changed_cols;
         return @changed_cols > 0;
     }
 }
@@ -239,10 +241,12 @@ sub search {
     my $class = shift;
     my($terms, $args) = @_;
     my $driver = $class->driver;
-    my @objs = $driver->search($class, $terms, $args) or return;
+    my @objs = $driver->search($class, $terms, $args);
+
     ## Don't attempt to cache objects where the caller specified fetchonly,
     ## because they won't be complete.
-    unless ($args->{fetchonly}) {
+    ## Also skip this step if we don't get any objects back from the search
+    if (!$args->{fetchonly} || !@objs) {
         for my $obj (@objs) {
             $driver->cache_object($obj) if $obj;
         }
