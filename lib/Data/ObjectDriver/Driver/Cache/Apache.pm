@@ -2,6 +2,8 @@
 
 package Data::ObjectDriver::Driver::Cache::Apache;
 use strict;
+use warnings;
+
 use base qw( Data::ObjectDriver::Driver::BaseCache );
 
 sub init {

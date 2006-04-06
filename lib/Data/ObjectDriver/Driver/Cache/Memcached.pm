@@ -2,6 +2,8 @@
 
 package Data::ObjectDriver::Driver::Cache::Memcached;
 use strict;
+use warnings;
+
 use base qw( Data::ObjectDriver::Driver::BaseCache );
 
 use Cache::Memcached;

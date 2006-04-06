@@ -2,6 +2,8 @@
 
 package Data::ObjectDriver::Driver::DBD::Pg;
 use strict;
+use warnings;
+
 use base qw( Data::ObjectDriver::Driver::DBD );
 
 sub init_dbh {
@@ -16,7 +18,7 @@ sub bind_param_attributes {
     if ($data_type && $data_type eq 'blob') {
         return { pg_type => DBD::Pg::PG_BYTEA() };
     }
-    return undef;
+    return;
 }
 
 sub sequence_name {

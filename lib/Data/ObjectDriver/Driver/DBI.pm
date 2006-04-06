@@ -2,6 +2,8 @@
 
 package Data::ObjectDriver::Driver::DBI;
 use strict;
+use warnings;
+
 use base qw( Data::ObjectDriver Class::Accessor::Fast );
 
 use DBI;
@@ -148,9 +150,9 @@ sub search {
         $obj->call_trigger('post_load') unless $args->{no_triggers};
         $obj;
     };
-    
     if (wantarray) {
-        my @objs;
+        my @objs = ();
+
         while (my $obj = $iter->()) {
             push @objs, $obj;
         }
@@ -158,6 +160,7 @@ sub search {
     } else {
         return $iter;
     }
+    return;
 }
 
 sub lookup {
@@ -248,7 +251,7 @@ sub insert {
     my $sql = "INSERT INTO $tbl\n";
     my $dbd = $driver->dbd;
     $sql .= '(' . join(', ',
-                  map $dbd->db_column_name($tbl, $_),
+                  map {$dbd->db_column_name($tbl, $_)}
                   @$cols) .
             ')' . "\n" .
             'VALUES (' . join(', ', ('?') x @$cols) . ')' . "\n";
@@ -297,7 +300,7 @@ sub update {
     my $cols = $obj->column_names;
     my $pk = $obj->primary_key_tuple;
     my %pk = map { $_ => 1 } @$pk;
-    my @changed_cols = grep !$pk{$_}, $obj->changed_cols;
+    my @changed_cols = grep {!$pk{$_}} $obj->changed_cols;
 
     ## If there's no updated columns, update() is no-op
     ## but we should call post_* triggers
@@ -311,7 +314,7 @@ sub update {
     my $sql = "UPDATE $tbl SET\n";
     my $dbd = $driver->dbd;
     $sql .= join(', ',
-            map $dbd->db_column_name($tbl, $_) . " = ?",
+            map {$dbd->db_column_name($tbl, $_) . " = ?"}
             @changed_cols) . "\n";
     my $stmt = $driver->prepare_statement(ref($obj), $obj->primary_key_to_terms);
     $sql .= $stmt->as_sql_where;

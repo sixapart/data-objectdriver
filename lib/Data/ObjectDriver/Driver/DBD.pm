@@ -2,6 +2,8 @@
 
 package Data::ObjectDriver::Driver::DBD;
 use strict;
+use warnings;
+
 
 sub new {
     my $class = shift;

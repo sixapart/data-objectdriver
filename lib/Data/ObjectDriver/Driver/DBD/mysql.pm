@@ -2,6 +2,8 @@
 
 package Data::ObjectDriver::Driver::DBD::mysql;
 use strict;
+use warnings;
+
 use base qw( Data::ObjectDriver::Driver::DBD );
 
 use Carp qw( croak );

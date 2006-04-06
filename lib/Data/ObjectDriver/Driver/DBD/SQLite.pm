@@ -2,6 +2,8 @@
 
 package Data::ObjectDriver::Driver::DBD::SQLite;
 use strict;
+use warnings;
+
 use base qw( Data::ObjectDriver::Driver::DBD );
 
 sub fetch_id { $_[2]->func('last_insert_rowid') }
@@ -15,7 +17,7 @@ sub bind_param_attributes {
             return DBI::SQL_BINARY;
         }
     }
-    return undef;
+    return;
 }
 
 1;

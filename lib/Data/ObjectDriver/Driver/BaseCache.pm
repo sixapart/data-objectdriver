@@ -2,6 +2,8 @@
 
 package Data::ObjectDriver::Driver::BaseCache;
 use strict;
+use warnings;
+
 use base qw( Data::ObjectDriver Class::Accessor::Fast
              Class::Data::Inheritable );
 
@@ -141,7 +143,7 @@ sub search {
 
     ## Load all of the objects using a lookup_multi, which is fast from
     ## cache.
-    my $objs = $driver->lookup_multi($class, [ map $_->primary_key, @objs ]);
+    my $objs = $driver->lookup_multi($class, [ map {$_->primary_key} @objs ]);
 
     $driver->list_or_iterator($objs);
 }
@@ -176,10 +178,9 @@ sub cache_key {
 
 sub DESTROY { }
 
-our $AUTOLOAD;
 sub AUTOLOAD {
     my $driver = $_[0];
-    (my $meth = $AUTOLOAD) =~ s/.+:://;
+    (my $meth = our $AUTOLOAD) =~ s/.+:://;
     no strict 'refs';
     my $fallback = $driver->fallback;
     ## Check for invalid methods, but make sure we still allow

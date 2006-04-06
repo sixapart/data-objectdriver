@@ -2,6 +2,8 @@
 
 package Data::ObjectDriver::Driver::Partition;
 use strict;
+use warnings;
+
 use base qw( Data::ObjectDriver Class::Accessor::Fast );
 
 __PACKAGE__->mk_accessors(qw( get_driver ));

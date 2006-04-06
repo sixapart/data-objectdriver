@@ -2,6 +2,8 @@
 
 package Data::ObjectDriver::BaseView;
 use strict;
+use warnings;
+
 use base qw( Data::ObjectDriver::BaseObject );
 
 use Carp ();

@@ -2,6 +2,8 @@
 
 package Data::ObjectDriver::SQL;
 use strict;
+use warnings;
+
 use base qw( Class::Accessor::Fast );
 
 __PACKAGE__->mk_accessors(qw( select select_map select_map_reverse from join where bind limit offset group order having where_values ));
