@@ -2,12 +2,14 @@
 
 package Data::ObjectDriver;
 use strict;
+use warnings;
+
 use base qw( Class::Accessor::Fast );
 
 __PACKAGE__->mk_accessors(qw( pk_generator ));
 
 our $VERSION = '0.02';
-our $DEBUG = 0;
+our $DEBUG = $ENV{DOD_DEBUG} || 0;
 
 use Data::Dumper ();
 
@@ -39,12 +41,13 @@ sub debug {
 sub list_or_iterator {
     my $driver = shift;
     my($objs) = @_;
+
     ## Emulate the standard search behavior of returning an
     ## iterator in scalar context, and the full list in list context.
     if (wantarray) {
-        return @$objs;
+        return @{$objs};
     } else {
-        return sub { shift @$objs };
+        return sub { shift @{$objs} };
     }
 }
 
