@@ -53,7 +53,7 @@ sub primary_key_tuple {
 sub primary_key {
     my $obj = shift;
     my $pk = $obj->primary_key_tuple;
-    my @val = map {$obj->$_()} @$pk;
+    my @val = map { $obj->$_() }  @$pk;
     @val == 1 ? $val[0] : \@val;
 }
 

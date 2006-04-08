@@ -251,7 +251,7 @@ sub insert {
     my $sql = "INSERT INTO $tbl\n";
     my $dbd = $driver->dbd;
     $sql .= '(' . join(', ',
-                  map {$dbd->db_column_name($tbl, $_)}
+                  map { $dbd->db_column_name($tbl, $_) }
                   @$cols) .
             ')' . "\n" .
             'VALUES (' . join(', ', ('?') x @$cols) . ')' . "\n";
@@ -314,7 +314,7 @@ sub update {
     my $sql = "UPDATE $tbl SET\n";
     my $dbd = $driver->dbd;
     $sql .= join(', ',
-            map {$dbd->db_column_name($tbl, $_) . " = ?"}
+            map { $dbd->db_column_name($tbl, $_) . " = ?" }
             @changed_cols) . "\n";
     my $stmt = $driver->prepare_statement(ref($obj), $obj->primary_key_to_terms);
     $sql .= $stmt->as_sql_where;
