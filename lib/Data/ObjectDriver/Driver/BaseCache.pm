@@ -106,10 +106,12 @@ sub lookup_multi {
         $i++;
     }
 
-    my $more = $driver->fallback->lookup_multi($class, \@need);
-    $i = 0;
-    for my $obj (@$more) {
-        $got[ $need2got{$i++} ] = $obj;
+    if (@need) {
+        my $more = $driver->fallback->lookup_multi($class, \@need);
+        $i = 0;
+        for my $obj (@$more) {
+            $got[ $need2got{$i++} ] = $obj;
+        }
     }
 
     \@got;
