@@ -15,6 +15,17 @@ sub install_properties {
     no strict 'refs';
     my($props) = @_;
     *{"${class}::__properties"} = sub { $props };
+
+    # predefine getter/setter methods here
+    foreach my $col (@{ $props->{columns} }) {
+        # Skip adding this method if the class overloads it.
+        # this lets the SUPER::columnname magic do it's thing
+        if (!defined (*{"${class}::$col"})) {
+            *{"${class}::$col"} = sub {
+                shift()->column($col, @_);
+            };
+        }
+    }
     $props;
 }
 
@@ -22,6 +33,66 @@ sub properties {
     my $this = shift;
     my $class = ref($this) || $this;
     $class->__properties;
+}
+
+# see docs below
+
+sub has_a {
+    my $class = shift;
+    my %args = @_;
+
+    # Iterate over each remote object
+    foreach my $parentclass (keys %args) {
+        my $config = $args{$parentclass};
+        next unless $config;
+ 
+        # Parameters
+        my $column = $config->{column};
+        my $method = $config->{method};
+        my $parent_method = $config->{method};
+
+        # column is required
+        if (!defined($column)) {
+            die "Please specify a valid column for $parentclass" 
+        }
+
+        # create a method name based on the column
+        if (! defined $method) {
+            $method = $column;
+            $method =~ s/_id$//;
+        }
+
+        # die if we can't find a way to make a valid method
+        # TBD check current list of columns to avoid clash
+        if (! defined $method || ($method eq $column)) {
+            die "Please define a valid method for $class->$column";
+        }
+
+        print STDERR "adding method $method linking $column to $parentclass->lookup()\n";
+        no strict 'refs';
+        *{"${class}::$method"} = sub {
+            my $obj = shift;
+            # TBD - Add in-memory caching logic here with weak ref?
+            return $parentclass->lookup($obj->column($column));
+        };
+
+        # now add to the parent
+        if (!defined $parent_method) {
+            $parent_method = lc($class);
+            $parent_method =~ s/^.*:://;
+            $parent_method .= 's';  # plural :)
+        }
+        print STDERR "adding method ${parentclass}::$parent_method\n";
+        *{"${parentclass}::$parent_method"} = sub {
+            my $obj = shift;
+            my $terms = shift;
+            my $args = shift;
+            # TBD - allow user defined extra terms here?...
+            # TBD - use primary_key_to_terms
+            return $class->search({$column => $obj->id}, $args);
+        };
+    } # end of loop over class names
+    return;
 }
 
 sub driver {
@@ -288,15 +359,15 @@ sub inflate {
 
 sub DESTROY { }
 
-our $AUTOLOAD;
 sub AUTOLOAD {
     my $obj = $_[0];
-    (my $col = $AUTOLOAD) =~ s!.+::!!;
+    (my $col = our $AUTOLOAD) =~ s!.+::!!;
     no strict 'refs';
     Carp::croak("Cannot find method '$col' for class '$obj'") unless ref $obj;
     unless ($obj->has_column($col)) {
         Carp::croak("Cannot find column '$col' for class '" . ref($obj) . "'");
     }
+    print STDERR "AUTOLOAD for $AUTOLOAD\n";
     *$AUTOLOAD = sub {
         shift()->column($col, @_);
     };
@@ -323,7 +394,41 @@ with the I<Data::ObjectDriver> object relational mapper.
 
 =head2 Class->install_properties({ ... })
 
+Sets up columns, indexes, primary keys, etc.
+
 =head2 Class->properties
+
+Returns the list of properties.
+
+=head2 Class->has_a(ParentClass => { ... }, ParentClass2 => { ...} )
+
+Creates utility methods that map this object to parent Data::ObjectDriver objects.
+
+Pass in a list of parent classes to map with a hash of parameters.  The following parameters
+are recognized:
+
+=over 4
+
+=item * column
+
+Name of the column(s) in this class to map with.  Pass in a single string if
+the column is a singular key, an array ref if this is a composite key.
+
+=item * method [OPTIONAL]
+
+Name of the method to create in this class.  Defaults to the column name without
+the _id suffix
+
+=item * parent_method [OPTIONAL]
+
+Name of the method created in the parent class.  Default is the lowercased 
+name of the current class with an 's' appended. 
+
+=item * cached [OPTIONAL]
+
+If set to 1 then we will cache in-memory the resulting object inside this class.
+
+=back
 
 =head2 Class->driver
 
