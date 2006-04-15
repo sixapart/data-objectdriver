@@ -93,8 +93,10 @@ sub has_a {
         # now add to the parent
         if (!defined $parent_method) {
             $parent_method = lc($class);
-            $parent_method =~ s/^.*:://;
-            $parent_method .= 's';  # plural :)
+            $parent_method =~ s/^.*:://; 
+
+            # make this plural :)
+            $parent_method .= (substr($parent_method,-1,1) eq 's') ? 'es' : 's'; 
         }
         print STDERR "adding method ${parentclass}::$parent_method\n";
         *{"${parentclass}::$parent_method"} = sub {
@@ -436,7 +438,7 @@ the _id suffix
 =item * parent_method [OPTIONAL]
 
 Name of the method created in the parent class.  Default is the lowercased 
-name of the current class with an 's' appended. 
+name of the current class with an 's' or 'es' appended. 
 
 =item * cached [OPTIONAL]
 
