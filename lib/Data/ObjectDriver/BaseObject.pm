@@ -4,6 +4,7 @@ package Data::ObjectDriver::BaseObject;
 use strict;
 use warnings;
 
+use Scalar::Util qw(weaken);
 use Carp ();
 
 use Class::Trigger qw( pre_save post_save post_load pre_search
@@ -49,7 +50,8 @@ sub has_a {
         # Parameters
         my $column = $config->{column};
         my $method = $config->{method};
-        my $parent_method = $config->{method};
+        my $cached = $config->{cached} || 0;
+        my $parent_method = $config->{parent_method};
 
         # column is required
         if (!defined($column)) {
@@ -68,13 +70,25 @@ sub has_a {
             die "Please define a valid method for $class->$column";
         }
 
-        print STDERR "adding method $method linking $column to $parentclass->lookup()\n";
+        print STDERR "adding method $class->$method linking $column to $parentclass->lookup()\n";
         no strict 'refs';
-        *{"${class}::$method"} = sub {
-            my $obj = shift;
-            # TBD - Add in-memory caching logic here with weak ref?
-            return $parentclass->lookup($obj->column($column));
-        };
+
+        if ($cached) {
+            my $cachekey = "__cache_$method";
+
+            *{"${class}::$method"} = sub {
+                my $obj = shift;
+                unless (exists $obj->{$cachekey}) {
+                    $obj->{$cachekey} = $parentclass->lookup($obj->column($column));
+                    weaken $obj->{$cachekey};
+                }
+                return $obj->{$cachekey};
+            };
+        } else {
+            *{"${class}::$method"} = sub {
+                return $parentclass->lookup(shift()->column($column));
+            };
+        }
 
         # now add to the parent
         if (!defined $parent_method) {
