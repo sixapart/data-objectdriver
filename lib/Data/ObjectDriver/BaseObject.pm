@@ -42,10 +42,6 @@ sub has_a {
     my $class = shift;
     my %args = @_;
 
-    my $props = $obj->properties;
-
-    die "No properties defined for $class" unless ($props);
-
     # Iterate over each remote object
     foreach my $parentclass (keys %args) {
         my $config = $args{$parentclass};
