@@ -42,6 +42,10 @@ sub has_a {
     my $class = shift;
     my %args = @_;
 
+    my $props = $obj->properties;
+
+    die "No properties defined for $class" unless ($props);
+
     # Iterate over each remote object
     foreach my $parentclass (keys %args) {
         my $config = $args{$parentclass};
@@ -57,11 +61,13 @@ sub has_a {
         if (!defined($column)) {
             die "Please specify a valid column for $parentclass" 
         }
+        # TBD Is column a composite key?
 
         # create a method name based on the column
         if (! defined $method) {
             $method = $column;
             $method =~ s/_id$//;
+            $method .= "_obj";
         }
 
         # die if we can't find a way to make a valid method
@@ -70,10 +76,10 @@ sub has_a {
             die "Please define a valid method for $class->$column";
         }
 
-        print STDERR "adding method $class->$method linking $column to $parentclass->lookup()\n";
         no strict 'refs';
 
         if ($cached) {
+            # Store cached item inside this object's namespace
             my $cachekey = "__cache_$method";
 
             *{"${class}::$method"} = sub {
@@ -95,10 +101,8 @@ sub has_a {
             $parent_method = lc($class);
             $parent_method =~ s/^.*:://; 
 
-            # make this plural :)
-            $parent_method .= (substr($parent_method,-1,1) eq 's') ? 'es' : 's'; 
+            $parent_method .= '_objs';
         }
-        print STDERR "adding method ${parentclass}::$parent_method\n";
         *{"${parentclass}::$parent_method"} = sub {
             my $obj = shift;
             my $terms = shift;
@@ -383,7 +387,7 @@ sub AUTOLOAD {
     unless ($obj->has_column($col)) {
         Carp::croak("Cannot find column '$col' for class '" . ref($obj) . "'");
     }
-    print STDERR "AUTOLOAD for $AUTOLOAD\n";
+
     *$AUTOLOAD = sub {
         shift()->column($col, @_);
     };
@@ -433,12 +437,12 @@ the column is a singular key, an array ref if this is a composite key.
 =item * method [OPTIONAL]
 
 Name of the method to create in this class.  Defaults to the column name without
-the _id suffix
+the _id suffix and with the suffix _obj appended.
 
 =item * parent_method [OPTIONAL]
 
 Name of the method created in the parent class.  Default is the lowercased 
-name of the current class with an 's' or 'es' appended. 
+name of the current class with the suffix _objs.
 
 =item * cached [OPTIONAL]
 

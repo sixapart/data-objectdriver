@@ -121,7 +121,7 @@ sub fetch {
         }
     }
 
-    # xxx what happens if $sth goes out of scope without finish() being called ?
+    # TBD what happens if $sth goes out of scope without finish() being called ?
     $sth;
 }
 
