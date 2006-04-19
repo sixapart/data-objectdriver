@@ -57,18 +57,24 @@ sub has_a {
         if (!defined($column)) {
             die "Please specify a valid column for $parentclass" 
         }
-        # TBD Is column a composite key?
 
         # create a method name based on the column
         if (! defined $method) {
-            $method = $column;
-            $method =~ s/_id$//;
-            $method .= "_obj";
+            if (!ref($column)) {
+                $method = $column;
+                $method =~ s/_id$//;
+                $method .= "_obj";
+            } elsif (ref($column) eq 'ARRAY') {
+                foreach my $col (@{$column}) {
+                    $col =~ s/_id$//;
+                    $method .= $col . '_';
+                }
+                $method .= "obj";
+            }
         }
-
-        # die if we can't find a way to make a valid method
-        # TBD check current list of columns to avoid clash
-        if (! defined $method || ($method eq $column)) {
+     
+        # die if we have clashing methods method
+        if (! defined $method || defined(*{"${class}::$method"})) {
             die "Please define a valid method for $class->$column";
         }
 
@@ -78,18 +84,33 @@ sub has_a {
             # Store cached item inside this object's namespace
             my $cachekey = "__cache_$method";
 
-            *{"${class}::$method"} = sub {
-                my $obj = shift;
-                unless (exists $obj->{$cachekey}) {
-                    $obj->{$cachekey} = $parentclass->lookup($obj->column($column));
-                    weaken $obj->{$cachekey};
-                }
-                return $obj->{$cachekey};
-            };
+            if (ref($column)) {
+                *{"${class}::$method"} = sub {
+                    my $obj = shift;
+                    unless (exists $obj->{$cachekey}) {
+                        if (ref($column) eq 'ARRAY') {
+                            $obj->{$cachekey} = $parentclass->lookup([ map{ $obj->{column_values}->{$_} } @{$column}]);
+                        } else {
+                            $obj->{$cachekey} = $parentclass->lookup($obj->{column_values}->{$column});
+                        }
+                        weaken $obj->{$cachekey};
+                    }
+                    return $obj->{$cachekey};
+                };
+            } else {
+                # array version
+            }
         } else {
-            *{"${class}::$method"} = sub {
-                return $parentclass->lookup(shift()->column($column));
-            };
+            if (ref($column)) {
+                *{"${class}::$method"} = sub {
+                    my $obj = shift;
+                    return $parentclass->lookup([ map{ $obj->{column_values}->{$_} } @{$column}]);
+                };
+            } else {
+                *{"${class}::$method"} = sub {
+                    return $parentclass->lookup(shift()->{column_values}->{$column});
+                };
+            }
         }
 
         # now add to the parent
@@ -99,13 +120,32 @@ sub has_a {
 
             $parent_method .= '_objs';
         }
-        *{"${parentclass}::$parent_method"} = sub {
-            my $obj = shift;
-            my $terms = shift;
-            my $args = shift;
-            # TBD - allow user defined extra terms here?...
-            # TBD - use primary_key_to_terms
-            return $class->search({$column => $obj->id}, $args);
+        if (ref($column)) {
+            *{"${parentclass}::$parent_method"} = sub {
+                my $obj = shift;
+                my $terms = shift || {};
+                my $args = shift;
+
+                my $primary_key_tuple = $obj->primary_key_tuple;
+                my $primary_key = $obj->primary_key;
+
+                # inject pk search into given terms.
+                # composite key, ugh
+                foreach my $key (@{$primary_key_tuple}) {
+                    $terms->{$key} = shift(@{$primary_key});
+                }
+
+                return $class->search($terms, $args);
+            }
+        } else {
+            *{"${parentclass}::$parent_method"} = sub {
+                my $obj = shift;
+                my $terms = shift || {};
+                my $args = shift;
+                # TBD - use primary_key_to_terms
+                $terms->{$column} = $obj->primary_key;
+                return $class->search($terms, $args);
+            }
         };
     } # end of loop over class names
     return;
@@ -264,6 +304,7 @@ sub column {
         Carp::croak("Cannot find column '$col' for class '" . ref($obj) . "'");
     }
 
+    # set some values
     if (@_) {
         $obj->{column_values}->{$col} = shift;
         unless ($_[0] && ref($_[0]) eq 'HASH' && $_[0]->{no_changed_flag}) {
@@ -430,9 +471,12 @@ are recognized:
 Name of the column(s) in this class to map with.  Pass in a single string if
 the column is a singular key, an array ref if this is a composite key.
 
+   column => 'user_id'
+   column => ['user_id', 'photo_id']
+
 =item * method [OPTIONAL]
 
-Name of the method to create in this class.  Defaults to the column name without
+Name of the method to create in this class.  Defaults to the column name(s) without
 the _id suffix and with the suffix _obj appended.
 
 =item * parent_method [OPTIONAL]
@@ -442,7 +486,9 @@ name of the current class with the suffix _objs.
 
 =item * cached [OPTIONAL]
 
-If set to 1 then we will cache in-memory the resulting object inside this class.
+If set to 1 cache the result of the fetching the parent object in the current class.  Note
+that this is a private copy to this class only, and does not interact with other caches
+in the system.
 
 =back
 
