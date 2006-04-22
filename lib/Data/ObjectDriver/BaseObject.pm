@@ -84,22 +84,18 @@ sub has_a {
             # Store cached item inside this object's namespace
             my $cachekey = "__cache_$method";
 
-            if (ref($column)) {
-                *{"${class}::$method"} = sub {
-                    my $obj = shift;
-                    unless (exists $obj->{$cachekey}) {
-                        if (ref($column) eq 'ARRAY') {
-                            $obj->{$cachekey} = $parentclass->lookup([ map{ $obj->{column_values}->{$_} } @{$column}]);
-                        } else {
-                            $obj->{$cachekey} = $parentclass->lookup($obj->{column_values}->{$column});
-                        }
-                        weaken $obj->{$cachekey};
+            *{"${class}::$method"} = sub {
+                my $obj = shift;
+                unless (exists $obj->{$cachekey}) {
+                    if (ref($column) eq 'ARRAY') {
+                        $obj->{$cachekey} = $parentclass->lookup([ map{ $obj->{column_values}->{$_} } @{$column}]);
+                    } else {
+                        $obj->{$cachekey} = $parentclass->lookup($obj->{column_values}->{$column});
                     }
-                    return $obj->{$cachekey};
-                };
-            } else {
-                # array version
-            }
+                    weaken $obj->{$cachekey};
+                }
+                return $obj->{$cachekey};
+            };
         } else {
             if (ref($column)) {
                 *{"${class}::$method"} = sub {
@@ -136,7 +132,7 @@ sub has_a {
                 }
 
                 return $class->search($terms, $args);
-            }
+            };
         } else {
             *{"${parentclass}::$parent_method"} = sub {
                 my $obj = shift;
@@ -145,7 +141,7 @@ sub has_a {
                 # TBD - use primary_key_to_terms
                 $terms->{$column} = $obj->primary_key;
                 return $class->search($terms, $args);
-            }
+            };
         };
     } # end of loop over class names
     return;
