@@ -40,12 +40,11 @@ sub properties {
 
 sub has_a {
     my $class = shift;
-    my %args = @_;
+    my @args = @_;
 
     # Iterate over each remote object
-    foreach my $parentclass (keys %args) {
-        my $config = $args{$parentclass};
-        next unless $config;
+    foreach my $config (@args) {
+        my $parentclass = $config->{class};
  
         # Parameters
         my $column = $config->{column};
@@ -78,31 +77,36 @@ sub has_a {
             die "Please define a valid method for $class->$column";
         }
 
-        no strict 'refs';
-
         if ($cached) {
             # Store cached item inside this object's namespace
             my $cachekey = "__cache_$method";
 
+            no strict 'refs';
             *{"${class}::$method"} = sub {
                 my $obj = shift;
-                unless (exists $obj->{$cachekey}) {
-                    if (ref($column) eq 'ARRAY') {
-                        $obj->{$cachekey} = $parentclass->lookup([ map{ $obj->{column_values}->{$_} } @{$column}]);
-                    } else {
-                        $obj->{$cachekey} = $parentclass->lookup($obj->{column_values}->{$column});
-                    }
-                    weaken $obj->{$cachekey};
-                }
-                return $obj->{$cachekey};
+
+                return $obj->{$cachekey}
+                    if exists $obj->{$cachekey};
+
+                my $id = (ref($column) eq 'ARRAY')
+                    ? [ map { $obj->{column_values}->{$_} } @{$column}]
+                    : $obj->{column_values}->{$column}
+                    ;
+                ## Hold in a variable here too, so we don't lose it immediately
+                ## by having only the weak reference.
+                my $ret = $obj->{$cachekey} = $parentclass->lookup($id);
+                weaken $obj->{$cachekey};
+                return $ret;
             };
         } else {
             if (ref($column)) {
+                no strict 'refs';
                 *{"${class}::$method"} = sub {
                     my $obj = shift;
                     return $parentclass->lookup([ map{ $obj->{column_values}->{$_} } @{$column}]);
                 };
             } else {
+                no strict 'refs';
                 *{"${class}::$method"} = sub {
                     return $parentclass->lookup(shift()->{column_values}->{$column});
                 };
@@ -117,6 +121,7 @@ sub has_a {
             $parent_method .= '_objs';
         }
         if (ref($column)) {
+            no strict 'refs';
             *{"${parentclass}::$parent_method"} = sub {
                 my $obj = shift;
                 my $terms = shift || {};
@@ -134,6 +139,7 @@ sub has_a {
                 return $class->search($terms, $args);
             };
         } else {
+            no strict 'refs';
             *{"${parentclass}::$parent_method"} = sub {
                 my $obj = shift;
                 my $terms = shift || {};
