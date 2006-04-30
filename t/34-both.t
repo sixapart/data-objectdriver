@@ -114,6 +114,12 @@ my $i4 = Ingredient->lookup([ $recipe->id, $i3->id ]);
 ok !$i4->{__cached};
 is $i4->name, 'Flour';
 
+## Delete it from the cache, so that the next test is actually accurate.
+my $driver = Ingredient->driver;
+$driver->remove_from_cache($driver->cache_key('Ingredient', $i4->primary_key));
+
+## Now look up the ingredients again. Milk and Eggs should already be cached,
+## and doing the search should now cache Flour.
 @is = Ingredient->search({ recipe_id => $recipe->id });
 is scalar(@is), 3;
 
