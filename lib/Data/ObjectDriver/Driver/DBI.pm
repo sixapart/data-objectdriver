@@ -411,20 +411,39 @@ sub direct_remove {
     1;
 }
 
-sub commit {
+sub begin_work {
     my $driver = shift;
-    if (my $dbh = $driver->dbh) {
-        $dbh->commit;
+    my $dbh = $driver->dbh;
+    unless ($dbh) {
+        $driver->{__delete_dbh_after_txn} = 1;
+        $dbh = $driver->rw_handle;
+        $driver->dbh($dbh);
     }
-    1;
+    eval {
+        $dbh->begin_work;
+    };
+    if ($@) {
+        $driver->rollback;
+        Carp::croak("Begin work failed for driver $driver: $@");
+    }
 }
 
-sub rollback {
+sub commit { shift->_end_txn('commit') }
+sub rollback { shift->_end_txn('rollback') }
+
+sub _end_txn {
     my $driver = shift;
-    if (my $dbh = $driver->dbh) {
-        $dbh->rollback;
+    my($action) = @_;
+    my $dbh = $driver->dbh
+        or Carp::croak("$action called without a stored handle--begin_work?");
+    eval { $dbh->$action() };
+    if ($@) {
+        Carp::croak("$action failed for driver $driver: $@");
     }
-    1;
+    if ($driver->{__delete_dbh_after_txn}) {
+        $driver->dbh(undef);
+        delete $driver->{__delete_dbh_after_txn};
+    }
 }
 
 sub DESTROY {
