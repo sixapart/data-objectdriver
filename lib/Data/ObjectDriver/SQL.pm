@@ -132,19 +132,18 @@ sub _mk_term {
     my $term = '';
     my @bind;
     if (ref($val) eq 'ARRAY') {
-        my $logic = 'OR';
-        my @val = @$val;
         if ($val->[0] eq '-and') {
-            $logic = 'AND';
-            shift @val;
+            my @terms;
+            for my $v (@$val[1..$#$val]) {
+                my ($t, $b) = $stmt->_mk_term($col, $v);
+                push @terms, $t;
+                push @bind, @$b;
+            }
+            $term = join " AND ", @terms;
+        } else {
+            $term = "$col IN (".join(',', ('?') x scalar @$val).')';
+            @bind = @$val;
         }
-        my @terms;
-        for my $val (@val) {
-            my($term, $bind) = $stmt->_mk_term($col, $val);
-            push @terms, $term;
-            push @bind, @$bind;
-        }
-        $term = join " $logic ", @terms;
     } elsif (ref($val) eq 'HASH') {
         $term = "$col $val->{op} ?";
         push @bind, $val->{value};

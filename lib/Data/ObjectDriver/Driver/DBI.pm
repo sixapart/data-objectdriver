@@ -230,7 +230,7 @@ sub insert {
     $obj->call_trigger('pre_insert', $orig_obj);
     
     my $cols = $obj->column_names;
-    if (! $obj->has_primary_key && ! $obj->is_pkless) {
+    if (!$obj->is_pkless && ! $obj->has_primary_key) {
         ## If we don't already have a primary key assigned for this object, we
         ## may need to generate one (depending on the underlying DB
         ## driver). If the driver gives us a new ID, we insert that into
@@ -271,7 +271,7 @@ sub insert {
 
     ## Now, if we didn't have an object ID, we need to grab the
     ## newly-assigned ID.
-    if (! $obj->has_primary_key && ! $obj->is_pkless) {
+    if (!$obj->is_pkless && ! $obj->has_primary_key) {
         my $pk = $obj->primary_key_tuple; ## but do that only for relation that aren't PK-less
         my $id_col = $pk->[0]; # XXX are we sure we will always use '0' ?
         my $id = $dbd->fetch_id(ref($obj), $dbh, $sth);
