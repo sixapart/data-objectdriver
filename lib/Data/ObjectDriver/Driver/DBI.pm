@@ -444,6 +444,7 @@ sub _end_txn {
         $driver->dbh(undef);
         delete $driver->{__delete_dbh_after_txn};
     }
+    return 1;
 }
 
 sub DESTROY {
