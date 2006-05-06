@@ -249,7 +249,7 @@ sub set_values {
         unless ( $obj->has_column($col) ) {
             Carp::croak("You tried to set inexistent column $col to value $values->{$col} on " . ref($obj));
         }
-        $obj->column($col => $values->{$col});
+        $obj->$col($values->{$col});
     }
 }
 
@@ -260,7 +260,7 @@ sub set_values_internal {
         unless ( $obj->has_column($col) ) {
             Carp::croak("You tried to set inexistent column $col to value $values->{$col} on " . ref($obj));
         }
-        $obj->column($col => $values->{$col}, { no_changed_flag => 1 });
+        $obj->$col($values->{$col}, { no_changed_flag => 1 });
     }
 }
 
@@ -313,9 +313,30 @@ sub column {
             $obj->{changed_cols}->{$col}++;
         }
     }
-        
+
     $obj->{column_values}->{$col};
 }
+
+sub column_func {
+    my $obj = shift;
+    my $col = shift or return;
+
+    return sub {
+        my $obj = shift;
+        my ($val, $flags) = @_;
+
+        if (@_) {
+            $obj->{column_values}->{$col} = $val;
+            unless (($val && ref($val) eq 'HASH' && $val->{no_changed_flag}) ||
+                    $flags->{no_changed_flag}) {
+                $obj->{changed_cols}->{$col}++;
+            }
+        }
+
+        return $obj->{column_values}->{$col};
+    };
+}
+
 
 sub changed_cols {
     my $obj = shift;
@@ -427,9 +448,8 @@ sub AUTOLOAD {
         Carp::croak("Cannot find column '$col' for class '" . ref($obj) . "'");
     }
 
-    *$AUTOLOAD = sub {
-        shift()->column($col, @_);
-    };
+    *$AUTOLOAD = $obj->column_func($col);
+
     goto &$AUTOLOAD;
 }
 

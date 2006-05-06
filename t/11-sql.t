@@ -81,7 +81,7 @@ is(scalar @{ $stmt->bind }, 1);
 is($stmt->bind->[0], 'bar');
 
 $stmt = ns(); $stmt->add_where(foo => [ 'bar', 'baz' ]);
-is($stmt->as_sql_where, "WHERE (foo = ? OR foo = ?)\n");
+is($stmt->as_sql_where, "WHERE (foo IN (?,?))\n");
 is(scalar @{ $stmt->bind }, 2);
 is($stmt->bind->[0], 'bar');
 is($stmt->bind->[1], 'baz');

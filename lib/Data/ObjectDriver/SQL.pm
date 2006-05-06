@@ -68,7 +68,7 @@ sub as_sql {
 sub as_aggregate {
     my $stmt = shift;
     my($set) = @_;
-        
+
     if (my $attribute = $stmt->$set()) {
         my $elements = (ref($attribute) eq 'ARRAY') ? $attribute : [ $attribute ];
         return uc($set) . ' BY '
@@ -120,7 +120,7 @@ sub add_having {
     if (my $orig = $stmt->select_map_reverse->{$col}) {
         $col = $orig;
     }
-    
+
     my($term, $bind) = $stmt->_mk_term($col, $val);
     push @{ $stmt->{having} }, "($term)";
     push @{ $stmt->{bind} }, @$bind;
@@ -132,19 +132,25 @@ sub _mk_term {
     my $term = '';
     my @bind;
     if (ref($val) eq 'ARRAY') {
-        my $logic = 'OR';
-        my @val = @$val;
-        if ($val->[0] eq '-and') {
-            $logic = 'AND';
-            shift @val;
+        if (ref $val->[0] or $val->[0] eq '-and') {
+            my $logic = 'OR';
+            my @values = @$val;
+            if ($val->[0] eq '-and') {
+                $logic = 'AND';
+                shift @values;
+            }
+
+            my @terms;
+            for my $v (@values) {
+                my($term, $bind) = $stmt->_mk_term($col, $v);
+                push @terms, $term;
+                push @bind, @$bind;
+            }
+            $term = join " $logic ", @terms;
+        } else {
+            $term = "$col IN (".join(',', ('?') x scalar @$val).')';
+            @bind = @$val;
         }
-        my @terms;
-        for my $val (@val) {
-            my($term, $bind) = $stmt->_mk_term($col, $val);
-            push @terms, $term;
-            push @bind, @$bind;
-        }
-        $term = join " $logic ", @terms;
     } elsif (ref($val) eq 'HASH') {
         $term = "$col $val->{op} ?";
         push @bind, $val->{value};
