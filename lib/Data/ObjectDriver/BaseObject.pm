@@ -86,7 +86,7 @@ sub has_a {
                 my $obj = shift;
 
                 return $obj->{$cachekey}
-                    if exists $obj->{$cachekey};
+                    if defined $obj->{$cachekey};
 
                 my $id = (ref($column) eq 'ARRAY')
                     ? [ map { $obj->{column_values}->{$_} } @{$column}]
