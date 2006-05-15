@@ -260,7 +260,8 @@ sub set_values_internal {
         unless ( $obj->has_column($col) ) {
             Carp::croak("You tried to set inexistent column $col to value $values->{$col} on " . ref($obj));
         }
-        $obj->$col($values->{$col}, { no_changed_flag => 1 });
+
+        $obj->column_values->{$col} = $values->{$col};
     }
 }
 
@@ -293,7 +294,7 @@ sub column_names {
     [ @{ shift->properties->{columns} } ]
 }
 
-sub column_values { $_[0]->{'column_values'} }
+sub column_values { $_[0]->{'column_values'} ||= {} }
 
 ## In 0.1 version we didn't die on inexistent column
 ## which might lead to silent bugs
