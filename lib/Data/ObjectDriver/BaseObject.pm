@@ -22,9 +22,7 @@ sub install_properties {
         # Skip adding this method if the class overloads it.
         # this lets the SUPER::columnname magic do it's thing
         if (!defined (*{"${class}::$col"})) {
-            *{"${class}::$col"} = sub {
-                shift()->column($col, @_);
-            };
+            *{"${class}::$col"} = $class->column_func($col);
         }
     }
     $props;
@@ -45,7 +43,7 @@ sub has_a {
     # Iterate over each remote object
     foreach my $config (@args) {
         my $parentclass = $config->{class};
- 
+
         # Parameters
         my $column = $config->{column};
         my $method = $config->{method};
@@ -71,7 +69,7 @@ sub has_a {
                 $method .= "obj";
             }
         }
-     
+
         # die if we have clashing methods method
         if (! defined $method || defined(*{"${class}::$method"})) {
             die "Please define a valid method for $class->$column";
@@ -320,18 +318,19 @@ sub column {
 
 sub column_func {
     my $obj = shift;
-    my $col = shift or return;
+    my $col = shift or die "Must specify column";
 
     return sub {
         my $obj = shift;
-        my ($val, $flags) = @_;
+        # getter
+        return $obj->{column_values}->{$col} unless (@_);
 
-        if (@_) {
-            $obj->{column_values}->{$col} = $val;
-            unless (($val && ref($val) eq 'HASH' && $val->{no_changed_flag}) ||
-                    $flags->{no_changed_flag}) {
-                $obj->{changed_cols}->{$col}++;
-            }
+        # setter 
+        my ($val, $flags) = @_;
+        $obj->{column_values}->{$col} = $val;
+        unless (($val && ref($val) eq 'HASH' && $val->{no_changed_flag}) ||
+                $flags->{no_changed_flag}) {
+            $obj->{changed_cols}->{$col}++;
         }
 
         return $obj->{column_values}->{$col};
@@ -514,6 +513,11 @@ that this is a private copy to this class only, and does not interact with other
 in the system.
 
 =back
+
+=head2 column_func
+
+This method is called to get/set column values.  Subclasses can override this and get different
+behavior.
 
 =head2 Class->driver
 
