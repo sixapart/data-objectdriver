@@ -11,7 +11,7 @@ use Carp ();
 use Data::ObjectDriver::SQL;
 use Data::ObjectDriver::Driver::DBD;
 
-__PACKAGE__->mk_accessors(qw( dsn username password connect_options dbh get_dbh dbd ));
+__PACKAGE__->mk_accessors(qw( dsn username password connect_options dbh get_dbh dbd prefix ));
 
 sub init {
     my $driver = shift;
@@ -201,11 +201,18 @@ sub select_one {
     $val;
 }
 
+sub table_for {
+    my $driver = shift;
+    my($this) = @_;
+    my $src = $this->datasource or return;
+    return $driver->prefix ? join('', $driver->prefix, $src) : $src;
+}
+
 sub exists {
     my $driver = shift;
     my($obj) = @_;
     return unless $obj->has_primary_key;
-    my $tbl = $obj->datasource;
+    my $tbl = $driver->table_for($obj);
     my $stmt = $driver->prepare_statement(ref($obj),
         $obj->primary_key_to_terms,
         { limit => 1 });
@@ -247,7 +254,7 @@ sub insert {
             $cols = [ grep !$pk{$_} || defined $obj->$_(), @$cols ];
         }
     }
-    my $tbl = $obj->datasource;
+    my $tbl = $driver->table_for($obj);
     my $sql = "INSERT INTO $tbl\n";
     my $dbd = $driver->dbd;
     $sql .= '(' . join(', ',
@@ -310,7 +317,7 @@ sub update {
         return 1;
     }
 
-    my $tbl = $obj->datasource;
+    my $tbl = $driver->table_for($obj);
     my $sql = "UPDATE $tbl SET\n";
     my $dbd = $driver->dbd;
     $sql .= join(', ',
@@ -373,7 +380,7 @@ sub remove {
     my $obj = $orig_obj->clone_all;
     $obj->call_trigger('pre_remove', $orig_obj);
 
-    my $tbl = $obj->datasource;
+    my $tbl = $driver->table_for($obj);
     my $sql = "DELETE FROM $tbl\n";
     my $stmt = $driver->prepare_statement(ref($obj), $obj->primary_key_to_terms);
     $sql .= $stmt->as_sql_where;
@@ -398,7 +405,7 @@ sub direct_remove {
     $class->call_trigger('pre_search', $terms, $args);
 
     my $stmt = $driver->prepare_statement($class, $terms, $args);
-    my $tbl  = $class->datasource;
+    my $tbl  = $driver->table_for($class);
     my $sql  = "DELETE from $tbl\n";
        $sql .= $stmt->as_sql_where;
 
@@ -459,7 +466,7 @@ sub prepare_statement {
 
     my $stmt = $args->{sql_statement} || Data::ObjectDriver::SQL->new;
 
-    if (my $tbl = $class->datasource) {
+    if (my $tbl = $driver->table_for($class)) {
         my $cols = $class->column_names;
         my $dbd = $driver->dbd;
         my %fetch = $args->{fetchonly} ?
