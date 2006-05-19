@@ -3,6 +3,7 @@
 package Data::ObjectDriver;
 use strict;
 use warnings;
+use Class::Accessor::Fast;
 
 use base qw( Class::Accessor::Fast );
 
