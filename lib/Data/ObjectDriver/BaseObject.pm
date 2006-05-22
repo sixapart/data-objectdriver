@@ -255,9 +255,10 @@ sub set_values_internal {
     my $obj = shift;
     my $values = shift;
     for my $col (keys %$values) {
-        unless ( $obj->has_column($col) ) {
-            Carp::croak("You tried to set inexistent column $col to value $values->{$col} on " . ref($obj));
-        }
+        # Not needed for the internal version of this method
+        #unless ( $obj->has_column($col) ) {
+        #    Carp::croak("You tried to set inexistent column $col to value $values->{$col} on " . ref($obj));
+        #}
 
         $obj->column_values->{$col} = $values->{$col};
     }
