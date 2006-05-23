@@ -8,6 +8,7 @@ use base qw( Data::ObjectDriver Class::Accessor::Fast );
 
 use DBI;
 use Carp ();
+use Data::ObjectDriver::Errors;
 use Data::ObjectDriver::SQL;
 use Data::ObjectDriver::Driver::DBD;
 
@@ -515,6 +516,11 @@ sub prepare_statement {
     }
 
     $stmt;
+}
+
+sub last_error {
+    my $driver = shift;
+    return $driver->dbd->map_error_code($DBI::err, $DBI::errstr);
 }
 
 1;

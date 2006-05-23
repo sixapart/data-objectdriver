@@ -20,5 +20,6 @@ sub bind_param_attributes { }
 sub db_column_name { $_[2] }
 sub fetch_id { }
 sub offset_implemented { 1 }
+sub map_error_code { }
 
 1;

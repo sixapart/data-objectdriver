@@ -3,8 +3,9 @@
 package Data::ObjectDriver::Driver::DBD::SQLite;
 use strict;
 use warnings;
-
 use base qw( Data::ObjectDriver::Driver::DBD );
+
+use Data::ObjectDriver::Errors;
 
 sub fetch_id { $_[2]->func('last_insert_rowid') }
 
@@ -18,6 +19,16 @@ sub bind_param_attributes {
         }
     }
     return;
+}
+
+sub map_error_code {
+    my $dbd = shift;
+    my($code, $msg) = @_;
+    if ($msg && $msg =~ /not unique/) {
+        return Data::ObjectDriver::Errors->UNIQUE_CONSTRAINT;
+    } else {
+        return undef;
+    }
 }
 
 1;
