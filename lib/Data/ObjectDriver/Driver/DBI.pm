@@ -175,6 +175,7 @@ sub lookup {
 sub lookup_multi {
     my $driver = shift;
     my($class, $ids) = @_;
+    return [] unless @$ids;
     my @got;
     ## If it's a single-column PK, assume it's in one partition, and
     ## use an OR search.
