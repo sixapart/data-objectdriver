@@ -212,10 +212,15 @@ sub exists {
     my $driver = shift;
     my($obj) = @_;
     return unless $obj->has_primary_key;
+
+    ## should call pre_search trigger so we can use enum in the part of PKs
+    my $terms = $obj->primary_key_to_terms;
+    
+    my $class = ref $obj;
+    $class->call_trigger('pre_search', $terms);
+
     my $tbl = $driver->table_for($obj);
-    my $stmt = $driver->prepare_statement(ref($obj),
-        $obj->primary_key_to_terms,
-        { limit => 1 });
+    my $stmt = $driver->prepare_statement($class, $terms, { limit => 1 });
     my $sql = "SELECT 1 FROM $tbl\n";
     $sql .= $stmt->as_sql_where;
     my $dbh = $driver->r_handle($obj->properties->{db});
@@ -305,9 +310,7 @@ sub update {
     $obj->call_trigger('pre_update', $orig_obj);
 
     my $cols = $obj->column_names;
-    my $pk = $obj->primary_key_tuple;
-    my %pk = map { $_ => 1 } @$pk;
-    my @changed_cols = grep {!$pk{$_}} $obj->changed_cols;
+    my @changed_cols = $obj->changed_cols;
 
     ## If there's no updated columns, update() is no-op
     ## but we should call post_* triggers

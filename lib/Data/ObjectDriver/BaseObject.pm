@@ -170,6 +170,22 @@ sub is_pkless {
     return 1 if ref $prop_pk eq 'ARRAY' && ! @$prop_pk;
 }
 
+sub is_primary_key {
+    my $obj = shift;
+    my($col) = @_;
+
+    my $prop_pk = $obj->properties->{primary_key};
+    if (ref($prop_pk)) {
+        for my $pk (@$prop_pk) {
+            return 1 if $pk eq $col;
+        }
+    } else {
+        return 1 if $prop_pk eq $col;
+    }
+
+    return;
+}
+
 sub primary_key_tuple {
     my $obj = shift;
     my $pk = $obj->properties->{primary_key};
@@ -339,9 +355,16 @@ sub column_func {
 }
 
 
-sub changed_cols {
+sub changed_cols_and_pk {
     my $obj = shift;
     keys %{$obj->{changed_cols}};
+}
+
+sub changed_cols {
+    my $obj = shift;
+    my $pk = $obj->primary_key_tuple;
+    my %pk = map { $_ => 1 } @$pk;
+    grep !$pk{$_}, $obj->changed_cols_and_pk;
 }
 
 sub is_changed {
@@ -349,10 +372,7 @@ sub is_changed {
     if (@_) {
         return exists $obj->{changed_cols}->{$_[0]};
     } else {
-        my $pk = $obj->primary_key_tuple;
-        my %pk = map { $_ => 1 } @$pk;
-        my @changed_cols = grep {!$pk{$_}}  $obj->changed_cols;
-        return @changed_cols > 0;
+        return $obj->changed_cols > 0;
     }
 }
 
