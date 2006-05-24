@@ -453,7 +453,7 @@ sub inflate {
     my $class = shift;
     my($deflated) = @_;
     my $obj = $class->new;
-    $obj->set_values_internal($deflated->{columns});
+    $obj->set_values($deflated->{columns});
     $obj->{changed_cols} = {};
     $obj;
 }
