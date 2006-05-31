@@ -45,9 +45,15 @@ sub as_sql {
         ## If there's an actual JOIN statement, assume it's for joining with
         ## the main datasource for the object we're loading. So shift that
         ## off of the FROM list, and write the JOIN statement and condition.
-        $sql .= shift(@{ $stmt->from }) . ' ' .
-                uc($join->{type}) . ' JOIN ' . $join->{table} . ' ON ' .
-                $join->{condition};
+        $sql .= shift(@{ $stmt->from });
+
+        my @joins = ref($join) eq 'ARRAY' ? @$join : ($join);
+        for my $j (@joins) {
+            $sql .= ' ' .
+                    uc($j->{type}) . ' JOIN ' . $j->{table} . ' ON ' .
+                    $j->{condition};
+        }
+
         $sql .= ', ' if @{ $stmt->from };
     }
     $sql .= join(', ', @{ $stmt->from }) . "\n";

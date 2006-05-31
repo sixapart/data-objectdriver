@@ -3,7 +3,7 @@
 use strict;
 
 use Data::ObjectDriver::SQL;
-use Test::More tests => 52;
+use Test::More tests => 53;
 
 my $stmt = ns();
 ok($stmt, 'Created SQL object');
@@ -15,6 +15,7 @@ is($stmt->as_sql, "FROM foo\n");
 $stmt->from([ 'foo', 'bar' ]);
 is($stmt->as_sql, "FROM foo, bar\n");
 
+## Testing JOINs
 $stmt->from([ 'foo' ]);
 $stmt->join({ type => 'inner', table => 'baz',
               condition => 'foo.baz_id = baz.baz_id' });
@@ -22,6 +23,15 @@ is($stmt->as_sql, "FROM foo INNER JOIN baz ON foo.baz_id = baz.baz_id\n");
 
 $stmt->from([ 'foo', 'bar' ]);
 is($stmt->as_sql, "FROM foo INNER JOIN baz ON foo.baz_id = baz.baz_id, bar\n");
+
+$stmt->from([ 'foo' ]);
+$stmt->join([
+        { type => 'inner', table => 'baz b1',
+          condition => 'foo.baz_id = b1.baz_id AND b1.quux_id = 1' },
+        { type => 'left', table => 'baz b2',
+          condition => 'foo.baz_id = b2.baz_id AND b2.quux_id = 2' },
+    ]);
+is $stmt->as_sql, "FROM foo INNER JOIN baz b1 ON foo.baz_id = b1.baz_id AND b1.quux_id = 1 LEFT JOIN baz b2 ON foo.baz_id = b2.baz_id AND b2.quux_id = 2\n";
 
 ## Testing GROUP BY
 $stmt = ns();
