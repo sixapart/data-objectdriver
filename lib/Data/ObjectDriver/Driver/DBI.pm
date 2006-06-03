@@ -169,7 +169,7 @@ sub lookup {
     my($class, $id) = @_;
     return unless defined $id;
     my @obj = $driver->search($class,
-        $class->primary_key_to_terms($id, { limit => 1 }));
+        $class->primary_key_to_terms($id), { limit => 1 , is_pk => 1 });
     $obj[0];
 }
 
@@ -182,7 +182,7 @@ sub lookup_multi {
     ## use an OR search.
     unless (ref($ids->[0])) {
         my $terms = $class->primary_key_to_terms([ $ids ]);
-        @got = $driver->search($class, $terms);
+        @got = $driver->search($class, $terms, { is_pk => 1 });
     } else {
         for my $id (@$ids) {
             push @got, $class->driver->lookup($class, $id);
