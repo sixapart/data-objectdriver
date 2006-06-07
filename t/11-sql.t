@@ -16,16 +16,18 @@ $stmt->from([ 'foo', 'bar' ]);
 is($stmt->as_sql, "FROM foo, bar\n");
 
 ## Testing JOINs
-$stmt->from([ 'foo' ]);
-$stmt->join({ type => 'inner', table => 'baz',
-              condition => 'foo.baz_id = baz.baz_id' });
+$stmt->from([]);
+$stmt->joins([]);
+$stmt->add_join(foo => { type => 'inner', table => 'baz',
+                         condition => 'foo.baz_id = baz.baz_id' });
 is($stmt->as_sql, "FROM foo INNER JOIN baz ON foo.baz_id = baz.baz_id\n");
 
-$stmt->from([ 'foo', 'bar' ]);
+$stmt->from([ 'bar' ]);
 is($stmt->as_sql, "FROM foo INNER JOIN baz ON foo.baz_id = baz.baz_id, bar\n");
 
-$stmt->from([ 'foo' ]);
-$stmt->join([
+$stmt->from([]);
+$stmt->joins([]);
+$stmt->add_join(foo => [
         { type => 'inner', table => 'baz b1',
           condition => 'foo.baz_id = b1.baz_id AND b1.quux_id = 1' },
         { type => 'left', table => 'baz b2',

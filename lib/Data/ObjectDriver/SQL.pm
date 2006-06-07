@@ -6,7 +6,7 @@ use warnings;
 
 use base qw( Class::Accessor::Fast );
 
-__PACKAGE__->mk_accessors(qw( select select_map select_map_reverse from join where bind limit offset group order having where_values ));
+__PACKAGE__->mk_accessors(qw( select select_map select_map_reverse from joins where bind limit offset group order having where_values ));
 
 sub new {
     my $class = shift;
@@ -19,6 +19,7 @@ sub new {
     $stmt->where([]);
     $stmt->where_values({});
     $stmt->having([]);
+    $stmt->joins([]);
     $stmt;
 }
 
@@ -28,6 +29,15 @@ sub add_select {
     push @{ $stmt->select }, $term;
     $stmt->select_map->{$term} = $col;
     $stmt->select_map_reverse->{$col} = $term;
+}
+
+sub add_join {
+    my $stmt = shift;
+    my($table, $joins) = @_;
+    push @{ $stmt->joins }, {
+        table => $table,
+        joins => ref($joins) eq 'ARRAY' ? $joins : [ $joins ],
+    };
 }
 
 sub as_sql {
@@ -41,19 +51,17 @@ sub as_sql {
         } @{ $stmt->select }) . "\n";
     }
     $sql .= 'FROM ';
-    if (my $join = $stmt->join) {
-        ## If there's an actual JOIN statement, assume it's for joining with
-        ## the main datasource for the object we're loading. So shift that
-        ## off of the FROM list, and write the JOIN statement and condition.
-        $sql .= shift(@{ $stmt->from });
-
-        my @joins = ref($join) eq 'ARRAY' ? @$join : ($join);
-        for my $j (@joins) {
-            $sql .= ' ' .
-                    uc($j->{type}) . ' JOIN ' . $j->{table} . ' ON ' .
-                    $j->{condition};
+    ## Add any explicit JOIN statements before the non-joined tables.
+    if ($stmt->joins && @{ $stmt->joins }) {
+        for my $j (@{ $stmt->joins }) {
+            my($table, $joins) = map { $j->{$_} } qw( table joins );
+            $sql .= $table;
+            for my $join (@{ $j->{joins} }) {
+                $sql .= ' ' .
+                        uc($join->{type}) . ' JOIN ' . $join->{table} . ' ON ' .
+                        $join->{condition};
+            }
         }
-
         $sql .= ', ' if @{ $stmt->from };
     }
     $sql .= join(', ', @{ $stmt->from }) . "\n";
