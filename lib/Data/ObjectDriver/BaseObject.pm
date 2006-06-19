@@ -384,10 +384,10 @@ sub exists {
 
 sub save {
     my $obj = shift;
-    if ($obj->exists) {
-        return $obj->update;
+    if ($obj->exists(@_)) {
+        return $obj->update(@_);
     } else {
-        return $obj->insert;
+        return $obj->insert(@_);
     }
 }
 
