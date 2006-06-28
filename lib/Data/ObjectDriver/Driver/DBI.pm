@@ -254,9 +254,11 @@ sub insert {
         my $pk = $obj->primary_key_tuple;
         if(my $generated = $driver->generate_pk($obj)) {
             ## The ID is the only thing we *are* allowed to change on
-            ## the original object.
+            ## the original object, so copy it back.
             $orig_obj->$_($obj->$_) for @$pk;
         } else {
+            ## Filter the undefined key fields out of the columns to include
+            ## in the query, so that we don't specify them in the query.
             my %pk = map { $_ => 1 } @$pk;
             $cols = [ grep !$pk{$_} || defined $obj->$_(), @$cols ];
         }
