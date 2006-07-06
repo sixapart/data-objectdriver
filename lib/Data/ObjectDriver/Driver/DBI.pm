@@ -307,7 +307,7 @@ sub insert {
 
 sub update {
     my $driver = shift;
-    my($orig_obj) = @_;
+    my($orig_obj, $terms) = @_;
 
     ## Use a duplicate so the pre_save trigger can modify it.
     my $obj = $orig_obj->clone_all;
@@ -331,7 +331,10 @@ sub update {
     $sql .= join(', ',
             map { $dbd->db_column_name($tbl, $_) . " = ?" }
             @changed_cols) . "\n";
-    my $stmt = $driver->prepare_statement(ref($obj), $obj->primary_key_to_terms);
+    my $stmt = $driver->prepare_statement(ref($obj), {
+            %{ $obj->primary_key_to_terms },
+            %{ $terms || {} }
+        });
     $sql .= $stmt->as_sql_where;
     
     my $dbh = $driver->rw_handle($obj->properties->{db});
