@@ -109,6 +109,7 @@ sub fetch {
     }
 
     my $sql = $stmt->as_sql;
+    $sql .= "\nFOR UPDATE" if $orig_args->{for_update};
     my $dbh = $driver->r_handle($class->properties->{db});
     $driver->debug($sql, $stmt->{bind});
     my $sth = $dbh->prepare_cached($sql);
@@ -350,14 +351,14 @@ sub update {
         $sth->bind_param($i++, $val);
     }
 
-    $sth->execute;
+    my $rows = $sth->execute;
     $sth->finish;
 
     $obj->call_trigger('post_save', $orig_obj);
     $obj->call_trigger('post_update', $orig_obj);
 
     $orig_obj->{changed_cols} = {};
-    1;
+    return $rows;
 }
 
 sub remove {
