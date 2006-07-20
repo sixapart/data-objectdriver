@@ -111,7 +111,7 @@ sub fetch {
     my $sql = $stmt->as_sql;
     $sql .= "\nFOR UPDATE" if $orig_args->{for_update};
     my $dbh = $driver->r_handle($class->properties->{db});
-    $driver->debug($sql, $stmt->{bind});
+    $driver->record_query($sql, $stmt->{bind});
     my $sth = $dbh->prepare_cached($sql);
     $sth->execute(@{ $stmt->{bind} });
     $sth->bind_columns(undef, @bind);
@@ -227,7 +227,7 @@ sub exists {
     my $sql = "SELECT 1 FROM $tbl\n";
     $sql .= $stmt->as_sql_where;
     my $dbh = $driver->r_handle($obj->properties->{db});
-    $driver->debug($sql, $stmt->{bind});
+    $driver->record_query($sql, $stmt->{bind});
     my $sth = $dbh->prepare_cached($sql);
     $sth->execute(@{ $stmt->{bind} });
     my $exists = $sth->fetch;
@@ -273,7 +273,7 @@ sub insert {
             ')' . "\n" .
             'VALUES (' . join(', ', ('?') x @$cols) . ')' . "\n";
     my $dbh = $driver->rw_handle($obj->properties->{db});
-    $driver->debug($sql, $obj->{column_values});
+    $driver->record_query($sql, $obj->{column_values});
     my $sth = $dbh->prepare_cached($sql);
     my $i = 1;
     my $col_defs = $obj->properties->{column_defs};
@@ -338,7 +338,7 @@ sub update {
     $sql .= $stmt->as_sql_where;
     
     my $dbh = $driver->rw_handle($obj->properties->{db});
-    $driver->debug($sql, $obj->{column_values});
+    $driver->record_query($sql, $obj->{column_values});
     my $sth = $dbh->prepare_cached($sql);
     my $i = 1;
     my $col_defs = $obj->properties->{column_defs};
@@ -396,7 +396,7 @@ sub remove {
     my $stmt = $driver->prepare_statement(ref($obj), $obj->primary_key_to_terms);
     $sql .= $stmt->as_sql_where;
     my $dbh = $driver->rw_handle($obj->properties->{db});
-    $driver->debug($sql, $stmt->{bind});
+    $driver->record_query($sql, $stmt->{bind});
     my $sth = $dbh->prepare_cached($sql);
     $sth->execute(@{ $stmt->{bind} });
     $sth->finish;
@@ -421,7 +421,7 @@ sub direct_remove {
        $sql .= $stmt->as_sql_where;
 
     my $dbh = $driver->rw_handle($class->properties->{db});
-    $driver->debug($sql, $stmt->{bind});
+    $driver->record_query($sql, $stmt->{bind});
     my $sth = $dbh->prepare_cached($sql);
     $sth->execute(@{ $stmt->{bind} });
     $sth->finish;

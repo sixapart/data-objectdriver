@@ -7,10 +7,14 @@ use Class::Accessor::Fast;
 
 use base qw( Class::Accessor::Fast );
 
+use Data::ObjectDriver::Profiler;
+
 __PACKAGE__->mk_accessors(qw( pk_generator ));
 
 our $VERSION = '0.02';
 our $DEBUG = $ENV{DOD_DEBUG} || 0;
+our $PROFILE = $ENV{DOD_PROFILE} || 0;
+our $PROFILER = Data::ObjectDriver::Profiler->new;
 
 use Data::Dumper ();
 
@@ -28,6 +32,17 @@ sub init {
     $driver;
 }
 
+sub record_query {
+    my $driver = shift;
+    my($sql, $bind) = @_;
+    if ($DEBUG) {
+        $driver->debug($sql, $bind);
+    }
+    if ($PROFILE) {
+        $PROFILER->record_query($driver, $sql);
+    }
+}
+
 sub debug {
     my $driver = shift;
     return unless $DEBUG;
@@ -37,6 +52,10 @@ sub debug {
         local $Data::Dumper::Indent = 1;
         print STDERR Data::Dumper::Dumper(@_);
     }
+}
+
+sub profiler {
+    return $PROFILER;
 }
 
 sub list_or_iterator {
@@ -458,6 +477,21 @@ Note that the invocation of callbacks is the responsibility of the object
 driver. If you implement a driver that does not delegate to
 I<Data::ObjectDriver::Driver::DBI>, it is I<your> responsibility to invoke the
 appropriate callbacks with the I<call_trigger> method.
+
+=head1 PROFILING
+
+For performance tuning, you can turn on query profiling by setting
+I<$Data::ObjectDriver::PROFILE> to a true value. Or, alternatively, you can
+set the I<DOD_PROFILE> environment variable to a true value before starting
+your application.
+
+To obtain the profile statistics, get the global
+I<Data::ObjectDriver::Profiler> instance:
+
+    my $profiler = Data::ObjectDriver->profiler;
+
+Then see the documentation for I<Data::ObjectDriver::Profiler> to see the
+methods on that class.
 
 =head1 EXAMPLES
 

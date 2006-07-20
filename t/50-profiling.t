@@ -1,0 +1,83 @@
+# $Id$
+
+use strict;
+
+use lib 't/lib';
+use lib 't/lib/both';
+
+require 't/lib/db-common.pl';
+
+use Test::More;
+use Test::Exception;
+BEGIN {
+    unless (eval { require DBD::SQLite }) {
+        plan skip_all => 'Tests require DBD::SQLite';
+    }
+    unless (eval { require Cache::Memory }) {
+        plan skip_all => 'Tests require Cache::Memory';
+    }
+}
+
+plan tests => 16;
+
+use Recipe;
+use Ingredient;
+
+setup_dbs({
+    global   => [ qw( recipes ) ],
+    cluster1 => [ qw( ingredients ) ],
+    cluster2 => [ qw( ingredients ) ],
+});
+
+$Data::ObjectDriver::PROFILE = 1;
+
+my $recipe = Recipe->new;
+$recipe->title('Cake');
+$recipe->save;
+
+my $profiler = Data::ObjectDriver->profiler;
+
+my $stats = $profiler->statistics;
+is $stats->{'DBI:total_queries'}, 1;
+is $stats->{'DBI:query_insert'}, 1;
+
+my $log = $profiler->query_log;
+isa_ok $log, 'ARRAY';
+is scalar(@$log), 1;
+like $log->[0], qr/^\s*INSERT INTO recipe/;
+
+my $frequent = $profiler->query_frequency;
+isa_ok $frequent, 'HASH';
+my $sql = (keys %$frequent)[0];
+like $sql, qr/^\s*INSERT INTO recipe/;
+is $frequent->{$sql}, 1;
+
+Data::ObjectDriver->profiler->reset;
+
+$stats = $profiler->statistics;
+is scalar(keys %$stats), 0;
+
+$recipe = Recipe->lookup($recipe->id);
+
+$stats = $profiler->statistics;
+is $stats->{'DBI:total_queries'}, 1;
+is $stats->{'DBI:query_select'}, 1;
+
+$recipe->title('Brownies');
+$recipe->save;
+
+$stats = $profiler->statistics;
+is $stats->{'DBI:total_queries'}, 3;
+is $stats->{'DBI:query_select'}, 2;
+is $stats->{'DBI:query_update'}, 1;
+
+$recipe->title('Flan');
+$recipe->save;
+
+$frequent = $profiler->query_frequency;
+is $frequent->{"SELECT 1 FROM recipes WHERE (recipes.id = ?)"}, 2;
+
+my $report = $profiler->produce_report;
+like $report, qr/Total Queries/;
+
+teardown_dbs(qw( global cluster1 cluster2 ));
