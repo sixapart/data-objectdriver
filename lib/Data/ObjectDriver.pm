@@ -11,7 +11,7 @@ use Data::ObjectDriver::Profiler;
 
 __PACKAGE__->mk_accessors(qw( pk_generator ));
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 our $DEBUG = $ENV{DOD_DEBUG} || 0;
 our $PROFILE = $ENV{DOD_PROFILE} || 0;
 our $PROFILER = Data::ObjectDriver::Profiler->new;
@@ -344,6 +344,11 @@ A reference to an array of column names to fetch in the I<SELECT> statement.
 
 Optional; the default is to fetch the values of all of the columns.
 
+=item * for_update
+
+If set to a true value, the I<SELECT> statement generated will include a
+I<FOR UPDATE> clause.
+
 =back
 
 =head2 Class->add_trigger($trigger, \&callback)
@@ -368,6 +373,9 @@ generate a primary key and insert the record into the database table.
 Otherwise, it will update the existing record.
 
 If an error occurs, I<save> will I<croak>.
+
+Internally, I<save> calls I<update> for records that already exist in the
+database, and I<insert> for those that don't.
 
 =head2 $obj->remove
 

@@ -2,6 +2,40 @@
 
 Revision history for Data::ObjectDriver
 
+0.03  2006.07.20
+    - Added an inflate and deflate mechanism to memcached caching. When objects
+      are stored in memcached, they are now deflated to a hash reference
+      containing only the column values; retrieving the object from memcached
+      automatically inflates the object to the full representation. Classes
+      can override inflate and deflate to store additional information in the
+      memcached representation that's kept automatically up-to-date.
+    - Many, many bug fixes and improvements to the caching drivers.
+    - Added detection of changed columns, such that only columns that have
+      been changed are updated in an UPDATE statement.
+    - Added a clear_cache method to the D::O::D::Cache::RAM class.
+    - Added cross-DBD error handling, which maps local error codes to error
+      constants in Data::ObjectDriver::Errors. The list of supported errors
+      is pretty miniscule thus far (just one), but will be expanded as needed.
+    - Added support for query profiling (Data::ObjectDriver::Profiler), which
+      counts queries, calculates frequent queries, and can produce reports.
+    - Added support for optional table prefixes, which simplifies setting up
+      identical schemas in the same database.
+    - Added an optional $terms argument to D::O::D::DBI->update, which can
+      add additional terms to the UPDATE statement besides just the PK.
+    - Added a D::O::D::DBI->begin_work method, and improved the commit and
+      rollback methods.
+    - Added a D::O::D::DBI->last_error method.
+    - Added support for multiple JOIN clauses with a new D::O::D::SQL->add_join
+      method.
+    - Multiple OR values are now contained in an IN (...) clause rather than
+      many joined OR clauses.
+    - Added a for_update option to search, which allows constructing a
+      SELECT ... FOR UPDATE query.
+    - D::O::D::BaseObject->column is now removed and replaced with a
+      column_func method, which returns a subroutine reference used to
+      initialize the dynamically-created methods for each column. This allows
+      some optimizations.
+
 0.02  2006.02.21
     - Added Data::ObjectDriver::BaseView, a base class for creating "views"
       across multiple tables, or involving more complex aggregate queries.
