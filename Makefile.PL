@@ -16,6 +16,8 @@ requires('DBI');
 requires('Class::Accessor::Fast');
 requires('Class::Data::Inheritable');
 requires('Class::Trigger');
+requires('List::Util');
+requires('Text::SimpleTable');
 
 auto_include();
 auto_install();

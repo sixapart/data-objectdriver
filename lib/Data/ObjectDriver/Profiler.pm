@@ -6,7 +6,7 @@ use warnings;
 use base qw( Class::Accessor::Fast );
 
 use List::Util qw( min );
-use Text::Wrap qw( wrap );
+use Text::SimpleTable;
 
 __PACKAGE__->mk_accessors(qw( statistics query_log ));
 
@@ -58,28 +58,29 @@ sub query_frequency {
     return \%freq;
 }
 
-sub produce_report {
+sub total_queries { return $_[0]->statistics->{'DBI:total_queries'} || 0 }
+
+sub report_queries_by_type {
     my $profiler = shift;
     my $stats = $profiler->statistics;
-    my $report = <<REPORT;
-Total Queries: $stats->{'DBI:total_queries'}
-
-Queries By Type:
-REPORT
+    my $tbl = Text::SimpleTable->new( [ 64, 'Type' ], [ 9, 'Number' ] );
     for my $stat (keys %$stats) {
         my($type) = $stat =~ /^DBI:query_(\w+)$/
             or next;
-        $report .= sprintf "%-7d %s\n", $stats->{$stat}, uc($type);
+        $tbl->row(uc $type, $stats->{$stat});
     }
-    $report .= "\nMost Frequent Queries:\n";
+    return $tbl->draw;
+}
+
+sub report_query_frequency {
+    my $profiler = shift;
     my $freq = $profiler->query_frequency;
+    my $tbl = Text::SimpleTable->new( [ 64, 'Query' ], [ 9, 'Number' ] );
     my @sql = sort { $freq->{$b} <=> $freq->{$a} } keys %$freq;
-    local $Text::Wrap::columns = 70;
     for my $sql (@sql[0..min($#sql, 19)]) {
-        my $sql_f = wrap('', "        ", $sql);
-        $report .= sprintf "%-7d %s\n", $freq->{$sql}, $sql_f;
+        $tbl->row($sql, $freq->{$sql});
     }
-    return $report;
+    return $tbl->draw;
 }
 
 1;
@@ -137,11 +138,18 @@ representing the number of times the query was executed.
 
 Resets the statistics and the query log.
 
-=head2 $profiler->produce_report
+=head2 $profiler->total_queries
+
+Returns the total number of queries currently logged in the profiler.
+
+=head2 $profiler->report_queries_by_type
 
 Returns a string containing a pretty report of information about the current
-information in the profiler. This is useful to print out at the end of a
-web request, for example, or to be installed as a signal handler on an
-application.
+number of each type of query in the profiler (e.g. C<SELECT>, C<INSERT>).
+
+=head2 $profiler->report_query_frequency
+
+Returns a string containing a pretty report of information about the current
+query frequency information in the profiler.
 
 =cut

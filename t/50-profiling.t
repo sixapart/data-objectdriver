@@ -18,7 +18,7 @@ BEGIN {
     }
 }
 
-plan tests => 16;
+plan tests => 18;
 
 use Recipe;
 use Ingredient;
@@ -77,7 +77,9 @@ $recipe->save;
 $frequent = $profiler->query_frequency;
 is $frequent->{"SELECT 1 FROM recipes WHERE (recipes.id = ?)"}, 2;
 
-my $report = $profiler->produce_report;
-like $report, qr/Total Queries/;
+is $profiler->total_queries, 5;
+
+like $profiler->report_query_frequency, qr/FROM recipes/;
+like $profiler->report_queries_by_type, qr/SELECT/;
 
 teardown_dbs(qw( global cluster1 cluster2 ));
