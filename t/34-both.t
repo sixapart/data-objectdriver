@@ -18,7 +18,7 @@ BEGIN {
     }
 }
 
-plan tests => 40;
+plan tests => 42;
 
 use Recipe;
 use Ingredient;
@@ -148,5 +148,14 @@ is $ingredients->[0]->id, $ingredient->id;
 is $ingredients->[0]->recipe_id, $ingredient->recipe_id;
 is $ingredients->[0]->name, $ingredient->name;
 is $ingredients->[0]->quantity, $ingredient->quantity;
+
+## Now add a cache_version to Recipe dynamically, so that the cache_key
+## changes the next time we try to do a lookup.
+*Recipe::cache_version = *Recipe::cache_version = sub { '1.0' };
+$r3 = Recipe->lookup($recipe->id);
+ok !$r3->{__cached};
+
+$r3 = Recipe->lookup($recipe->id);
+ok $r3->{__cached};
 
 teardown_dbs(qw( global cluster1 cluster2 ));

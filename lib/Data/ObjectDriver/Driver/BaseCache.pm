@@ -175,7 +175,11 @@ sub cache_key {
     if ($class->can('cache_class')) {
         $class = $class->cache_class;
     }
-    join ':', $class, ref($id) eq 'ARRAY' ? @$id : $id;
+    my $key = join ':', $class, ref($id) eq 'ARRAY' ? @$id : $id;
+    if (my $v = $class->can('cache_version')) {
+        $key .= ':' . $v->();
+    }
+    return $key;
 }
 
 sub DESTROY { }
