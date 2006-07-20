@@ -29,6 +29,8 @@ sub init {
 sub cache_object {
     my $driver = shift;
     my($obj) = @_;
+    return $driver->fallback->cache_object($obj)
+        if $driver->Disabled;
     ## If it's already cached in this layer, assume it's already cached in
     ## all layers below this, as well.
     unless (exists $obj->{__cached} && $obj->{__cached}{ref $driver}) {
