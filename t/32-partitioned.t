@@ -26,15 +26,15 @@ my($tmp, $iter);
 my $recipe = Recipe->new;
 $recipe->title('Banana Milkshake');
 ok($recipe->save, 'Object saved successfully');
-ok($recipe->id, 'Recipe has an ID');
-ok($recipe->cluster_id, 'Recipe assigned to a cluster');
+ok($recipe->recipe_id, 'Recipe has an ID');
+ok($recipe->partition_id, 'Recipe assigned to a cluster');
 is($recipe->title, 'Banana Milkshake', 'Title is Banana Milkshake');
 
 $recipe->title('My Banana Milkshake');
 ok($recipe->save, 'Object updated successfully');
 is($recipe->title, 'My Banana Milkshake', 'Title is My Banana Milkshake');
 
-$tmp = Recipe->lookup($recipe->id);
+$tmp = Recipe->lookup($recipe->recipe_id);
 is(ref $tmp, 'Recipe', 'lookup gave us a recipe');
 is($tmp->title, 'My Banana Milkshake', 'Title is My Banana Milkshake');
 
@@ -50,7 +50,7 @@ is(ref $tmp, 'Recipe', 'Iterator gave us a recipe');
 is($tmp->title, 'My Banana Milkshake', 'Title is My Banana Milkshake');
 
 my $ingredient = Ingredient->new;
-$ingredient->recipe_id($recipe->id);
+$ingredient->recipe_id($recipe->recipe_id);
 $ingredient->name('Vanilla Ice Cream');
 $ingredient->quantity(1);
 ok($ingredient->save, 'Ingredient saved successfully');
@@ -58,15 +58,15 @@ ok($ingredient->id, 'Ingredient has an ID');
 is($ingredient->id, 1, 'ID is 1');
 is($ingredient->name, 'Vanilla Ice Cream', 'Name is Vanilla Ice Cream');
 
-$tmp = Ingredient->lookup([ $recipe->id, $ingredient->id ]);
+$tmp = Ingredient->lookup([ $recipe->recipe_id, $ingredient->id ]);
 is(ref $tmp, 'Ingredient', 'lookup gave us an ingredient');
 is($tmp->name, 'Vanilla Ice Cream', 'Name is Vanilla Ice Cream');
 
-my @ingredients = Ingredient->search({ recipe_id => $recipe->id });
+my @ingredients = Ingredient->search({ recipe_id => $recipe->recipe_id });
 is(scalar @ingredients, 1, 'Got one ingredient back from search');
 is($ingredients[0]->name, 'Vanilla Ice Cream', 'Name is Vanilla Ice Cream');
 
-$iter = Ingredient->search({ recipe_id => $recipe->id });
+$iter = Ingredient->search({ recipe_id => $recipe->recipe_id });
 ok($iter, 'Got an iterator object');
 $tmp = $iter->();
 ok(!$iter->(), 'Iterator gave us only one ingredient');
@@ -74,7 +74,7 @@ is(ref $tmp, 'Ingredient', 'Iterator gave us an ingredient');
 is($tmp->name, 'Vanilla Ice Cream', 'Name is Vanilla Ice Cream');
 
 my $ingredient2 = Ingredient->new;
-$ingredient2->recipe_id($recipe->id);
+$ingredient2->recipe_id($recipe->recipe_id);
 $ingredient2->name('Bananas');
 $ingredient2->quantity(5);
 ok($ingredient2->save, 'Ingredient saved successfully');
@@ -82,7 +82,7 @@ ok($ingredient2->id, 'Ingredient has an ID');
 is($ingredient2->id, 2, 'ID is 2');
 is($ingredient2->name, 'Bananas', 'Name is Bananas');
 
-@ingredients = Ingredient->search({ recipe_id => $recipe->id, quantity => 5 });
+@ingredients = Ingredient->search({ recipe_id => $recipe->recipe_id, quantity => 5 });
 is(scalar @ingredients, 1, 'Got one ingredient back from search');
 is($ingredients[0]->id, $ingredient2->id, 'ID is for the Bananas object');
 is($ingredients[0]->name, 'Bananas', 'Name is Bananas');
@@ -90,12 +90,12 @@ is($ingredients[0]->name, 'Bananas', 'Name is Bananas');
 my $recipe2 = Recipe->new;
 $recipe2->title('Chocolate Chip Cookies');
 ok($recipe2->save, 'Object saved successfully');
-ok($recipe2->id, 'Recipe has an ID');
-ok($recipe2->cluster_id, 'Recipe assigned to a cluster');
+ok($recipe2->recipe_id, 'Recipe has an ID');
+ok($recipe2->partition_id, 'Recipe assigned to a cluster');
 is($recipe2->title, 'Chocolate Chip Cookies', 'Title is Chocolate Chip Cookies');
 
 my $ingredient3 = Ingredient->new;
-$ingredient3->recipe_id($recipe2->id);
+$ingredient3->recipe_id($recipe2->recipe_id);
 $ingredient3->name('Chocolate Chips');
 $ingredient3->quantity(100);
 ok($ingredient3->save, 'Ingredient saved successfully');
@@ -103,7 +103,7 @@ ok($ingredient3->id, 'Ingredient has an ID');
 is($ingredient3->id, 1, 'ID is 1');
 is($ingredient3->name, 'Chocolate Chips', 'Name is Chocolate Chips');
 
-$tmp = Ingredient->lookup([ $recipe2->id, 1 ]);
+$tmp = Ingredient->lookup([ $recipe2->recipe_id, 1 ]);
 is(ref $tmp, 'Ingredient', 'lookup gave us an ingredient');
 is($tmp->name, 'Chocolate Chips', 'Name is Chocolate Chips');
 

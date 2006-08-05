@@ -81,7 +81,7 @@ setup_dbs({
     my $r = Recipe->new;
     $r->title("Good one");
     ok $r->save;
-    my $rid = $r->id;
+    my $rid = $r->recipe_id;
     ok $rid;
 
     my $i = Ingredient->new;

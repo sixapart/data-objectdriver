@@ -474,6 +474,31 @@ sub AUTOLOAD {
     goto &$AUTOLOAD;
 }
 
+sub has_partitions {
+    my $class = shift;
+    my(%param) = @_;
+    my $how_many = delete $param{number}
+        or Carp::croak("number (of partitions) is required");
+
+    ## Save the get_driver subref that we were passed, so that the
+    ## SimplePartition driver can access it.
+    $class->properties->{partition_get_driver} = delete $param{get_driver}
+        or Carp::croak("get_driver is required");
+
+    ## When creating a new $class object, we should automatically fill in
+    ## the partition ID by selecting one at random, unless a partition_id
+    ## is already defined. This allows us to keep it simple but for the
+    ## caller to do something more complex, if it wants to.
+    $class->add_trigger(pre_insert => sub {
+        my($obj, $orig_obj) = @_;
+        unless (defined $obj->partition_id) {
+            my $partition_id = int(rand $how_many) + 1;
+            $obj->partition_id($partition_id);
+            $orig_obj->partition_id($partition_id);
+        }
+    });
+}
+
 1;
 __END__
 

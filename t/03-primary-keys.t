@@ -42,7 +42,7 @@ setup_dbs({
     ok $r->has_primary_key, "recipe has pk";;
     
     my $i = Ingredient->new;
-    $i->recipe_id($r->id);
+    $i->recipe_id($r->recipe_id);
     $i->save;
     ok $i->has_primary_key, "ingredient has (multi) pk";
 

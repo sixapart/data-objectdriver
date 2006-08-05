@@ -7,9 +7,9 @@ use base qw( Data::ObjectDriver::BaseObject );
 use Data::ObjectDriver::Driver::DBI;
 
 __PACKAGE__->install_properties({
-    columns => [ 'id', 'title' ],
+    columns => [ 'recipe_id', 'title' ],
     datasource => 'recipes',
-    primary_key => 'id',
+    primary_key => 'recipe_id',
     driver => Data::ObjectDriver::Driver::DBI->new(
         dsn      => 'dbi:SQLite:dbname=global.db',
     ),

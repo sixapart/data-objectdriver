@@ -32,13 +32,13 @@ use Ingredient;
     $recipe->save;
 
     my $ingredient = Ingredient->new;
-    $ingredient->recipe_id($recipe->id);
+    $ingredient->recipe_id($recipe->recipe_id);
     $ingredient->name($name);
     $ingredient->quantity($quantity);
 
     ## it makes no sense to test if have the wrong init. cond.
     isa_ok $ingredient->primary_key_tuple, 'ARRAY';
-    ok($recipe->cluster_id, 'Recipe assigned to a cluster');
+    ok($recipe->partition_id, 'Recipe assigned to a cluster');
 
     my $ran_callback = 0;
     my $test_pre_save = sub {

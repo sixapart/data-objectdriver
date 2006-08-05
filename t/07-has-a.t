@@ -42,13 +42,13 @@ $recipe->title('Cake');
 $recipe->save;
 
 my $ingredient = Ingredient->new;
-$ingredient->recipe_id($recipe->id);
+$ingredient->recipe_id($recipe->recipe_id);
 $ingredient->name('Egg');
 $ingredient->quantity(5);
 $ingredient->save;
 
 my $i3 = Ingredient->new;
-$i3->recipe_id($recipe->id);
+$i3->recipe_id($recipe->recipe_id);
 $i3->name('Milk');
 $i3->quantity(1);
 $i3->save;
@@ -64,6 +64,6 @@ while (my $i = $iter->()) {
 }
 
 my $r = $ingredient->recipe;
-is $r->id, $recipe->id, "recipe id back using 'parent_method'";
+is $r->recipe_id, $recipe->recipe_id, "recipe id back using 'parent_method'";
 
 teardown_dbs(qw( global ));

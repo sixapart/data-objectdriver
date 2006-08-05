@@ -2,13 +2,15 @@
 
 Revision history for Data::ObjectDriver
 
-0.03  2006.07.20
+0.03  2006.08.05
     - Added an inflate and deflate mechanism to memcached caching. When objects
       are stored in memcached, they are now deflated to a hash reference
       containing only the column values; retrieving the object from memcached
       automatically inflates the object to the full representation. Classes
       can override inflate and deflate to store additional information in the
       memcached representation that's kept automatically up-to-date.
+    - Added a SimplePartition driver, which helps to make partitioning, well,
+      simpler. Still to come: documentation and a tutorial on partitioning.
     - Many, many bug fixes and improvements to the caching drivers.
     - Added detection of changed columns, such that only columns that have
       been changed are updated in an UPDATE statement.

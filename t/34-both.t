@@ -45,14 +45,14 @@ $recipe->title('Cake');
 $recipe->save;
 
 my $deflated = $recipe->deflate;
-is $deflated->{columns}{id}, $recipe->id;
+is $deflated->{columns}{recipe_id}, $recipe->recipe_id;
 is $deflated->{columns}{title}, $recipe->title;
 
 isa_ok $deflated->{ingredients}, 'ARRAY';
 is scalar(@{ $deflated->{ingredients} }), 0;
 
 my $ingredient = Ingredient->new;
-$ingredient->recipe_id($recipe->id);
+$ingredient->recipe_id($recipe->recipe_id);
 $ingredient->name('Egg');
 $ingredient->quantity(5);
 $ingredient->save;
@@ -63,7 +63,7 @@ isa_ok $deflated->{ingredients}, 'ARRAY';
 is scalar(@{ $deflated->{ingredients} }), 1;
 
 my $r2 = Recipe->inflate($deflated);
-is $r2->id, $recipe->id;
+is $r2->recipe_id, $recipe->recipe_id;
 is $r2->title, $recipe->title;
 
 ## Inspect the internal array, since it should have been populated
@@ -78,39 +78,39 @@ is $ingredients->[0]->name, $ingredient->name;
 is $ingredients->[0]->quantity, $ingredient->quantity;
 
 my $i2 = Ingredient->new;
-$i2->recipe_id($recipe->id);
+$i2->recipe_id($recipe->recipe_id);
 $i2->name('Egg');
 $i2->quantity(5);
 $i2->save;
 
 my $is = Ingredient->lookup_multi([
-        [ $recipe->id, $ingredient->id ],
-        [ $recipe->id, $i2->id ],
+        [ $recipe->recipe_id, $ingredient->id ],
+        [ $recipe->recipe_id, $i2->id ],
     ]);
 is scalar(@$is), 2;
 ok $is->[0]{__cached};
 ok !$is->[1]{__cached};
 
 $is = Ingredient->lookup_multi([
-        [ $recipe->id, $ingredient->id ],
-        [ $recipe->id, $i2->id ],
+        [ $recipe->recipe_id, $ingredient->id ],
+        [ $recipe->recipe_id, $i2->id ],
     ]);
 is scalar(@$is), 2;
 ok $is->[0]{__cached};
 ok $is->[1]{__cached};
 
 my $i3 = Ingredient->new;
-$i3->recipe_id($recipe->id);
+$i3->recipe_id($recipe->recipe_id);
 $i3->name('Flour');
 $i3->quantity(10);
 $i3->save;
 
 ## Try loading with fetchonly first. The driver shouldn't cache the results.
-my @is = Ingredient->search({ recipe_id => $recipe->id }, { fetchonly => [ 'recipe_id', 'id' ] });
+my @is = Ingredient->search({ recipe_id => $recipe->recipe_id }, { fetchonly => [ 'recipe_id', 'id' ] });
 is scalar(@is), 3;
 
 ## Flour should not yet be cached.
-my $i4 = Ingredient->lookup([ $recipe->id, $i3->id ]);
+my $i4 = Ingredient->lookup([ $recipe->recipe_id, $i3->id ]);
 ok !$i4->{__cached};
 is $i4->name, 'Flour';
 
@@ -120,25 +120,25 @@ $driver->remove_from_cache($driver->cache_key('Ingredient', $i4->primary_key));
 
 ## Now look up the ingredients again. Milk and Eggs should already be cached,
 ## and doing the search should now cache Flour.
-@is = Ingredient->search({ recipe_id => $recipe->id });
+@is = Ingredient->search({ recipe_id => $recipe->recipe_id });
 is scalar(@is), 3;
 
 ## Flour should now be cached.
-$i4 = Ingredient->lookup([ $recipe->id, $i3->id ]);
+$i4 = Ingredient->lookup([ $recipe->recipe_id, $i3->id ]);
 ok $i4->{__cached};
 is $i4->name, 'Flour';
 
 ## Now look up the recipe, so that we make sure it gets cached...
-my $r3 = Recipe->lookup($recipe->id);
+my $r3 = Recipe->lookup($recipe->recipe_id);
 ok !$r3->{__cached};
-is $r3->id, $recipe->id;
+is $r3->recipe_id, $recipe->recipe_id;
 is $r3->title, $recipe->title;
 
 ## Now look it up again. We should get the cached version, and it
 ## should get inflated.
-$r3 = Recipe->lookup($recipe->id);
+$r3 = Recipe->lookup($recipe->recipe_id);
 ok $r3->{__cached};
-is $r3->id, $recipe->id;
+is $r3->recipe_id, $recipe->recipe_id;
 is $r3->title, $recipe->title;
 $ingredients = $r3->{__ingredients};
 isa_ok $ingredients, 'ARRAY';
@@ -152,10 +152,10 @@ is $ingredients->[0]->quantity, $ingredient->quantity;
 ## Now add a cache_version to Recipe dynamically, so that the cache_key
 ## changes the next time we try to do a lookup.
 *Recipe::cache_version = *Recipe::cache_version = sub { '1.0' };
-$r3 = Recipe->lookup($recipe->id);
+$r3 = Recipe->lookup($recipe->recipe_id);
 ok !$r3->{__cached};
 
-$r3 = Recipe->lookup($recipe->id);
+$r3 = Recipe->lookup($recipe->recipe_id);
 ok $r3->{__cached};
 
 teardown_dbs(qw( global cluster1 cluster2 ));

@@ -57,7 +57,7 @@ Data::ObjectDriver->profiler->reset;
 $stats = $profiler->statistics;
 is scalar(keys %$stats), 0;
 
-$recipe = Recipe->lookup($recipe->id);
+$recipe = Recipe->lookup($recipe->recipe_id);
 
 $stats = $profiler->statistics;
 is $stats->{'DBI:total_queries'}, 1;
@@ -75,7 +75,7 @@ $recipe->title('Flan');
 $recipe->save;
 
 $frequent = $profiler->query_frequency;
-is $frequent->{"SELECT 1 FROM recipes WHERE (recipes.id = ?)"}, 2;
+is $frequent->{"SELECT 1 FROM recipes WHERE (recipes.recipe_id = ?)"}, 2;
 
 is $profiler->total_queries, 5;
 
