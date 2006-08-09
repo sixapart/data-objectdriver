@@ -79,7 +79,12 @@ is $frequent->{"SELECT 1 FROM recipes WHERE (recipes.recipe_id = ?)"}, 2;
 
 is $profiler->total_queries, 5;
 
-like $profiler->report_query_frequency, qr/FROM recipes/;
-like $profiler->report_queries_by_type, qr/SELECT/;
+SKIP: {
+        my $simpletable = eval { require Text::SimpleTable };
+        skip "Text::SimpleTable not installed", 2 unless $simpletable;
+
+        like $profiler->report_query_frequency, qr/FROM recipes/;
+        like $profiler->report_queries_by_type, qr/SELECT/;
+};
 
 teardown_dbs(qw( global cluster1 cluster2 ));

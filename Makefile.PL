@@ -17,7 +17,10 @@ requires('Class::Accessor::Fast');
 requires('Class::Data::Inheritable');
 requires('Class::Trigger');
 requires('List::Util');
-requires('Text::SimpleTable');
+recommends('Text::SimpleTable');
+build_requires('Test::Exception');
+build_requires('UNIVERSAL::require');
+build_requires('Cache::Memory');
 
 auto_include();
 auto_install();

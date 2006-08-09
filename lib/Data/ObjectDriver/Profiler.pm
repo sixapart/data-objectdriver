@@ -6,7 +6,14 @@ use warnings;
 use base qw( Class::Accessor::Fast );
 
 use List::Util qw( min );
-use Text::SimpleTable;
+
+my $simpletable = 0;
+BEGIN {
+    eval {
+        require Text::SimpleTable;
+        $simpletable = 1;
+    };
+}
 
 __PACKAGE__->mk_accessors(qw( statistics query_log ));
 
@@ -62,6 +69,7 @@ sub total_queries { return $_[0]->statistics->{'DBI:total_queries'} || 0 }
 
 sub report_queries_by_type {
     my $profiler = shift;
+    return "Text::SimpleTable unavailable at startup, reports disabled." unless $simpletable;
     my $stats = $profiler->statistics;
     my $tbl = Text::SimpleTable->new( [ 64, 'Type' ], [ 9, 'Number' ] );
     for my $stat (keys %$stats) {
@@ -74,6 +82,7 @@ sub report_queries_by_type {
 
 sub report_query_frequency {
     my $profiler = shift;
+    return "Text::SimpleTable unavailable at startup, reports disabled." unless $simpletable;
     my $freq = $profiler->query_frequency;
     my $tbl = Text::SimpleTable->new( [ 64, 'Query' ], [ 9, 'Number' ] );
     my @sql = sort { $freq->{$b} <=> $freq->{$a} } keys %$freq;
