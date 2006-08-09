@@ -21,7 +21,7 @@ sub install_properties {
     foreach my $col (@{ $props->{columns} }) {
         # Skip adding this method if the class overloads it.
         # this lets the SUPER::columnname magic do it's thing
-        if (!defined (*{"${class}::$col"})) {
+        if (! $class->can($col)) {
             *{"${class}::$col"} = $class->column_func($col);
         }
     }
