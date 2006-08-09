@@ -7,7 +7,7 @@ use base qw( Class::Accessor::Fast );
 
 use List::Util qw( min );
 
-my $simpletable = 0;
+my $simpletable;
 BEGIN {
     eval {
         require Text::SimpleTable;
