@@ -165,10 +165,19 @@ sub update {
 sub remove {
     my $driver = shift;
     my($obj) = @_;
-    return $driver->fallback->remove($obj)
+    return $driver->fallback->remove(@_)
         if $driver->Disabled;
-    $driver->remove_from_cache($driver->cache_key(ref($obj), $obj->primary_key));
-    $driver->fallback->remove($obj);
+    if (ref $obj) {
+        $driver->remove_from_cache($driver->cache_key(ref($obj), $obj->primary_key));
+    } else {
+        ## since direct_remove isn't an object method, it can't benefit
+        ## from inheritance, we're forced to keep things a bit obfuscated here
+        ## (I'd rather have a : sub direct_remove { die "unavailable" } in the driver
+        if ($_[2] && $_[2]->{nofetch}) {
+            die "nofetch option isn't compatible with a cache driver.";
+        }
+    }
+    $driver->fallback->remove(@_);
 }
 
 sub cache_key {

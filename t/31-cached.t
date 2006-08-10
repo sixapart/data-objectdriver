@@ -15,7 +15,7 @@ BEGIN {
         plan skip_all => 'Tests require Cache::Memory';
     }
 }
-plan tests => 54;
+plan tests => 56;
 
 setup_dbs({
     global   => [ qw( recipes ingredients ) ],
@@ -136,7 +136,14 @@ is_deeply $data,
 
 ok($ingredient->remove, 'Ingredient removed successfully');
 ok($ingredient2->remove, 'Ingredient removed successfully');
-ok($ingredient3->remove, 'Ingredient removed successfully');
+# let's remove ingredient3 with Class methods
+eval {
+    Ingredient->remove({ name => 'Chocolate Chips' }, { nofetch => 1 });
+}; 
+ok($@, "nofetch option will make the driver dies if cache is involved");
+
+ok(Ingredient->remove({ name => 'Chocolate Chips' }), "Removed with class method");
+ok(! Ingredient->lookup(1), "really deleted");
 
 
 ok($recipe->remove, 'Recipe removed successfully');
