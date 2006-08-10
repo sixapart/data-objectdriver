@@ -169,13 +169,11 @@ sub remove {
         if $driver->Disabled;
     if (ref $obj) {
         $driver->remove_from_cache($driver->cache_key(ref($obj), $obj->primary_key));
-    } else {
+    } elsif ($_[2] && $_[2]->{nofetch}) {
         ## since direct_remove isn't an object method, it can't benefit
         ## from inheritance, we're forced to keep things a bit obfuscated here
         ## (I'd rather have a : sub direct_remove { die "unavailable" } in the driver
-        if ($_[2] && $_[2]->{nofetch}) {
-            die "nofetch option isn't compatible with a cache driver.";
-        }
+        Carp::croak("nofetch option isn't compatible with a cache driver");
     }
     $driver->fallback->remove(@_);
 }
