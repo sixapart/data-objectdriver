@@ -18,7 +18,7 @@ BEGIN {
     }
 }
 
-plan tests => 20;
+plan tests => 21;
 
 use Wine;
 use Recipe;
@@ -93,7 +93,10 @@ setup_dbs({
 
 # 0 might be a valid pk
 { 
-    Wine->remove({});
+    my $rv = Wine->remove({});
+    # make sure that remove returns the number of records deleted (1)
+    is($rv, 1, 'correct number of rows deleted');
+
     my $wine = Wine->new;
     $wine->id(0);
     $wine->name("zero");

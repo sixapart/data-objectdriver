@@ -134,19 +134,19 @@ is_deeply $data,
     { name => "Vanilla Ice Cream", quantity => 1, recipe_id => 1, id => 1 },
     "(Cache) fetch_data - ingredient is cached";
 
-ok($ingredient->remove, 'Ingredient removed successfully');
-ok($ingredient2->remove, 'Ingredient removed successfully');
+is($ingredient->remove, 1, 'Ingredient removed successfully');
+is($ingredient2->remove, 1, 'Ingredient removed successfully');
 # let's remove ingredient3 with Class methods
 eval {
     Ingredient->remove({ name => 'Chocolate Chips' }, { nofetch => 1 });
 }; 
 ok($@, "nofetch option will make the driver dies if cache is involved");
 
-ok(Ingredient->remove({ name => 'Chocolate Chips' }), "Removed with class method");
+is(Ingredient->remove({ name => 'Chocolate Chips' }), 1, "Removed with class method");
 ok(! Ingredient->lookup(1), "really deleted");
 
 
-ok($recipe->remove, 'Recipe removed successfully');
-ok($recipe2->remove, 'Recipe removed successfully');
+is($recipe->remove, 1, 'Recipe removed successfully');
+is($recipe2->remove, 1, 'Recipe removed successfully');
 
 teardown_dbs(qw( global ));

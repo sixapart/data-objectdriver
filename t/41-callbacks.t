@@ -10,7 +10,7 @@ use Test::More;
 unless (eval { require DBD::SQLite }) {
     plan skip_all => 'Tests require DBD::SQLite';
 }
-plan tests => 23;
+plan tests => 25;
 
 setup_dbs({
     global => [ qw( wines ) ],
@@ -72,7 +72,7 @@ use Wine;
 
 #    Wine->remove_trigger('pre_save'); # doesn't exist
     delete $wine->__triggers->{'pre_save'};
-    $wine->remove;
+    is $wine->remove, 1, 'Remove correct number or rows';
 };
 
 ## test pre_search
@@ -89,7 +89,7 @@ use Wine;
     ok $wine;
     cmp_ok $wine->rating, '==', 10, "object has still the same rating";
     cmp_ok $wine->name, 'eq', 'I will change rating', "indeed";
-    $wine->remove;
+    is $wine->remove, 1, 'Remove correct number of rows';
 
 #    Wine->remove_trigger('pre_search'); # doesn't exist
     delete $wine->__triggers->{'pre_search'};

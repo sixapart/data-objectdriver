@@ -2,6 +2,10 @@
 
 Revision history for Data::ObjectDriver
 
+0.04_XX
+    - Added has_a() construct to build linking methods between classes.
+    - remove() returns number of affected rows, with DBI semantics.
+
 0.03  2006.08.05
     - Added an inflate and deflate mechanism to memcached caching. When objects
       are stored in memcached, they are now deflated to a hash reference

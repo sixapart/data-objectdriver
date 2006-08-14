@@ -107,10 +107,10 @@ $tmp = Ingredient->lookup([ $recipe2->recipe_id, 1 ]);
 is(ref $tmp, 'Ingredient', 'lookup gave us an ingredient');
 is($tmp->name, 'Chocolate Chips', 'Name is Chocolate Chips');
 
-ok($ingredient->remove, 'Ingredient removed successfully');
-ok($ingredient2->remove, 'Ingredient removed successfully');
-ok($ingredient3->remove, 'Ingredient removed successfully');
-ok($recipe->remove, 'Recipe removed successfully');
-ok($recipe2->remove, 'Recipe removed successfully');
+is $ingredient->remove, 1, 'Ingredient removed successfully';
+is $ingredient2->remove, 1, 'Ingredient removed successfully';
+is $ingredient3->remove, 1, 'Ingredient removed successfully';
+is $recipe->remove, 1, 'Recipe removed successfully';
+is $recipe2->remove, 1, 'Recipe removed successfully';
 
 teardown_dbs(qw( global cluster1 cluster2 ));

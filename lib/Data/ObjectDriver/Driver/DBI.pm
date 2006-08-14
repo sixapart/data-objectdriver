@@ -377,14 +377,16 @@ sub remove {
         if ($_[1] && $_[1]->{nofetch}) {
             return $driver->direct_remove($orig_obj, @_);
         } else {
+	    my $result = 0;
             my @obj = $driver->search($orig_obj, @_);
             for my $obj (@obj) {
+		$result ++;
                 $obj->remove;
             }
-            return 1;
+            return $result || 0E0;
         }
     }
-    
+
     return unless $orig_obj->has_primary_key;
 
     ## Use a duplicate so the pre_save trigger can modify it.
@@ -398,12 +400,12 @@ sub remove {
     my $dbh = $driver->rw_handle($obj->properties->{db});
     $driver->record_query($sql, $stmt->{bind});
     my $sth = $dbh->prepare_cached($sql);
-    $sth->execute(@{ $stmt->{bind} });
+    my $result = $sth->execute(@{ $stmt->{bind} });
     $sth->finish;
 
     $obj->call_trigger('post_remove', $orig_obj);
-    
-    1;
+
+    return $result;
 }
 
 sub direct_remove {
@@ -423,10 +425,9 @@ sub direct_remove {
     my $dbh = $driver->rw_handle($class->properties->{db});
     $driver->record_query($sql, $stmt->{bind});
     my $sth = $dbh->prepare_cached($sql);
-    $sth->execute(@{ $stmt->{bind} });
+    my $result = $sth->execute(@{ $stmt->{bind} });
     $sth->finish;
-
-    1;
+    return $result;
 }
 
 sub begin_work {

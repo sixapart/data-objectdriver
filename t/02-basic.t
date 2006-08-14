@@ -9,6 +9,7 @@ require 't/lib/db-common.pl';
 
 use Test::More;
 use Test::Exception;
+
 BEGIN {
     unless (eval { require DBD::SQLite }) {
         plan skip_all => 'Tests require DBD::SQLite';
@@ -18,7 +19,7 @@ BEGIN {
     }
 }
 
-plan tests => 27;
+plan tests => 33;
 
 use Wine;
 use Recipe;
@@ -56,8 +57,8 @@ setup_dbs({
     $w1->refresh;
 
     cmp_ok $w1->name, 'eq', $new, "Refreshed";
-    ok $w1->remove;
-    ok $w2->remove;
+    is $w1->remove, 1, 'Remove correct number of rows';
+    is $w2->remove, '0E0', 'Remove correct number of rows';
 }
 
 # lookup with hash (single pk) 
@@ -73,7 +74,7 @@ setup_dbs({
     cmp_ok $w->name, 'eq', 'Veuve Cliquot', "simple data test";
 
     ok $w;
-    ok $w->remove;
+    is $w->remove, 1, 'Remove correct number of rows';
 }
 
 # lookup with hash (multiple pk) 
@@ -97,8 +98,8 @@ setup_dbs({
     lives_ok { $i = Ingredient->lookup({ id => $id, recipe_id => $rid })} "Alive";
     cmp_ok $i->name, 'eq', 'Chouchenn', "simple data test";
 
-    ok $r->remove;
-    ok $i->remove;
+    is $r->remove, 1, 'Remove correct number of rows';
+    is $i->remove, 1, 'Remove correct number or rows';
 }
 
 # is_changed interface 
@@ -111,6 +112,30 @@ setup_dbs({
     ok $w->is_changed;
     ok $w->is_changed('name');
     ok ! $w->is_changed('content');
+}
+
+# Remove counts
+{
+    # Clear out the wine table
+    ok (Wine->remove(), 'delete all from Wine table');
+
+    is (Wine->remove({name=>'moooo'}), 0E0, 'No rows deleted');
+    my @bad_wines = qw(Thunderbird MadDog Franzia);
+    foreach my $name (@bad_wines) {
+        my $w = Wine->new;
+        $w->name($name);
+        ok $w->save, "Saving bad_wine $name";
+    }
+    is (Wine->remove(), scalar(@bad_wines), 'removing all bad wine');
+
+    # Do it again with direct remove from the DB
+    foreach my $name (@bad_wines) {
+        my $w = Wine->new;
+        $w->name($name);
+        ok $w->save, "Saving bad_wine $name";
+    }
+    # note sqlite is stupid and doesn't return the number of affected rows
+    is (Wine->remove({}, { nofetch => 1 }), '0E0', 'removing all bad wine');
 }
 
 teardown_dbs(qw( global ));
