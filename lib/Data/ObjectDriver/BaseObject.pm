@@ -63,8 +63,9 @@ sub has_a {
                 $method .= "_obj";
             } elsif (ref($column) eq 'ARRAY') {
                 foreach my $col (@{$column}) {
-                    $col =~ s/_id$//;
-                    $method .= $col . '_';
+                    my $part = $col;
+                    $part =~ s/_id$//;
+                    $method .= $part . '_';
                 }
                 $method .= "obj";
             }
