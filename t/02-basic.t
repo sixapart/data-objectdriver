@@ -19,7 +19,7 @@ BEGIN {
     }
 }
 
-plan tests => 33;
+plan tests => 37;
 
 use Wine;
 use Recipe;
