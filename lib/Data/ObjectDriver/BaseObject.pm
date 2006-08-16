@@ -52,7 +52,7 @@ sub has_a {
 
         # column is required
         if (!defined($column)) {
-            die "Please specify a valid column for $parentclass" 
+            die "Please specify a valid column for $parentclass"
         }
 
         # create a method name based on the column
@@ -114,7 +114,7 @@ sub has_a {
         # now add to the parent
         if (!defined $parent_method) {
             $parent_method = lc($class);
-            $parent_method =~ s/^.*:://; 
+            $parent_method =~ s/^.*:://;
 
             $parent_method .= '_objs';
         }
@@ -125,12 +125,11 @@ sub has_a {
                 my $terms = shift || {};
                 my $args = shift;
 
-                my $primary_key_tuple = $obj->primary_key_tuple;
                 my $primary_key = $obj->primary_key;
 
                 # inject pk search into given terms.
                 # composite key, ugh
-                foreach my $key (@{$primary_key_tuple}) {
+                foreach my $key (@$column) {
                     $terms->{$key} = shift(@{$primary_key});
                 }
 
@@ -212,7 +211,7 @@ sub is_same_array {
 sub primary_key_to_terms {
     my($obj, $id) = @_;
     my $pk = $obj->primary_key_tuple;
-    if (! defined $id) { 
+    if (! defined $id) {
         $id = $obj->primary_key;
     } else {
         if (ref($id) eq 'HASH') {
@@ -313,7 +312,7 @@ sub column_values { $_[0]->{'column_values'} ||= {} }
 
 ## In 0.1 version we didn't die on inexistent column
 ## which might lead to silent bugs
-## You should override column if you want to find the old 
+## You should override column if you want to find the old
 ## behaviour
 sub column {
     my $obj = shift;
@@ -342,7 +341,7 @@ sub column_func {
         # getter
         return $obj->{column_values}->{$col} unless (@_);
 
-        # setter 
+        # setter
         my ($val, $flags) = @_;
         $obj->{column_values}->{$col} = $val;
         unless (($val && ref($val) eq 'HASH' && $val->{no_changed_flag}) ||
@@ -432,7 +431,7 @@ sub insert          { shift->_proxy('insert',       @_) }
 sub fetch_data      { shift->_proxy('fetch_data',   @_) }
 
 sub refresh {
-    my $obj = shift; 
+    my $obj = shift;
     return unless $obj->has_primary_key;
     my $fields = $obj->fetch_data;
     $obj->set_values_internal($fields);
@@ -500,6 +499,7 @@ sub has_partitions {
 }
 
 1;
+
 __END__
 
 =head1 NAME
@@ -549,7 +549,7 @@ the _id suffix and with the suffix _obj appended.
 
 =item * parent_method [OPTIONAL]
 
-Name of the method created in the parent class.  Default is the lowercased 
+Name of the method created in the parent class.  Default is the lowercased
 name of the current class with the suffix _objs.
 
 =item * cached [OPTIONAL]
