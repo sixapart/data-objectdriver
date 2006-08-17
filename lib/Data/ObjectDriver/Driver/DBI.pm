@@ -425,7 +425,7 @@ sub direct_remove {
     # not all DBD drivers can do this.  check.  better to die than do
     # unbounded DELETE when they requested a limit.
     if ($stmt->limit) {
-        die "Driver doesn't support DELETE with LIMIT\n"
+        Carp::croak("Driver doesn't support DELETE with LIMIT")
             unless $driver->dbd->can_delete_with_limit;
         $sql .= $stmt->as_limit;
     }
