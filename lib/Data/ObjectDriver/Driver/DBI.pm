@@ -94,7 +94,7 @@ sub fetch_data {
 sub fetch {
     my $driver = shift;
     my($rec, $class, $orig_terms, $orig_args) = @_;
-    
+
     ## Use (shallow) duplicates so the pre_search trigger can modify them.
     my $terms = defined $orig_terms ? { %$orig_terms } : undef;
     my $args  = defined $orig_args  ? { %$orig_args  } : undef;
@@ -218,7 +218,7 @@ sub exists {
 
     ## should call pre_search trigger so we can use enum in the part of PKs
     my $terms = $obj->primary_key_to_terms;
-    
+
     my $class = ref $obj;
     $class->call_trigger('pre_search', $terms);
 
@@ -243,7 +243,7 @@ sub insert {
     my $obj = $orig_obj->clone_all;
     $obj->call_trigger('pre_save', $orig_obj);
     $obj->call_trigger('pre_insert', $orig_obj);
-    
+
     my $cols = $obj->column_names;
     if (!$obj->is_pkless && ! $obj->has_primary_key) {
         ## If we don't already have a primary key assigned for this object, we
@@ -336,7 +336,7 @@ sub update {
             %{ $terms || {} }
         });
     $sql .= $stmt->as_sql_where;
-    
+
     my $dbh = $driver->rw_handle($obj->properties->{db});
     $driver->record_query($sql, $obj->{column_values});
     my $sth = $dbh->prepare_cached($sql);
@@ -377,10 +377,10 @@ sub remove {
         if ($_[1] && $_[1]->{nofetch}) {
             return $driver->direct_remove($orig_obj, @_);
         } else {
-	    my $result = 0;
+            my $result = 0;
             my @obj = $driver->search($orig_obj, @_);
             for my $obj (@obj) {
-		$result ++;
+                $result ++;
                 $obj->remove;
             }
             return $result || 0E0;
