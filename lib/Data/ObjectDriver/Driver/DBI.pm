@@ -422,6 +422,14 @@ sub direct_remove {
     my $sql  = "DELETE from $tbl\n";
        $sql .= $stmt->as_sql_where;
 
+    # not all DBD drivers can do this.  check.  better to die than do
+    # unbounded DELETE when they requested a limit.
+    if ($stmt->limit) {
+        die "Driver doesn't support DELETE with LIMIT\n"
+            unless $driver->dbd->can_delete_with_limit;
+        $sql .= $stmt->as_limit;
+    }
+
     my $dbh = $driver->rw_handle($class->properties->{db});
     $driver->record_query($sql, $stmt->{bind});
     my $sth = $dbh->prepare_cached($sql);

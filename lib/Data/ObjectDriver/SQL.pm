@@ -71,12 +71,17 @@ sub as_sql {
     $sql .= $stmt->as_sql_having;
     $sql .= $stmt->as_aggregate('order');
 
-    if (my $n = $stmt->limit) {
-        $n =~ s/\D//g;   ## Get rid of any non-numerics.
-        $sql .= sprintf "LIMIT %d%s\n", $n,
-            ($stmt->offset ? " OFFSET " . $stmt->offset : "");
-    }
+    $sql .= $stmt->as_limit;
     $sql;
+}
+
+sub as_limit {
+    my $stmt = shift;
+    my $n = $stmt->limit or
+        return '';
+
+    return sprintf "LIMIT %d%s\n", $n,
+           ($stmt->offset ? " OFFSET " . int($stmt->offset) : "");
 }
 
 sub as_aggregate {

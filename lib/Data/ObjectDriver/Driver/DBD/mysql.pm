@@ -20,4 +20,11 @@ sub map_error_code {
     return ERROR_MAP->{$code};
 }
 
+sub sql_for_unixtime {
+    return "UNIX_TIMESTAMP()";
+}
+
+# yes, MySQL supports LIMIT on a DELETE
+sub can_delete_with_limit { 1 }
+
 1;
