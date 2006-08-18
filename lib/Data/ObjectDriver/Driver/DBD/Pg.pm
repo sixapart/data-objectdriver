@@ -36,4 +36,22 @@ sub fetch_id {
         { sequence => $dbd->sequence_name($class) });
 }
 
+sub bulk_insert {
+    my $dbd = shift;
+    my $dbh = shift;
+    my $table = shift;
+
+    my $cols = shift;
+    my $rows_ref = shift;
+
+    my $sql = "COPY $table (" . join(',', @{$cols}) . ') from stdin';
+
+    $dbh->do($sql);
+    foreach my $row (@{$rows_ref}) {
+	my $line = join("\t", map {$_ || '\N'} @{$row});
+	$dbh->pg_putline($line);
+    }
+    return $dbh->pg_endcopy();
+}
+
 1;

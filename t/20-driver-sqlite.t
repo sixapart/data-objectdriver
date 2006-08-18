@@ -48,4 +48,15 @@ is scalar @results, 1;
 is $results[0]->rating, 4;
 is $results[0]->name, "Saumur Champigny, Le Grand Clos 2001";
 
+## Test Bulk Loading
+Wine->bulk_insert(['name', 'rating'], [['Caymus', 4], ['Thunderbird', 1], ['Stags Leap', 3]]);
+
+my ($result) = Wine->search({name => 'Caymus'});
+ok $result, 'Found Caymus';
+is $result->rating, 4, 'Caymus is a 4';
+
+my ($result) = Wine->search({name => 'Thunderbird'});
+ok $result, 'Found Thunderbird';
+is $result->rating, 1, 'Thunderbird is a 1';
+
 teardown_dbs(qw( global ));

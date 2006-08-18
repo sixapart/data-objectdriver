@@ -31,6 +31,29 @@ sub map_error_code {
     }
 }
 
+
+sub bulk_insert {
+    my $dbd = shift;
+    my $dbh = shift;
+    my $table = shift;
+
+    my $cols = shift;
+    my $rows_ref = shift;
+
+    my $sql = "INSERT INTO $table("  . join(',', @{$cols}) . ") VALUES (" . join(',',  map {'?'} @{$cols}) .  ")\n";
+
+    my $sth = $dbh->prepare($sql);
+
+    foreach my $row (@{$rows_ref}) {
+	$sth->execute(@{$row});
+    }
+
+    # For now just write all data, at some point we need to lookup the
+    # maximum packet size for SQL
+    return 1;
+}
+
+
 1;
 
 =pod

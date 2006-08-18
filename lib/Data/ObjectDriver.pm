@@ -403,6 +403,11 @@ This might be much faster and useful for tables without Primary Key,
 but beware that in this case B<Triggers won't be fired> because no
 objects are instanciated.
 
+=head2 Class->bulk_insert([col1, col2], [[d1,d2], [d1,d2]]);
+
+Bulk inserts data into the underlying table.  The first argument
+is an array reference of columns names as specified in install_properties
+
 =head2 $obj->add_trigger($trigger, \&callback)
 
 Adds a trigger to the object I<$obj>, such that when the event I<$trigger>

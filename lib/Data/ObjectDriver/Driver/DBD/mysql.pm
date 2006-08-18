@@ -27,4 +27,27 @@ sub sql_for_unixtime {
 # yes, MySQL supports LIMIT on a DELETE
 sub can_delete_with_limit { 1 }
 
+sub bulk_insert {
+    my $dbd = shift;
+    my $dbh = shift;
+    my $table = shift;
+
+    my $cols = shift;
+    my $rows_ref = shift;
+
+    my $sql = "INSERT INTO $table("  . join(',', @{$cols}) . ") VALUES\n";
+    my $statement_length = length($sql);
+
+    foreach my $row (@{$rows_ref}) {
+	my $line = join(',', map { defined($_) ?  $dbh->quote($_) : 'NULL'} @{$row});
+	$statement_length += length($line);
+	$sql .= $line . "\n";
+    }
+
+    # For now just write all data, at some point we need to lookup the
+    # maximum packet size for SQL
+
+    return $dbh->do($sql);
+}
+
 1;

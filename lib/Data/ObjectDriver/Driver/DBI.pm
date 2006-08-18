@@ -438,6 +438,38 @@ sub direct_remove {
     return $result;
 }
 
+sub bulk_insert {
+    my $driver = shift;
+    my $class = shift;
+    my $dbd = $driver->dbd;
+
+    my $cols = shift;
+    my $data = shift;
+
+
+    Carp::croak("Driver doesn't support bulk_insert")
+	    unless ($dbd->can('bulk_insert'));
+
+    # check that cols are valid..
+    my %valid_cols = map {$_ => 1} @{$class->column_names};
+
+    my $invalid_cols;
+    foreach my $c (@{$cols}) {
+        $invalid_cols .= "$c " if (!$valid_cols{$c});
+    }
+    if (defined($invalid_cols)) {
+        Carp::croak("Invalid columns $invalid_cols passed to bulk_insert");
+    }
+
+
+    # pass this directly to the backend DBD
+    my $dbh = $driver->rw_handle($class->properties->{db});
+    my $tbl  = $driver->table_for($class);
+    my @db_cols =  map {$dbd->db_column_name($tbl, $_) } @{$cols};
+
+    return $dbd->bulk_insert($dbh, $tbl, \@db_cols, $data);
+}
+
 sub begin_work {
     my $driver = shift;
     my $dbh = $driver->dbh;

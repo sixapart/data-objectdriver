@@ -391,6 +391,13 @@ sub save {
     }
 }
 
+sub bulk_insert {
+    my $class = shift;
+    my $driver = $class->driver;
+
+    return $driver->bulk_insert($class, @_);
+}
+
 sub lookup {
     my $class = shift;
     my $driver = $class->driver;
