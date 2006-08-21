@@ -10,7 +10,7 @@ sub new {
     my($name) = @_;
     die "No Driver" unless $name;
     my $subclass = join '::', $class, $name;
-    eval "use $subclass";
+    eval "use $subclass"; ## no critic
     die $@ if $@;
     bless {}, $subclass;
 }

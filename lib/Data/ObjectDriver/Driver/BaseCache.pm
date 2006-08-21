@@ -196,16 +196,18 @@ sub DESTROY { }
 sub AUTOLOAD {
     my $driver = $_[0];
     (my $meth = our $AUTOLOAD) =~ s/.+:://;
-    no strict 'refs';
     my $fallback = $driver->fallback;
     ## Check for invalid methods, but make sure we still allow
     ## chaining 2 caching drivers together.
     Carp::croak("Cannot call method '$meth' on object '$driver'")
         unless $fallback->can($meth) ||
                UNIVERSAL::isa($fallback, __PACKAGE__);
-    *$AUTOLOAD = sub {
-        shift->fallback->$meth(@_);
-    };
+    {
+        no strict 'refs'; ## no critic
+        *$AUTOLOAD = sub {
+            shift->fallback->$meth(@_);
+        };
+    }
     goto &$AUTOLOAD;
 }
 
