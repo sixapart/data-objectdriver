@@ -491,6 +491,10 @@ driver. If you implement a driver that does not delegate to
 I<Data::ObjectDriver::Driver::DBI>, it is I<your> responsibility to invoke the
 appropriate callbacks with the I<call_trigger> method.
 
+=back
+
+=back
+
 =head1 PROFILING
 
 For performance tuning, you can turn on query profiling by setting
