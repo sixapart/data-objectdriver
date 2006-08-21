@@ -123,7 +123,7 @@ sub has_a {
             $parent_method .= '_objs';
         }
         if (ref($column)) {
-            #no strict 'refs';
+            no strict 'refs'; ## no critic
             *{"${parentclass}::$parent_method"} = sub {
                 my $obj = shift;
                 my $terms = shift || {};
