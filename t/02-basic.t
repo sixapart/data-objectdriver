@@ -19,7 +19,7 @@ BEGIN {
     }
 }
 
-plan tests => 37;
+plan tests => 40;
 
 use Wine;
 use Recipe;
@@ -59,6 +59,15 @@ setup_dbs({
     cmp_ok $w1->name, 'eq', $new, "Refreshed";
     is $w1->remove, 1, 'Remove correct number of rows';
     is $w2->remove, '0E0', 'Remove correct number of rows';
+}
+
+# Constructor testing
+{
+    my $w = Wine->new(name=>'Mouton Rothschild', rating=> 4);
+
+    ok ($w, 'constructed a new Wine');
+    is ($w->name, 'Mouton Rothschild', 'name constructor');
+    is ($w->rating, 4, 'rating constructor');
 }
 
 # lookup with hash (single pk) 

@@ -11,7 +11,7 @@ use Test::More;
 unless (eval { require DBD::SQLite }) {
     plan skip_all => 'Tests require DBD::SQLite';
 }
-plan tests => 7;
+plan tests => 13;
 
 setup_dbs({
     global => [ qw( wines ) ],
@@ -55,8 +55,12 @@ my ($result) = Wine->search({name => 'Caymus'});
 ok $result, 'Found Caymus';
 is $result->rating, 4, 'Caymus is a 4';
 
-my ($result) = Wine->search({name => 'Thunderbird'});
+($result) = Wine->search({name => 'Thunderbird'});
 ok $result, 'Found Thunderbird';
 is $result->rating, 1, 'Thunderbird is a 1';
+
+($result) = Wine->search({name => 'Stags Leap'});
+ok $result, 'Found Stags Leap';
+is $result->rating, 3, 'Stags Leap is a 3';
 
 teardown_dbs(qw( global ));

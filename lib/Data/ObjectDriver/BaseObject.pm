@@ -13,15 +13,18 @@ use Class::Trigger qw( pre_save post_save post_load pre_search
 
 sub install_properties {
     my $class = shift;
-    no strict 'refs';
     my($props) = @_;
-    *{"${class}::__properties"} = sub { $props };
+    {
+        no strict 'refs'; ## no critic
+        *{"${class}::__properties"} = sub { $props };
+    }
 
     # predefine getter/setter methods here
     foreach my $col (@{ $props->{columns} }) {
         # Skip adding this method if the class overloads it.
         # this lets the SUPER::columnname magic do it's thing
         if (! $class->can($col)) {
+            no strict 'refs'; ## no critic
             *{"${class}::$col"} = $class->column_func($col);
         }
     }
@@ -80,7 +83,7 @@ sub has_a {
             # Store cached item inside this object's namespace
             my $cachekey = "__cache_$method";
 
-            no strict 'refs';
+            no strict 'refs'; ## no critic
             *{"${class}::$method"} = sub {
                 my $obj = shift;
 
@@ -99,13 +102,13 @@ sub has_a {
             };
         } else {
             if (ref($column)) {
-                no strict 'refs';
+                no strict 'refs'; ## no critic
                 *{"${class}::$method"} = sub {
                     my $obj = shift;
                     return $parentclass->lookup([ map{ $obj->{column_values}->{$_} } @{$column}]);
                 };
             } else {
-                no strict 'refs';
+                no strict 'refs'; ## no critic
                 *{"${class}::$method"} = sub {
                     return $parentclass->lookup(shift()->{column_values}->{$column});
                 };
@@ -120,7 +123,7 @@ sub has_a {
             $parent_method .= '_objs';
         }
         if (ref($column)) {
-            no strict 'refs';
+            #no strict 'refs';
             *{"${parentclass}::$parent_method"} = sub {
                 my $obj = shift;
                 my $terms = shift || {};
@@ -137,7 +140,7 @@ sub has_a {
                 return $class->search($terms, $args);
             };
         } else {
-            no strict 'refs';
+            no strict 'refs'; ## no critic
             *{"${parentclass}::$parent_method"} = sub {
                 my $obj = shift;
                 my $terms = shift || {};
@@ -161,7 +164,22 @@ sub get_driver {
     $class->properties->{get_driver} = shift if @_;
 }
 
-sub new { bless {}, shift }
+sub new {
+    my $obj = bless {}, shift;
+
+    return $obj->init(@_);
+}
+
+sub init {
+    my $self = shift;
+
+    while (@_) {
+        my $field = shift;
+        my $val   = shift;
+        $self->$field($val);
+    }
+    return $self;
+}
 
 sub is_pkless {
     my $obj = shift;
@@ -470,13 +488,15 @@ sub DESTROY { }
 sub AUTOLOAD {
     my $obj = $_[0];
     (my $col = our $AUTOLOAD) =~ s!.+::!!;
-    no strict 'refs';
     Carp::croak("Cannot find method '$col' for class '$obj'") unless ref $obj;
     unless ($obj->has_column($col)) {
         Carp::croak("Cannot find column '$col' for class '" . ref($obj) . "'");
     }
 
-    *$AUTOLOAD = $obj->column_func($col);
+    {
+        no strict 'refs'; ## no critic
+        *$AUTOLOAD = $obj->column_func($col);
+    }
 
     goto &$AUTOLOAD;
 }

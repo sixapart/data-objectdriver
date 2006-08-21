@@ -126,6 +126,11 @@ Data::ObjectDriver - Simple, transparent data interface, with caching
     $ingredient->quantity(10);
     $ingredient->save;
 
+    ## Shorthand constructor
+    my $ingredient = Ingredient->new(recipe_id=> $recipe->id,
+                                     name => 'Milk',
+                                     quantity => 2);
+
 =head1 DESCRIPTION
 
 I<Data::ObjectDriver> is an object relational mapper, meaning that it maps
