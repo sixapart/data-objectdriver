@@ -27,7 +27,7 @@ sub map_error_code {
     if ($msg && $msg =~ /not unique/) {
         return Data::ObjectDriver::Errors->UNIQUE_CONSTRAINT;
     } else {
-        return undef;
+        return;
     }
 }
 
