@@ -31,4 +31,7 @@ sub sql_for_unixtime { return time() }
 # by default, LIMIT isn't supported on a DELETE.  MySql overrides.
 sub can_delete_with_limit { 0 }
 
+# searches are case sensitive by default.  MySql overrides.
+sub is_case_insensitive { 0 }
+
 1;

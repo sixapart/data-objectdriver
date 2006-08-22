@@ -27,6 +27,9 @@ sub sql_for_unixtime {
 # yes, MySQL supports LIMIT on a DELETE
 sub can_delete_with_limit { 1 }
 
+# yes, MySQL makes every search case insensitive
+sub is_case_insensitive { 1 };
+
 sub bulk_insert {
     my $dbd = shift;
     my $dbh = shift;
