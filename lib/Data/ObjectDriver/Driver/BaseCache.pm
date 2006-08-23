@@ -15,6 +15,12 @@ __PACKAGE__->mk_classdata(qw( Disabled ));
 sub deflate { $_[1] }
 sub inflate { $_[2] }
 
+# subclasses must override these:
+sub add_to_cache            { Carp::croak("NOT IMPLEMENTED") }
+sub update_cache            { Carp::croak("NOT IMPLEMENTED") }
+sub remove_from_cache       { Carp::croak("NOT IMPLEMENTED") }
+sub get_from_cache          { Carp::croak("NOT IMPLEMENTED") }
+
 sub init {
     my $driver = shift;
     $driver->SUPER::init(@_);
@@ -120,7 +126,7 @@ sub lookup_multi {
 }
 
 ## We fallback by default
-sub fetch_data { 
+sub fetch_data {
     my $driver = shift;
     my ($obj) = @_;
     return $driver->fallback->fetch_data($obj);
@@ -139,7 +145,7 @@ sub search {
 
     ## Tell the fallback driver to fetch only the primary columns,
     ## then run the search using the fallback.
-    local $args->{fetchonly} = $class->primary_key_tuple; 
+    local $args->{fetchonly} = $class->primary_key_tuple;
     ## Disable triggers for this load. We don't want the post_load trigger
     ## being called twice.
     $args->{no_triggers} = 1;
