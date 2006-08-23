@@ -2,6 +2,7 @@
 
 use strict;
 
+use lib 't/lib';  # for Cache::Memory substitute.
 use lib 't/lib/cached';
 
 require 't/lib/db-common.pl';
