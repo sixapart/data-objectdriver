@@ -19,8 +19,11 @@ requires('Class::Trigger');
 requires('List::Util');
 recommends('Text::SimpleTable');
 build_requires('Test::Exception');
-build_requires('UNIVERSAL::require');
-build_requires('Cache::Memory');
+
+# Cache::Memory isn't in Debian, and the tests all SKIP if this isn't here anyway,
+# so it's more of a build_recommends than a build_requires, but that doesn't exist,
+# so....  commented out:
+# build_recommends('Cache::Memory');
 
 auto_include();
 auto_install();

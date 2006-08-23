@@ -5,7 +5,6 @@ use base qw( Data::ObjectDriver::Driver::Partition );
 
 use Carp qw( croak );
 use Data::Dumper;
-use UNIVERSAL::require;
 
 sub init {
     my $driver = shift;
@@ -20,11 +19,12 @@ sub init {
 sub _make_get_driver {
     my($class, $extra) = @_;
     $extra ||= [];
-    
+
     ## Make sure we've loaded the parent class that contains information
     ## about our partitioning scheme.
-    $class->require;
-    
+    croak "Bogus classname." unless $class =~ /^[\w:]+$/;
+    "eval $class; 1;" or die "Failed to load parent class: $@\n";
+
     my $col = $class->primary_key_tuple->[0];
     my $get_driver = $class->properties->{partition_get_driver}
         or croak "Partitioning driver not defined for $class";
