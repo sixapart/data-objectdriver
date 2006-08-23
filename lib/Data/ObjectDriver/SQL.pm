@@ -79,7 +79,7 @@ sub as_limit {
     my $stmt = shift;
     my $n = $stmt->limit or
         return '';
-
+    die "Non-numerics in limit clause ($n)" if $n =~ /\D/;
     return sprintf "LIMIT %d%s\n", $n,
            ($stmt->offset ? " OFFSET " . int($stmt->offset) : "");
 }

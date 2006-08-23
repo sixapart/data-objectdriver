@@ -83,8 +83,11 @@ $stmt->limit(5);
 is($stmt->as_sql, "FROM foo\nLIMIT 5\n");
 $stmt->offset(10);
 is($stmt->as_sql, "FROM foo\nLIMIT 5 OFFSET 10\n");
-$stmt->limit("  15g");  ## Non-numerics should be stripped.
-is($stmt->as_sql, "FROM foo\nLIMIT 15 OFFSET 10\n");
+$stmt->limit("  15g");  ## Non-numerics should cause an error
+{
+    my $sql = eval { $stmt->as_sql };
+    like($@, qr/Non-numerics/, "bogus limit causes as_sql assertion");
+}
 
 ## Testing WHERE
 $stmt = ns(); $stmt->add_where(foo => 'bar');
@@ -183,5 +186,5 @@ HAVING (COUNT(*) = ?)
 ORDER BY foo DESC
 LIMIT 2
 SQL
-    
+
 sub ns { Data::ObjectDriver::SQL->new }
