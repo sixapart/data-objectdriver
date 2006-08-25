@@ -62,7 +62,7 @@ __END__
 
 =head1 NAME
 
-Data::ObjectDriver::Driver::Partition - basic driver for partitioned objects
+Data::ObjectDriver::Driver::Partition - base class for partitioned object drivers
 
 =head1 SYNOPSIS
 
