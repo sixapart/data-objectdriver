@@ -183,3 +183,159 @@ sub _mk_term {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+Data::ObjectDriver::SQL - an SQL statement
+
+=head1 SYNOPSIS
+
+    my $sql = Data::ObjectDriver::SQL->new();
+    $sql->select([ 'id', 'name', 'bucket_id', 'note_id' ]);
+    $sql->from([ 'foo' ]);
+    $sql->add_where('name',      'fred');
+    $sql->add_where('bucket_id', { op => '!=', value => 47 });
+    $sql->add_where('note_id',   \'IS NULL');
+    $sql->limit(1);
+
+    my $sth = $dbh->prepare($sql->as_sql);
+    $sth->execute(@{ $sql->{bind} });
+    my @values = $sth->selectrow_array();
+    
+    my $obj = SomeObject->new();
+    $obj->set_columns(...);
+
+=head1 DESCRIPTION
+
+I<Data::ObjectDriver::SQL> represents an SQL statement. SQL statements are used
+internally to C<Data::ObjectDriver::Driver::DBI> object drivers to convert
+database operations (C<search()>, C<update()>, etc) into database operations,
+but sometimes you just gotta use SQL.
+
+=head1 USAGE
+
+=head2 C<Data::ObjectDriver::SQL-E<gt>new()>
+
+Creates a new, empty SQL statement.
+
+=head2 C<$sql-E<gt>select()>
+
+=head2 C<$sql-E<gt>select(\@columns)>
+
+Returns or sets the database columns to select in a C<SELECT> query.
+
+=head2 select_map
+
+=head2 select_map_reverse
+
+=head2 C<$sql-E<gt>from()>
+
+=head2 C<$sql-E<gt>from(\@tables)>
+
+Returns or sets the tables used in the query.
+
+Note if you perform a C<SELECT> query with multiple tables, the rows will be
+selected as Cartesian products that you'll need to reduce with C<WHERE>
+clauses. Your query might be better served using a real query specified through
+the C<joins> member of your statement.
+
+=head2 joins
+
+=head2 where
+
+=head2 bind
+
+=head2 C<$sql-E<gt>limit()>
+
+=head2 C<$sql-E<gt>limit($limit)>
+
+Returns or sets a C<SELECT> query's maximum number of records to return.
+
+=head2 C<$sql-E<gt>offset()>
+
+=head2 C<$sql-E<gt>offset($offset)>
+
+Returns or sets a C<SELECT> query's number of records to skip in this query.
+Combined with a C<limit> and logic to increase the offset, you can use multiple
+queries to paginate a set of records with a moving window of C<limit> records.
+
+=head2 C<$sql-E<gt>group()>
+
+=head2 C<$sql-E<gt>group(\%field)>
+
+=head2 C<$sql-E<gt>group(\@fields)>
+
+Returns or sets the fields on which to group the results. Grouping fields are
+hashrefs containing these members:
+
+=over 4
+
+=item * C<column>
+
+Name of the column on which to group.
+
+=back
+
+Note you can set a single grouping field, or use an arrayref containing multiple
+grouping fields.
+
+=head2 C<$sql-E<gt>having()>
+
+=head2 C<$sql-E<gt>having(\@clauses)>
+
+Returns or sets the list of clauses to specify in the C<HAVING> portion of the
+C<GROUP ... HAVING> clause. Individual clauses are simple strings containing
+the expression to use.
+
+Consider using the C<add_having> method instead of adding C<HAVING> clauses
+directly.
+
+=head2 C<$sql-E<gt>order()>
+
+=head2 C<$sql-E<gt>order(\%field)>
+
+=head2 C<$sql-E<gt>order(\@fields)>
+
+Returns or sets the fields by which to order the results. Ordering fields are hashrefs containing these members:
+
+=over 4
+
+=item * C<column>
+
+Name of the column by which to order.
+
+=item * C<desc>
+
+The SQL keyword to use to specify the ordering. For example, use C<DESC> to
+specify a descending order. This member is optional.
+
+=back
+
+Note you can set a single ordering field, or use an arrayref containing
+multiple ordering fields.
+
+=head2 where_values
+
+=head1 DIAGNOSTICS
+
+=head1 BUGS AND LIMITATIONS
+
+I<Data::ObjectDriver::SQL> does not provide the functionality for turning SQL
+statements into instances of object classes.
+
+=head1 SEE ALSO
+
+=head1 LICENSE
+
+I<Data::ObjectDriver> is free software; you may redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=head1 AUTHOR & COPYRIGHT
+
+Except where otherwise noted, I<Data::ObjectDriver> is Copyright 2005-2006
+Six Apart, cpan@sixapart.com. All rights reserved.
+
+=cut
+
