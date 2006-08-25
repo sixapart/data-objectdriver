@@ -667,6 +667,9 @@ in the system.
 
 =back
 
+B<NOTE:> C<has_a> is an experimental system, likely to be both buggy and change
+in future versions.
+
 =head2 column_func
 
 This method is called to get/set column values.  Subclasses can override this and get different
