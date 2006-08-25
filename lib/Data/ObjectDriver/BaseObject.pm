@@ -545,13 +545,92 @@ with the I<Data::ObjectDriver> object relational mapper.
 
 =head1 USAGE
 
-=head2 Class->install_properties({ ... })
+=head2 Class->install_properties(\%params)
 
-Sets up columns, indexes, primary keys, etc.
+Defines all the properties of the specified object class. Generally you should
+call C<install_properties()> in the body of your class definition, so the
+properties can be set when the class is C<use>d or C<require>d.
+
+Required members of C<%params> are:
+
+=over 4
+
+=item * C<columns>
+
+All the columns in the object class. This property is an arrayref.
+
+=item * C<primary_key>
+
+The column or columns used to uniquely identify an instance of the object
+class. If one column (such as a simple numeric ID) identifies the class,
+C<primary_key> should be a scalar. Otherwise, C<primary_key> is an arrayref.
+
+=item * C<datasource>
+
+The identifier of the table in which the object class's data are stored.
+Usually the datasource is simply the table name, but the datasource can be
+decorated into the table name by the C<Data::ObjectDriver::DBD> module if the
+database requires special formatting of table names.
+
+=item * C<driver> or C<get_driver>
+
+The driver used to perform database operations (lookup, update, etc) for the
+object class.
+
+C<driver> is the instance of C<Data::ObjectDriver> to use. If your driver
+requires configuration options not available when the properties are initially
+set, specify a coderef as C<get_driver> instead. It will be called the first
+time the driver is needed, storing the driver in the class's C<driver> property
+for subsequent calls.
+
+=back
+
+The optional members of C<%params> are:
+
+=over 4
+
+=item * C<column_defs>
+
+Specifies types for specially typed columns, if any, as a hashref. For example,
+if a column holds a timestamp, name it in C<column_defs> as a C<date> for
+proper handling with some C<Data::ObjectDriver::Driver::DBD> database drivers.
+Columns for which types aren't specified are handled as C<char> columns.
+
+Known C<column_defs> types are:
+
+=over 4
+
+=item * C<blob>
+
+A blob of binary data. C<Data::ObjectDriver::Driver::DBD::Pg> maps this to
+C<DBI::Pg::PG_BYTEA>, and C<DBD::SQLite> to C<DBI::SQL_BLOB>.
+
+=item * C<bin_char>
+
+A non-blob string of binary data. C<Data::ObjectDriver::Driver::DBD::SQLite>
+maps this to C<DBI::SQL_BINARY>.
+
+=back
+
+Other types may be defined by custom database drivers as needed, so consult
+their documentation.
+
+=item * C<db>
+
+The name of the database. When used with C<Data::ObjectDriver::Driver::DBI>
+type object drivers, this name is passed to the C<init_db> method when the
+actual database handle is being created.
+
+=back
+
+Custom object drivers may define other properties for your object classes.
+Consult the documentation of those object drivers for more information.
 
 =head2 Class->properties
 
-Returns the list of properties.
+Returns the named object class's properties as a hashref. Note some of the
+standard object class properties, such as C<primary_key>, have more convenient
+accessors than reading the properties directly.
 
 =head2 Class->has_a(ParentClass => { ... }, ParentClass2 => { ...} )
 
