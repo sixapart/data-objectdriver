@@ -51,3 +51,178 @@ sub _make_get_driver {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+Data::ObjectDriver::Driver::SimplePartition - basic partitioned object driver
+
+=head1 SYNOPSIS
+
+    package ParentObject;
+    use base qw( Data::ObjectDriver::BaseObject );
+
+    __PACKAGE__->install_properties({
+        columns     => [ 'parent_id', 'partition_id', ... ],
+        ...
+        driver      => Data::ObjectDriver::Driver::DBI->new( @$GLOBAL_DB_INFO ),
+        primary_key => 'parent_id',
+    });
+
+    package SomeObject;
+    use base qw( Data::ObjectDriver::BaseObject );
+
+    __PACKAGE__->install_properties({
+        ...
+        driver               => Data::ObjectDriver::Driver::SimplePartition->new(
+                                    using => 'ParentObject'
+                                ),
+        primary_key          => ['parent_id', 'object_id'],
+        partition_get_driver => \&ParentObject::get_driver_by_partition,
+    });
+
+
+=head1 DESCRIPTION
+
+I<Data::ObjectDriver::Driver::SimplePartition> is a basic driver for objects
+partitioned into separate databases. See
+L<Data::ObjectDriver::Driver::Partition> for more about partitioning databases.
+
+I<SimplePartition> helps you partition objects into databases based on their
+association with one record of a I<parent> class. If your classes don't meet
+the requirements imposed by I<SimplePartition>, you can still write your own
+partitioning driver. See L<Data::ObjectDriver::Driver::Partition>.
+
+=head1 SUGGESTED PRACTICES
+
+Often this is used for user partitioning, where the parent class is your user
+account class; all records of other classes that are "owned" by that user are
+partitioned into the same database. This allows you to scale horizontally with
+the number of users, at the cost of complicating querying multiple users' data
+together.
+
+I<SimplePartition> will load the related instance of the parent class every
+time it needs to find the partition for a related object. Consider using a
+minimal mapping class for the parent, keeping as much data as possible in other
+related classes. For example, if C<User> were your parent class, you might keep
+I<only> the user ID and other data used to find users (such as login name and
+email address) in C<User>, keeping further profile data in another
+C<UserProfile> class.
+
+As all the partitioned classes related to a given parent class will share the
+same C<partition_get_driver> logic to turn a partition ID into a driver, you
+might put the C<partition_get_driver> function in the parent class, or use a
+custom subclass of I<SimplePartition> that contains and automatically specifies
+the C<partition_get_driver> function.
+
+=head1 USAGE
+
+=head2 Data::ObjectDriver::Driver::SimplePartition->new(%params)
+
+Creates a new basic partitioning driver for a particular class. The required
+members of C<%params> are:
+
+=over 4
+
+=item * C<using>
+
+The name of the parent class on which the driven class is partitioned.
+
+Note the parent class must have a C<partition_id> column containing a partition
+identifier. This identifier is passed to the partitioned class's
+C<partition_get_driver> function to identify a driver to return. The primary
+key of the parent class must also be a simple single-column key, and that
+column must be the same as the referencing column in the partitioned class.
+
+=back
+
+You can also include any further optional parameters you like. They will be
+passed to the partitioned class's C<partition_get_driver> function as given.
+
+A I<SimplePartition> driver will require these properties to be defined for
+partitioned classes:
+
+=over 4
+
+=item * C<primary_key>
+
+Your primary key should be a complex primary key (arrayref) with the simple key
+of the parent object for the first field.
+
+=item * C<partition_get_driver>
+
+A function that, given a partition ID and the optional parameters specified in
+the I<SimplePartition> constructor, returns a database driver to which to
+delegate the database operations for an instance of the class.
+
+=back
+
+=head1 DIAGNOSTICS
+
+=over 4
+
+=item * C<using is required.>
+
+The C<using> parameter to the I<SimplePartition> constructor is required to
+create the partitioned class's C<get_driver> function. Perhaps you omitted it,
+or your subclass of I<SimplePartition> did not properly specify it to its
+parent's constructor.
+
+=item * C<Bogus classname.>
+
+The parent class name you specified in your C<using> parameter does not appear
+to be a valid class name. If you are automatically generating parent class
+names, check that your method of converting strings to class names is correct.
+
+=item * C<Failed to load parent class: I<error>>
+
+The parent class you specified in your C<using> parameter could not be loaded,
+for the given reason. Perhaps you didn't include its location in your library
+path.
+
+=item * C<Partitioning driver not defined for I<partitioned class>>
+
+The partitioned class named in the error is configured to use the
+I<SimplePartition> driver but does not have a C<partition_get_driver> set.
+Check that you intended to use I<SimplePartition> with that class or, if you're
+automatically specifying the C<partition_get_driver> function, that your
+technique is working correctly.
+
+=item * C<Cannot extract I<column> from terms I<search terms or primary key>>
+
+The I<SimplePartition> driver could not determine from the given search terms
+or object key what the ID of the related parent record was. Check that your
+columns in the partitioned and parent classes share the same name, and that
+your application includes the parent ID in all C<search()> calls for the
+partitioned class and instances of partitioned objects before attempting to
+save them.
+
+=item * C<Member of I<class> with ID I<parent ID> not found>
+
+The parent record associated with the partitioned object could not be loaded.
+Perhaps your application deleted the parent record without removing its
+associated partitioned objects first.
+
+=back
+
+=head1 BUGS AND LIMITATIONS
+
+There are no known bugs in this module.
+
+=head1 SEE ALSO
+
+L<Data::ObjectDriver::Driver::Partition>
+
+=head1 LICENSE
+
+I<Data::ObjectDriver> is free software; you may redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=head1 AUTHOR & COPYRIGHT
+
+Except where otherwise noted, I<Data::ObjectDriver> is Copyright 2005-2006
+Six Apart, cpan@sixapart.com. All rights reserved.
+
+=cut
+
