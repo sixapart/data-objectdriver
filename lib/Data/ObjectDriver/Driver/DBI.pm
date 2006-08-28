@@ -199,9 +199,13 @@ sub select_one {
     my $sth = $dbh->prepare_cached($sql);
     $sth->execute(@$bind);
     $sth->bind_columns(undef, \my($val));
-    $sth->fetch or return;
+    unless ($sth->fetch) {
+        $sth->finish;
+        return;
+    }
+
     $sth->finish;
-    $val;
+    return $val;
 }
 
 sub table_for {
