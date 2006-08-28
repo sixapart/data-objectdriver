@@ -70,6 +70,11 @@ Data::ObjectDriver::Driver::SimplePartition - basic partitioned object driver
         primary_key => 'parent_id',
     });
 
+    __PACKAGE__->has_partitions(
+        number     => scalar @PARTITIONS,
+        get_driver => \&get_driver_by_partition,
+    );
+
     package SomeObject;
     use base qw( Data::ObjectDriver::BaseObject );
 
@@ -79,7 +84,6 @@ Data::ObjectDriver::Driver::SimplePartition - basic partitioned object driver
                                     using => 'ParentObject'
                                 ),
         primary_key          => ['parent_id', 'object_id'],
-        partition_get_driver => \&ParentObject::get_driver_by_partition,
     });
 
 
@@ -129,11 +133,31 @@ members of C<%params> are:
 
 The name of the parent class on which the driven class is partitioned.
 
-Note the parent class must have a C<partition_id> column containing a partition
-identifier. This identifier is passed to the partitioned class's
-C<partition_get_driver> function to identify a driver to return. The primary
-key of the parent class must also be a simple single-column key, and that
-column must be the same as the referencing column in the partitioned class.
+Using a class as a parent partitioned class requires these properties to be defined:
+
+=over 4
+
+=item * C<columns>
+
+The parent class must have a C<partition_id> column containing a partition
+identifier. This identifier is passed to the C<partition_get_driver> function to
+identify a driver to return.
+
+=item * C<primary_key>
+
+The parent class's primary key must be a simple single-column key, and that
+column must be the same as the referencing column in the partitioned classes.
+
+=item * C<partition_get_driver>
+
+The C<partition_get_driver> property must be a function that returns an object
+driver, given a partition ID and any extra parameters given to the
+C<SimplePartition> constructor.
+
+This property can also be defined as C<get_driver> in a call to
+C<Class-E<gt>has_partitions()>. See L<Data::ObjectDriver::BaseObject>.
+
+=back
 
 =back
 
@@ -149,12 +173,6 @@ partitioned classes:
 
 Your primary key should be a complex primary key (arrayref) with the simple key
 of the parent object for the first field.
-
-=item * C<partition_get_driver>
-
-A function that, given a partition ID and the optional parameters specified in
-the I<SimplePartition> constructor, returns a database driver to which to
-delegate the database operations for an instance of the class.
 
 =back
 

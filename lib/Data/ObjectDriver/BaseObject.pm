@@ -536,16 +536,28 @@ Data::ObjectDriver::BaseObject - base class for modeled objects
 
 =head1 SYNOPSIS
 
-See synopsis in I<Data::ObjectDriver>.
+    package Ingredient;
+    use base qw( Data::ObjectDriver::BaseObject );
+
+    __PACKAGE__->install_properties({
+        columns     => [ 'ingredient_id', 'recipe_id', 'name', 'quantity' ],
+        datasource  => 'ingredient',
+        primary_key => [ 'recipe_id', 'ingredient_id' ],
+        driver      => FoodDriver->driver,
+    });
+
+    __PACKAGE__->has_a(
+        { class => 'Recipe', column => 'recipe_id', }
+    );
 
 =head1 DESCRIPTION
 
 I<Data::ObjectDriver::BaseObject> provides services to data objects modeled
 with the I<Data::ObjectDriver> object relational mapper.
 
-=head1 USAGE
+=head1 CLASS DEFINITION
 
-=head2 Class->install_properties(\%params)
+=head2 C<Class-E<gt>install_properties(\%params)>
 
 Defines all the properties of the specified object class. Generally you should
 call C<install_properties()> in the body of your class definition, so the
@@ -558,12 +570,6 @@ Required members of C<%params> are:
 =item * C<columns>
 
 All the columns in the object class. This property is an arrayref.
-
-=item * C<primary_key>
-
-The column or columns used to uniquely identify an instance of the object
-class. If one column (such as a simple numeric ID) identifies the class,
-C<primary_key> should be a scalar. Otherwise, C<primary_key> is an arrayref.
 
 =item * C<datasource>
 
@@ -588,6 +594,12 @@ for subsequent calls.
 The optional members of C<%params> are:
 
 =over 4
+
+=item * C<primary_key>
+
+The column or columns used to uniquely identify an instance of the object
+class. If one column (such as a simple numeric ID) identifies the class,
+C<primary_key> should be a scalar. Otherwise, C<primary_key> is an arrayref.
 
 =item * C<column_defs>
 
@@ -626,85 +638,208 @@ actual database handle is being created.
 Custom object drivers may define other properties for your object classes.
 Consult the documentation of those object drivers for more information.
 
-=head2 Class->properties
+=head2 C<Class-E<gt>has_a(@definitions)>
 
-Returns the named object class's properties as a hashref. Note some of the
-standard object class properties, such as C<primary_key>, have more convenient
-accessors than reading the properties directly.
+B<NOTE:> C<has_a> is an experimental system, likely to both be buggy and change
+in future versions.
 
-=head2 Class->has_a(ParentClass => { ... }, ParentClass2 => { ...} )
+Defines a foreign key reference between two classes, creating accessor methods
+to retrieve objects both ways across the reference. For each defined reference,
+two methods are created: one for objects of class C<Class> to load the objects
+they reference, and one for objects of the referenced class to load the set of
+C<Class> objects that reference I<them>.
 
-Creates utility methods that map this object to parent Data::ObjectDriver objects.
+For example, this definition:
 
-Pass in a list of parent classes to map with a hash of parameters.  The following parameters
-are recognized:
+    package Ingredient;
+    __PACKAGE__->has_a(
+        { class => 'Recipe', column => 'recipe_id' },
+    );
+
+would create C<Ingredient-E<gt>recipe_obj> and C<Recipe-E<gt>ingredient_objs>
+instance methods.
+
+Each member of C<@definitions> is a hashref containing the parameters for
+creating one accessor method. The required members of these hashes are:
 
 =over 4
 
-=item * column
+=item * C<class>
 
-Name of the column(s) in this class to map with.  Pass in a single string if
-the column is a singular key, an array ref if this is a composite key.
+The class to associate.
 
-   column => 'user_id'
-   column => ['user_id', 'photo_id']
+=item * C<column>
 
-=item * method [OPTIONAL]
-
-Name of the method to create in this class.  Defaults to the column name(s) without
-the _id suffix and with the suffix _obj appended.
-
-=item * parent_method [OPTIONAL]
-
-Name of the method created in the parent class.  Default is the lowercased
-name of the current class with the suffix _objs.
-
-=item * cached [OPTIONAL]
-
-If set to 1 cache the result of the fetching the parent object in the current class.  Note
-that this is a private copy to this class only, and does not interact with other caches
-in the system.
+The column or columns in this class that identify the primary key of the
+associated object. As with primary keys, use a single scalar string for a
+single column or an arrayref for a composite key.
 
 =back
 
-B<NOTE:> C<has_a> is an experimental system, likely to be both buggy and change
-in future versions.
+The optional members of C<has_a()> definitions are:
 
-=head2 column_func
+=item * C<method>
 
-This method is called to get/set column values.  Subclasses can override this and get different
-behavior.
+The name of the accessor method to create.
 
-=head2 Class->driver
+By default, the method name is the concatenated set of column names with each
+C<_id> suffix removed, and the suffix C<_obj> appended at the end of the method
+name. For example, if C<column> were C<['recipe_id', 'ingredient_id']>, the
+resulting method would be called C<recipe_ingredient_obj> by default.
 
-Returns the database driver for this class, invoking the class's I<get_driver>
-function if necessary.
+=item * C<cached>
 
-=head2 Class->get_driver($driver)
+Whether to keep a reference to the foreign object once it's loaded. Subsequent
+calls to the accessor method would return that reference immediately.
 
-Sets the function used to find the object driver for I<Class> objects.
+=item * C<parent_method>
 
-=head2 $obj->primary_key
+The name of the reciprocal method created in the referenced class named in
+C<class>.
 
-Returns the B<values> of the primary key fields of I<$obj>.
+By default, that method is named with the lowercased name of the current class
+with the suffix C<_objs>. For example, if in your C<Ingredient> class you
+defined a relationship with C<Recipe> on the column C<recipe_id>, this would
+create a C<$recipe-E<gt>ingredient_objs> method.
 
-=head2 Class->primary_key_tuple
+Note that if you reference one class with multiple sets of fields, you can omit
+only one parent_method; otherwise the methods would be named the same thing.
+For instance, if you had a C<Friend> class with two references to C<User>
+objects in its C<user_id> and C<friend_id> columns, one of them would need a
+C<parent_method>.
 
-Returns the B<names> of the primary key fields for objects of class I<Class>.
+=back
 
-=head2 $obj->has_primary_key
+=head2 C<Class-E<gt>has_partitions(%param)>
 
-=head2 $obj->clone
+Defines that the given class is partitioned, configuring it for use with the
+C<Data::ObjectDriver::Driver::SimplePartition> object driver. Required members
+of C<%param> are:
+
+=over 4
+
+=item * C<number>
+
+The number of partitions in which objects of this class may be stored.
+
+=item * C<get_driver>
+
+A function that returns an object driver, given a partition ID and any extra
+parameters specified when the class's
+C<Data::ObjectDriver::Driver::SimplePartition> was instantiated.
+
+=back
+
+Note that only the parent object for use with the C<SimplePartition> driver
+should use C<has_partitions()>. See
+C<Data::ObjectDriver::Driver::SimplePartition> for more about partitioning.
+
+=head1 BASIC USAGE
+
+=head2 C<Class-E<gt>lookup($id)>
+
+=head2 C<Class-E<gt>search($terms, [$args])>
+
+=head2 C<$obj-E<gt>exists()>
+
+=head2 C<$obj-E<gt>save()>
+
+=head2 C<$obj-E<gt>update()>
+
+=head2 C<$obj-E<gt>insert()>
+
+=head2 C<$obj-E<gt>remove()>
+
+=head1 USAGE
+
+=head2 C<Class-E<gt>new(%columns)>
+
+Returns a new object of the given class, initializing its columns to the values
+in C<%columns>.
+
+=head2 C<Class-E<gt>properties()>
+
+Returns the named object class's properties as a hashref. Note that some of the
+standard object class properties, such as C<primary_key>, have more convenient
+accessors than reading the properties directly.
+
+=head2 C<Class-E<gt>driver()>
+
+Returns the object driver for this class, invoking the class's I<get_driver>
+function (and caching the result for future calls) if necessary. 
+
+=head2 C<Class-E<gt>get_driver($get_driver_fn)>
+
+Sets the function used to find the object driver for I<Class> objects (that is,
+the C<get_driver> property).
+
+Note that once C<driver()> has been called, the C<get_driver> function is not
+used. Usually you would specify your function as the C<get_driver> parameter to
+C<install_properties()>.
+
+=head2 C<Class-E<gt>is_pkless()>
+
+Returns whether the given object class has a primary key defined.
+
+=head2 C<Class-E<gt>is_primary_key($column)>
+
+Returns whether the given column is or is part of the primary key for C<Class>
+objects.
+
+=head2 C<$obj-E<gt>primary_key()>
+
+Returns the I<values> of the primary key fields of C<$obj>.
+
+=head2 C<Class-E<gt>primary_key_tuple()>
+
+Returns the I<names> of the primary key fields of C<Class> objects.
+
+=head2 C<$obj-E<gt>has_primary_key()>
+
+Returns whether the given object has values for all of its primary key fields.
+
+=head2 C<Class-E<gt>datasource()>
+
+Returns the datasource for objects of class C<Class>. That is, returns the
+C<datasource> property of C<Class>.
+
+=head2 C<Class-E<gt>columns_of_type($type)>
+
+=head2 C<$obj-E<gt>set_values(\%values)>
+
+=head2 C<$obj-E<gt>clone()>
 
 Returns a new object of the same class as I<$obj> containing the same data,
 except for primary keys, which are set to C<undef>.
 
-=head2 $obj->clone_all
+=head2 C<$obj-E<gt>clone_all()>
 
 Returns a new object of the same class as I<$obj> containing the same data,
 including all key fields.
 
-=head2 $obj->deflate
+=head2 C<Class-E<gt>has_column($column)>
+
+=head2 C<Class-E<gt>column_names()>
+
+=head2 C<$obj-E<gt>column_values()>
+
+=head2 C<$obj-E<gt>column($column, [$value])
+
+=head2 C<$obj-E<gt>is_changed([$column])>
+
+=head2 C<$obj-E<gt>changed_cols_and_pk()>
+
+=head2 C<$obj-E<gt>changed_cols()>
+
+=head2 C<Class-E<gt>lookup_multi(@ids)>
+
+=head2 C<Class-E<gt>bulk_insert(@data)>
+
+=head2 C<$obj-E<gt>fetch_data()>
+
+=head2 C<$obj-E<gt>refresh()>
+
+=head2 C<$obj-E<gt>deflate()>
 
 Returns a minimal representation of the object, for use in caches where
 you might want to preserve space (like memcached). Can also be overridden
@@ -712,9 +847,10 @@ by subclasses to store the optimal representation of an object in the
 cache. For example, if you have metadata attached to an object, you might
 want to store that in the cache, as well.
 
-=head2 $class->inflate($deflated)
+=head2 C<Class-E<gt>inflate($deflated)>
 
-Inflates the deflated representation of the object I<$deflated> into a
-proper object in the class I<$class>.
+Inflates the deflated representation of the object I<$deflated> into a proper
+object in the class I<Class>. That is, undoes the operation C<$deflated =
+$obj-E<gt>deflate()> by returning a new object equivalent to C<$obj>.
 
 =cut
