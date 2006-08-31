@@ -1,0 +1,15 @@
+use strict;
+use Test::More;
+eval "use Test::Pod::Coverage 1.08";
+plan skip_all => "Test::Pod::Coverage 1.08 required for testing POD coverage" if $@;
+
+my %modules = (
+    'Data::ObjectDriver::BaseObject' => { also_private => [ qr{ \A is_same_array \z }xms ], },
+);
+
+plan tests => scalar keys %modules;
+
+while (my ($module, $params) = each %modules) {
+    pod_coverage_ok($module, ref $params ? $params : ());
+}
+
