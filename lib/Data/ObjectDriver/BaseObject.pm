@@ -550,6 +550,13 @@ Data::ObjectDriver::BaseObject - base class for modeled objects
         { class => 'Recipe', column => 'recipe_id', }
     );
 
+    package main;
+
+    my ($ingredient) = Ingredient->search({ recipe_id => 4, name => 'rutabaga' });
+    $ingredient->quantity(7);
+    $ingredient->save();
+
+
 =head1 DESCRIPTION
 
 I<Data::ObjectDriver::BaseObject> provides services to data objects modeled
@@ -740,24 +747,101 @@ C<Data::ObjectDriver::Driver::SimplePartition> for more about partitioning.
 
 =head2 C<Class-E<gt>lookup($id)>
 
-=head2 C<Class-E<gt>search($terms, [$args])>
+Returns the instance of C<Class> with the given value for its primary key. If
+C<Class> has a complex primary key (more than one column), C<$id> should be an
+arrayref specifying the column values in the same order as specified in the
+C<primary_key> property.
+
+=head2 C<Class-E<gt>search(\%terms, [\%args])>
+
+Returns all instances of C<Class> that match the values specified in
+C<\%terms>, keyed on column names. In list context, C<search> returns the
+objects containing those values. In scalar context, C<search> returns an
+iterator function containing the same set of objects.
+
+Your search can be customized with parameters specified in C<\%args>. Commonly
+recognized parameters (those implemented by the standard C<Data::ObjectDriver>
+object drivers) are:
+
+=over 4
+
+=item * C<sort>
+
+A column by which to order the object results.
+
+=item * C<direction>
+
+If set to C<descend>, the results (ordered by the C<sort> column) are returned
+in descending order. Otherwise, results will be in ascending order.
+
+=item * C<limit>
+
+The number of results to return, at most. You can use this with C<offset> to
+paginate your C<search()> results.
+
+=item * C<offset>
+
+The number of results to skip before the first returned result. Use this with
+C<limit> to paginate your C<search()> results.
+
+=item * C<fetchonly>
+
+A list (arrayref) of columns that should be requested. If specified, only the
+specified columns of the resulting objects are guaranteed to be set to the
+correct values.
+
+Note that any caching object drivers you use may opt to ignore C<fetchonly>
+instructions, or decline to cache objects queried with C<fetchonly>.
+
+=item * C<for_update>
+
+If true, instructs the object driver to indicate the query is a search, but the
+application may want to update the data after. That is, the generated SQL
+C<SELECT> query will include a C<FOR UPDATE> clause.
+
+=back
+
+All options are passed to the object driver, so your driver may support
+additional options.
 
 =head2 C<$obj-E<gt>exists()>
 
+Returns true if C<$obj> already exists in the database.
+
 =head2 C<$obj-E<gt>save()>
+
+Saves C<$obj> to the database, whether it is already there or not. That is,
+C<save()> is functionally:
+
+    $obj->exists() ? $obj->update() : $obj->insert()
 
 =head2 C<$obj-E<gt>update()>
 
+Saves changes to C<$obj>, an object that already exists in its database.
+
 =head2 C<$obj-E<gt>insert()>
 
+Adds C<$obj> to the database in which it should exist, according to its object
+driver and configuration.
+
 =head2 C<$obj-E<gt>remove()>
+
+Deletes C<$obj> from its database.
 
 =head1 USAGE
 
 =head2 C<Class-E<gt>new(%columns)>
 
-Returns a new object of the given class, initializing its columns to the values
+Returns a new object of the given class, initializing its columns with the values
 in C<%columns>.
+
+=head2 C<$obj-E<gt>init(%columns)>
+
+Initializes C<$obj>i by initializing its columns with the values in
+C<%columns>.
+
+Override this method if you must do initial configuration to new instances of
+C<$obj>'s class that are not more appropriate as a C<post_load> callback.
 
 =head2 C<Class-E<gt>properties()>
 
@@ -800,6 +884,12 @@ Returns the I<names> of the primary key fields of C<Class> objects.
 
 Returns whether the given object has values for all of its primary key fields.
 
+=head2 C<$obj-E<gt>primary_key_to_terms([$id])>
+
+Returns C<$obj>'s primary key as a hashref of values keyed on column names,
+suitable for passing as C<search()> terms. If C<$id> is specified, convert that
+primary key instead of C<$obj>'s.
+
 =head2 C<Class-E<gt>datasource()>
 
 Returns the datasource for objects of class C<Class>. That is, returns the
@@ -807,7 +897,19 @@ C<datasource> property of C<Class>.
 
 =head2 C<Class-E<gt>columns_of_type($type)>
 
+Returns the list of columns in C<Class> objects that hold data of type
+C<$type>, as an arrayref. Columns are of a certain type when they are set that
+way in C<Class>'s C<column_defs> property.
+
 =head2 C<$obj-E<gt>set_values(\%values)>
+
+Sets all the columns of C<$obj> that are members of C<\%values> to the values
+specified there.
+
+=head2 C<$obj-E<gt>set_values_internal(\%values)>
+
+Sets new specified values of C<$obj>, without using any overridden mutator
+methods of C<$obj> and without marking the changed columns changed.
 
 =head2 C<$obj-E<gt>clone()>
 
@@ -821,25 +923,71 @@ including all key fields.
 
 =head2 C<Class-E<gt>has_column($column)>
 
+Returns whether a column named C<$column> exists in objects of class <Class>.
+
 =head2 C<Class-E<gt>column_names()>
+
+Returns the list of columns in C<Class> objects as an arrayref.
 
 =head2 C<$obj-E<gt>column_values()>
 
+Returns the columns and values in the given object as a hashref.
+
 =head2 C<$obj-E<gt>column($column, [$value])>
+
+Returns the value of C<$obj>'s column C<$column>. If C<$value> is specified,
+C<column()> sets the first.
+
+Note the usual way of accessing and mutating column values is through the named
+accessors:
+
+    $obj->column('fred', 'barney');  # possible
+    $obj->fred('barney');            # preferred
 
 =head2 C<$obj-E<gt>is_changed([$column])>
 
+Returns whether any values in C<$obj> have changed. If C<$column> is given,
+returns specifically whether that column has changed.
+
 =head2 C<$obj-E<gt>changed_cols_and_pk()>
+
+Returns the list of all columns that have changed in C<$obj> since it was last
+loaded from or saved to the database, as a list.
 
 =head2 C<$obj-E<gt>changed_cols()>
 
+Returns the list of changed columns in C<$obj> as a list, except for any
+columns in C<$obj>'s primary key (even if they have changed).
+
 =head2 C<Class-E<gt>lookup_multi(@ids)>
 
-=head2 C<Class-E<gt>bulk_insert(@data)>
+Returns a list (arrayref) of objects as specified by their primary keys.
+
+=head2 C<Class-E<gt>bulk_insert(\@columns, \@data)>
+
+Adds the given data, an arrayref of arrayrefs containing column values in the
+order of column names given in C<\@columns>, as directly to the database as
+C<Class> records.
+
+Note that only some database drivers (for example,
+C<Data::ObjectDriver::Driver::DBD::Pg>) implement the bulk insert operation.
 
 =head2 C<$obj-E<gt>fetch_data()>
 
+Returns the current values from C<$obj> as saved in the database, as a hashref.
+
 =head2 C<$obj-E<gt>refresh()>
+
+Resets the values of C<$obj> from the database. Any unsaved modifications to
+C<$obj> will be lost, and any made meanwhile will be reflected in C<$obj>
+afterward.
+
+=head2 C<$obj-E<gt>column_func($column)>
+
+Creates an accessor/mutator method for column C<$column>, returning it as a
+coderef.
+
+Override this if you need special behavior in all accessor/mutator methods.
 
 =head2 C<$obj-E<gt>deflate()>
 
@@ -856,3 +1004,4 @@ object in the class I<Class>. That is, undoes the operation C<$deflated =
 $obj-E<gt>deflate()> by returning a new object equivalent to C<$obj>.
 
 =cut
+
