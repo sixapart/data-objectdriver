@@ -678,6 +678,8 @@ single column or an arrayref for a composite key.
 
 The optional members of C<has_a()> definitions are:
 
+=over 4
+
 =item * C<method>
 
 The name of the accessor method to create.
@@ -823,7 +825,7 @@ including all key fields.
 
 =head2 C<$obj-E<gt>column_values()>
 
-=head2 C<$obj-E<gt>column($column, [$value])
+=head2 C<$obj-E<gt>column($column, [$value])>
 
 =head2 C<$obj-E<gt>is_changed([$column])>
 
