@@ -1003,5 +1003,80 @@ Inflates the deflated representation of the object I<$deflated> into a proper
 object in the class I<Class>. That is, undoes the operation C<$deflated =
 $obj-E<gt>deflate()> by returning a new object equivalent to C<$obj>.
 
+=head1 DIAGNOSTICS
+
+=over 4
+
+=item * C<Please specify a valid column for I<class>>
+
+One of the class relationships you defined with C<has_a()> was missing a
+C<column> member.
+
+=item * C<Please define a valid method for I<column>>
+
+One of the class relationships you defined with C<has_a()> was missing its
+C<method> member and a method name could not be generated, or the class for
+which you specified the relationship already has a method by that name. Perhaps
+you specified an additional accessor by the same name for that class.
+
+=item * C<keys don't match with primary keys: I<list>>
+
+The hashref of values you passed as the ID to C<primary_key_to_terms()> was
+missing or had extra members. Perhaps you used a full C<column_values()> hash
+instead of only including that class's key fields.
+
+=item * C<You tried to set inexistent column I<column name> to value I<data> on I<class name>>
+
+The hashref you specified to C<set_values()> contained keys that are not
+defined columns for that class of object. Perhaps you invoked it on the wrong
+class, or did not fully filter members of the hash out before using it.
+
+=item * C<Cannot find column 'I<column>' for class 'I<class>'>
+
+The column you specified to C<column()> does not exist for that class, you
+attempted to use an automatically generated accessor/mutator for a column that
+doesn't exist, or attempted to use a column accessor as a class method instead
+of an instance method. Perhaps you performed your call on the wrong class or
+variable, or misspelled a method or column name.
+
+=item * C<Must specify column>
+
+You invoked the C<column_func()> method without specifying a column name.
+Column names are required to create the accessor/mutator function, so it knows
+what data member of the object to use.
+
+=item * C<number (of partitions) is required>
+
+You attempted to define partitioning for a class without specifying the number
+of partitions for that class in the C<number> member. Perhaps your logic for
+determining the number of partitions resulted in C<undef> or 0.
+
+=item * C<get_driver is required>
+
+You attempted to define partitioning for a class without specifying the
+function to find the object driver for a partition ID as the C<get_driver>
+member.
+
+=back
+
+=head1 BUGS AND LIMITATIONS
+
+There are no known bugs in this module.
+
+=head1 SEE ALSO
+
+L<Data::ObjectDriver>, L<Data::ObjectDriver::Driver::DBI>,
+L<Data::ObjectDriver::Driver::SimplePartition>
+
+=head1 LICENSE
+
+I<Data::ObjectDriver> is free software; you may redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=head1 AUTHOR & COPYRIGHT
+
+Except where otherwise noted, I<Data::ObjectDriver> is Copyright 2005-2006
+Six Apart, cpan@sixapart.com. All rights reserved.
+
 =cut
 
