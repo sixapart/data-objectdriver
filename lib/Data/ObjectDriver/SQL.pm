@@ -283,7 +283,9 @@ The SQL expression across which to perform the join, as a string.
 =head2 C<where> (arrayref)
 
 The list of C<WHERE> clauses that apply to the SQL statement. Individual
-members of the list are strings of SQL.
+members of the list are strings of SQL. All members of this attribute must be
+true for a record to be included as a result; that is, the list members are
+C<AND>ed together to form the full C<WHERE> clause.
 
 =head2 C<where_values> (hashref of variant structures)
 
@@ -353,6 +355,96 @@ multiple ordering fields.
 =head2 C<Data::ObjectDriver::SQL-E<gt>new()>
 
 Creates a new, empty SQL statement.
+
+=head2 C<$sql-E<gt>add_select($column, $term)>
+
+Adds the database column C<$column> to the list of fields to return in a
+C<SELECT> query. The requested object member will be indicated to be C<$term>
+in the statement's C<select_map> and C<select_map_reverse> attributes.
+
+=head2 C<$sql-E<gt>add_join($table, \@joins)>
+
+Adds the join statement indicated by C<$table> and C<\@joins> to the list of
+C<JOIN> table references for the statement. The structure for the set of joins
+are as described for the C<joins> attribute member above.
+
+=head2 C<$sql-E<gt>add_where($column, $value)>
+
+Adds a condition on the value of the database column C<$column> to the
+statement's C<WHERE> clause. A record will be tested against the below
+conditions according to what type of data structure C<$value> is:
+
+=over 4
+
+=item * a scalar
+
+The value of C<$column> must equal C<$value>.
+
+=item * a reference to a scalar
+
+The value of C<$column> must evaluate true against the SQL given in C<$$value>.
+For example, if C<$$value> were C<IS NULL>, C<$column> must be C<NULL> for a
+record to pass.
+
+=item * a hashref
+
+The value of C<$column> must compare against the condition represented by
+C<$value>, which must contain the members:
+
+=over 4
+
+=item * C<value>
+
+The value with which to compare.
+
+=item * C<op>
+
+The SQL operator with which to compare C<value> and the value of C<$column>.
+
+=back
+
+For example, if C<value> were C<NULL> and C<op> were C<IS>, a record's
+C<$column> column would have to be C<NULL> to match.
+
+=item * an arrayref of scalars
+
+The value of C<$column> may equal any of the members of C<@$value>. The
+generated SQL performs the comparison with as an C<IN> expression.
+
+=item * an arrayref of (mostly) references
+
+The value of C<$column> must compare against I<any> of the expressions
+represented in C<@$value>. Each member of the list can be any of the structures
+described here as possible forms of C<$value>.
+
+If the first member of the C<@$value> array is the scalar string C<-and>,
+I<all> subsequent members of <@$value> must be met for the record to match.
+Note this is not very useful unless contained as one option of a larger C<OR>
+alternation.
+
+=back
+
+All individual conditions specified with C<add_where()> must be true for a
+record to be a result of the query.
+
+Beware that you can create a circular reference that will recursively generate
+an infinite SQL statement (for example, by specifying a arrayref C<$value> that
+itself contains C<$value>). As C<add_where()> evaluates your expressions before
+storing the conditions in the C<where> attribute as a generated SQL string,
+this will occur when calling C<add_where()>, not C<as_sql()>. So don't do that.
+
+=head2 C<$sql-E<gt>has_where($column, [$value])>
+
+Returns whether a where clause for the column C<$column> was added to the
+statement with the C<add_where()> method.
+
+The C<$value> argument is currently ignored.
+
+=head2 C<$sql-E<gt>add_having($column, $value)>
+
+Adds an expression to the C<HAVING> portion of the statement's C<GROUP ...
+HAVING> clause. The expression compares C<$column> using C<$value>, which can
+be any of the structures described above for the C<add_where()> method.
 
 =head1 DIAGNOSTICS
 
