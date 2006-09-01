@@ -214,61 +214,102 @@ internally to C<Data::ObjectDriver::Driver::DBI> object drivers to convert
 database operations (C<search()>, C<update()>, etc) into database operations,
 but sometimes you just gotta use SQL.
 
-=head1 USAGE
+=head1 ATTRIBUTES
 
-=head2 C<Data::ObjectDriver::SQL-E<gt>new()>
+I<Data::ObjectDriver::SQL> sports several data attributes that represent the
+parts of the modeled SQL statement.  These attributes all have accessor and
+mutator methods. Note that some attributes have more convenient methods of
+modification (for example, C<add_where()> for the C<where> attribute).
 
-Creates a new, empty SQL statement.
+=head2 C<select> (arrayref)
 
-=head2 C<$sql-E<gt>select()>
+The database columns to select in a C<SELECT> query.
 
-=head2 C<$sql-E<gt>select(\@columns)>
+=head2 C<select_map> (hashref)
 
-Returns or sets the database columns to select in a C<SELECT> query.
+The map of database column names to object fields in a C<SELECT> query. Use
+this mapping to convert members of the C<select> list to column names.
 
-=head2 select_map
+=head2 C<select_map_reverse> (hashref)
 
-=head2 select_map_reverse
+The map of object fields to database column names in a C<SELECT> query. Use
+this map to reverse the C<select_map> mapping where needed.
 
-=head2 C<$sql-E<gt>from()>
+=head2 C<from> (arrayref)
 
-=head2 C<$sql-E<gt>from(\@tables)>
-
-Returns or sets the tables used in the query.
+The list of tables from which to query results in a C<SELECT> query.
 
 Note if you perform a C<SELECT> query with multiple tables, the rows will be
 selected as Cartesian products that you'll need to reduce with C<WHERE>
-clauses. Your query might be better served using a real query specified through
-the C<joins> member of your statement.
+clauses. Your query might be better served with real joins specified through
+the C<joins> attribute of your statement.
 
-=head2 joins
+=head2 C<joins> (arrayref of hashrefs containing scalars and hashrefs)
 
-=head2 where
+The list of C<JOIN> clauses to use in the table list of the statement. Each clause is a hashref containing these members:
 
-=head2 bind
+=over 4
 
-=head2 C<$sql-E<gt>limit()>
+=item * C<table>
 
-=head2 C<$sql-E<gt>limit($limit)>
+The name of the table in C<from> being joined.
 
-Returns or sets a C<SELECT> query's maximum number of records to return.
+=item * C<joins> (arrayref)
 
-=head2 C<$sql-E<gt>offset()>
+The list of joins to perform on the table named in C<table>. Each member of
+C<joins> is a hashref containing:
 
-=head2 C<$sql-E<gt>offset($offset)>
+=over 4
 
-Returns or sets a C<SELECT> query's number of records to skip in this query.
-Combined with a C<limit> and logic to increase the offset, you can use multiple
-queries to paginate a set of records with a moving window of C<limit> records.
+=item * C<type>
 
-=head2 C<$sql-E<gt>group()>
+The type of join to use. That is, the SQL string to use before the word C<JOIN>
+in the join expression; for example, C<INNER> or C<NATURAL RIGHT OUTER>). This
+member is optional. When not specified, the default plain C<JOIN> join is
+specified.
 
-=head2 C<$sql-E<gt>group(\%field)>
+=item * C<table>
 
-=head2 C<$sql-E<gt>group(\@fields)>
+The name of the table to which to join.
 
-Returns or sets the fields on which to group the results. Grouping fields are
-hashrefs containing these members:
+=item * C<condition>
+
+The SQL expression across which to perform the join, as a string.
+
+=back
+
+=back
+
+=head2 C<where> (arrayref)
+
+The list of C<WHERE> clauses that apply to the SQL statement. Individual
+members of the list are strings of SQL.
+
+=head2 C<where_values> (hashref of variant structures)
+
+The set of data structures used to generate the C<WHERE> clause SQL found in
+the C<where> attributes, keyed on the associated column names.
+
+=head2 C<bind> (arrayref)
+
+The list of values to bind to the query when performed. That is, the list of
+values to be replaced for the C<?>es in the SQL.
+
+=head2 C<limit> (scalar)
+
+The maximum number of results on which to perform the query.
+
+=head2 C<offset> (scalar)
+
+The number of records to skip before performing the query. Combined with a
+C<limit> and application logic to increase the offset in subsequent queries,
+you can paginate a set of records with a moving window containing C<limit>
+records.
+
+=head2 C<group> (hashref, or an arrayref of hashrefs)
+
+The fields on which to group the results. Grouping fields are hashrefs
+containing these members:
 
 =over 4
 
@@ -281,22 +322,13 @@ Name of the column on which to group.
 Note you can set a single grouping field, or use an arrayref containing multiple
 grouping fields.
 
-=head2 C<$sql-E<gt>having()>
+=head2 C<having> (arrayref)
 
-=head2 C<$sql-E<gt>having(\@clauses)>
+The list of clauses to specify in the C<HAVING> portion of a C<GROUP ...
+HAVING> clause. Individual clauses are simple strings containing the
+conditional expression, as in C<where>.
 
-Returns or sets the list of clauses to specify in the C<HAVING> portion of the
-C<GROUP ... HAVING> clause. Individual clauses are simple strings containing
-the expression to use.
-
-Consider using the C<add_having> method instead of adding C<HAVING> clauses
-directly.
-
-=head2 C<$sql-E<gt>order()>
-
-=head2 C<$sql-E<gt>order(\%field)>
-
-=head2 C<$sql-E<gt>order(\@fields)>
+=head2 C<order> (hashref, or an arrayref of hashrefs)
 
 Returns or sets the fields by which to order the results. Ordering fields are hashrefs containing these members:
 
@@ -316,7 +348,11 @@ specify a descending order. This member is optional.
 Note you can set a single ordering field, or use an arrayref containing
 multiple ordering fields.
 
-=head2 where_values
+=head1 USAGE
+
+=head2 C<Data::ObjectDriver::SQL-E<gt>new()>
+
+Creates a new, empty SQL statement.
 
 =head1 DIAGNOSTICS
 
