@@ -446,7 +446,40 @@ Adds an expression to the C<HAVING> portion of the statement's C<GROUP ...
 HAVING> clause. The expression compares C<$column> using C<$value>, which can
 be any of the structures described above for the C<add_where()> method.
 
+=head2 C<$sql-E<gt>as_sql()>
+
+Returns the SQL fully representing the SQL statement C<$sql>.
+
+=head2 C<$sql-E<gt>as_sql_having()>
+
+Returns the SQL representing the C<HAVING> portion of C<$sql>'s C<GROUP ...
+HAVING> clause.
+
+=head2 C<$sql-E<gt>as_sql_where()>
+
+Returns the SQL representing C<$sql>'s C<WHERE> clause.
+
+=head2 C<$sql-E<gt>as_limit()>
+
+Returns the SQL for the C<LIMIT ... OFFSET> clause of the statement.
+
+=head2 C<$sql-E<gt>as_aggregate($set)>
+
+Returns the SQL representing the aggregation clause of type C<$set> for the SQL
+statement C<$sql>. Reasonable values of C<$set> are C<ORDER> and C<GROUP>.
+
 =head1 DIAGNOSTICS
+
+=over 4
+
+=item * C<Invalid/unsafe column name I<column>>
+
+The column name you specified to C<add_where()> contained characters that are
+not allowed in database column names. Only word characters and periods are
+allowed. Perhaps you didn't filter punctuation out of a generated column name
+correctly.
+
+=back
 
 =head1 BUGS AND LIMITATIONS
 
