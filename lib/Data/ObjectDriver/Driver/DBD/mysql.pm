@@ -38,6 +38,12 @@ sub bulk_insert {
     my $cols = shift;
     my $rows_ref = shift;
 
+    croak "Usage bulk_insert(dbd, dbh, table, columnref, rowsref)"
+        unless (defined $dbd && defined $dbh && defined $table && defined $cols &&
+                defined $rows_ref);
+
+    return 0e0 if (scalar(@{$rows_ref}) == 0);
+
     my $sql = "INSERT INTO $table("  . join(',', @{$cols}) . ") VALUES\n";
     my $statement_length = length($sql);
 
