@@ -53,9 +53,10 @@ sub as_sql {
     $sql .= 'FROM ';
     ## Add any explicit JOIN statements before the non-joined tables.
     if ($stmt->joins && @{ $stmt->joins }) {
+        my $initial_table_written = 0;
         for my $j (@{ $stmt->joins }) {
             my($table, $joins) = map { $j->{$_} } qw( table joins );
-            $sql .= $table;
+            $sql .= $table unless $initial_table_written++;
             for my $join (@{ $j->{joins} }) {
                 $sql .= ' ' .
                         uc($join->{type}) . ' JOIN ' . $join->{table} . ' ON ' .
