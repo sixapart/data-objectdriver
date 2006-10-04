@@ -85,7 +85,7 @@ sub report_query_frequency {
     return "Text::SimpleTable unavailable at startup, reports disabled." unless $simpletable;
     my $freq = $profiler->query_frequency;
     my $tbl = Text::SimpleTable->new( [ 64, 'Query' ], [ 9, 'Number' ] );
-    my @sql = sort { $freq->{$b} <=> $freq->{$a} } keys %$freq;
+    my @sql = sort { ($freq->{$b} <=> $freq->{$a}) || ($a cmp $b) } keys %$freq;
     for my $sql (@sql[0..min($#sql, 19)]) {
         $tbl->row($sql, $freq->{$sql});
     }
