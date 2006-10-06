@@ -38,7 +38,7 @@ Data::ObjectDriver::Driver::Cache::Memcached - object driver for caching objects
 =head1 SYNOPSIS
 
     package MyObject;
-    use base qw( 
+    use base qw( Data::ObjectDriver::BaseObject );
 
     __PACKAGE__->install_properties({
         ...
