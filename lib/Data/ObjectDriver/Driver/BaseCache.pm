@@ -218,3 +218,28 @@ sub AUTOLOAD {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+Data::ObjectDriver::Driver::BaseCache - parent class for caching object drivers
+
+=head1 SYNOPSIS
+
+=head1 DESCRIPTION
+
+=head1 USAGE
+
+=head1 LICENSE
+
+I<Data::ObjectDriver> is free software; you may redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=head1 AUTHOR & COPYRIGHT
+
+Except where otherwise noted, I<Data::ObjectDriver> is Copyright 2005-2006
+Six Apart, cpan@sixapart.com. All rights reserved.
+
+=cut
+
