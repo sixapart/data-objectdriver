@@ -43,7 +43,7 @@ Data::ObjectDriver::Driver::Cache::Memcached - object driver for caching objects
     __PACKAGE__->install_properties({
         ...
         driver => Data::ObjectDriver::Driver::Cache::Memcached->new(
-            cache    => Cache::Memcached->new( servers => \@MEMCACHED_SERVERS ),
+            cache    => Cache::Memcached->new({ servers => \@MEMCACHED_SERVERS }),
             fallback => Data::ObjectDriver::Driver::DBI->new( @$DBI_INFO ),
         ),
         ...
