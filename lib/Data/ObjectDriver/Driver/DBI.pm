@@ -88,6 +88,7 @@ sub fetch_data {
     my $sth = $driver->fetch($rec, $obj, $terms, $args);
     $sth->fetch;
     $sth->finish;
+    $driver->end_query($sth);
     return $rec;
 }
 
@@ -111,7 +112,7 @@ sub fetch {
     my $sql = $stmt->as_sql;
     $sql .= "\nFOR UPDATE" if $orig_args->{for_update};
     my $dbh = $driver->r_handle($class->properties->{db});
-    $driver->record_query($sql, $stmt->{bind});
+    $driver->start_query($sql, $stmt->{bind});
     my $sth = $dbh->prepare_cached($sql);
     $sth->execute(@{ $stmt->{bind} });
     $sth->bind_columns(undef, @bind);
@@ -142,6 +143,7 @@ sub search {
 
         unless ($sth->fetch) {
             $sth->finish;
+            $driver->end_query($sth);
             return;
         }
         my $obj;
@@ -196,15 +198,20 @@ sub select_one {
     my $driver = shift;
     my($sql, $bind) = @_;
     my $dbh = $driver->r_handle;
+
+    $driver->start_query($sql, $bind);
     my $sth = $dbh->prepare_cached($sql);
     $sth->execute(@$bind);
     $sth->bind_columns(undef, \my($val));
     unless ($sth->fetch) {
         $sth->finish;
+        $driver->end_query($sth);
         return;
     }
 
     $sth->finish;
+    $driver->end_query($sth);
+
     return $val;
 }
 
@@ -231,12 +238,14 @@ sub exists {
     my $sql = "SELECT 1 FROM $tbl\n";
     $sql .= $stmt->as_sql_where;
     my $dbh = $driver->r_handle($obj->properties->{db});
-    $driver->record_query($sql, $stmt->{bind});
+    $driver->start_query($sql, $stmt->{bind});
     my $sth = $dbh->prepare_cached($sql);
     $sth->execute(@{ $stmt->{bind} });
     my $exists = $sth->fetch;
     $sth->finish;
-    $exists;
+    $driver->end_query($sth);
+
+    return $exists;
 }
 
 sub insert {
@@ -277,7 +286,7 @@ sub insert {
             ')' . "\n" .
             'VALUES (' . join(', ', ('?') x @$cols) . ')' . "\n";
     my $dbh = $driver->rw_handle($obj->properties->{db});
-    $driver->record_query($sql, $obj->{column_values});
+    $driver->start_query($sql, $obj->{column_values});
     my $sth = $dbh->prepare_cached($sql);
     my $i = 1;
     my $col_defs = $obj->properties->{column_defs};
@@ -289,6 +298,7 @@ sub insert {
     }
     $sth->execute;
     $sth->finish;
+    $driver->end_query($sth);
 
     ## Now, if we didn't have an object ID, we need to grab the
     ## newly-assigned ID.
@@ -342,7 +352,7 @@ sub update {
     $sql .= $stmt->as_sql_where;
 
     my $dbh = $driver->rw_handle($obj->properties->{db});
-    $driver->record_query($sql, $obj->{column_values});
+    $driver->start_query($sql, $obj->{column_values});
     my $sth = $dbh->prepare_cached($sql);
     my $i = 1;
     my $col_defs = $obj->properties->{column_defs};
@@ -360,6 +370,7 @@ sub update {
 
     my $rows = $sth->execute;
     $sth->finish;
+    $driver->end_query($sth);
 
     $obj->call_trigger('post_save', $orig_obj);
     $obj->call_trigger('post_update', $orig_obj);
@@ -402,10 +413,11 @@ sub remove {
     my $stmt = $driver->prepare_statement(ref($obj), $obj->primary_key_to_terms);
     $sql .= $stmt->as_sql_where;
     my $dbh = $driver->rw_handle($obj->properties->{db});
-    $driver->record_query($sql, $stmt->{bind});
+    $driver->start_query($sql, $stmt->{bind});
     my $sth = $dbh->prepare_cached($sql);
     my $result = $sth->execute(@{ $stmt->{bind} });
     $sth->finish;
+    $driver->end_query($sth);
 
     $obj->call_trigger('post_remove', $orig_obj);
 
@@ -435,10 +447,11 @@ sub direct_remove {
     }
 
     my $dbh = $driver->rw_handle($class->properties->{db});
-    $driver->record_query($sql, $stmt->{bind});
+    $driver->start_query($sql, $stmt->{bind});
     my $sth = $dbh->prepare_cached($sql);
     my $result = $sth->execute(@{ $stmt->{bind} });
     $sth->finish;
+    $driver->end_query($sth);
     return $result;
 }
 

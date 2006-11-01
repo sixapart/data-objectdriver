@@ -32,16 +32,20 @@ sub init {
     $driver;
 }
 
-sub record_query {
+# Alias record_query to start_query
+*record_query = \*start_query;
+
+sub start_query {
     my $driver = shift;
     my($sql, $bind) = @_;
-    if ($DEBUG) {
-        $driver->debug($sql, $bind);
-    }
-    if ($PROFILE) {
-        $PROFILER->record_query($driver, $sql);
-    }
+
+    $driver->debug($sql, $bind) if $DEBUG;
+    $PROFILER->record_query($driver, $sql) if $PROFILE;
+
+    return;
 }
+
+sub end_query { }
 
 sub debug {
     my $driver = shift;
