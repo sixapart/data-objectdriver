@@ -206,7 +206,7 @@ sub is_primary_key {
 
 sub primary_key_tuple {
     my $obj = shift;
-    my $pk = $obj->properties->{primary_key};
+    my $pk = $obj->properties->{primary_key} || return;
     $pk = [ $pk ] unless ref($pk) eq 'ARRAY';
     $pk;
 }
