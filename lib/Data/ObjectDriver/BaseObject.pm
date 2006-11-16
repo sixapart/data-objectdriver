@@ -363,8 +363,7 @@ sub column_func {
         # setter
         my ($val, $flags) = @_;
         $obj->{column_values}->{$col} = $val;
-        unless (($val && ref($val) eq 'HASH' && $val->{no_changed_flag}) ||
-                $flags->{no_changed_flag}) {
+        unless ($flags && ref($flags) eq 'HASH' && $flags->{no_changed_flag}) {
             $obj->{changed_cols}->{$col}++;
         }
 
