@@ -9,7 +9,7 @@ use Carp ();
 
 use Class::Trigger qw( pre_save post_save post_load pre_search
                        pre_insert post_insert pre_update post_update
-                       pre_remove post_remove );
+                       pre_remove post_remove post_inflate );
 
 sub install_properties {
     my $class = shift;
@@ -460,7 +460,6 @@ sub refresh {
     return unless $obj->has_primary_key;
     my $fields = $obj->fetch_data;
     $obj->set_values_internal($fields);
-    # XXX not sure this is the right place
     $obj->call_trigger('post_load');
     return 1;
 }
@@ -479,7 +478,8 @@ sub inflate {
     my $obj = $class->new;
     $obj->set_values($deflated->{columns});
     $obj->{changed_cols} = {};
-    $obj;
+    $obj->call_trigger('post_inflate');
+    return $obj;
 }
 
 sub DESTROY { }
