@@ -87,7 +87,6 @@ sub _exec_multiplexed {
     ## strictly identical as if we made only one call on $obj
     ## (Perhaps it's a bit overkill ? playing with 'changed_cols' may suffice)
     for my $sub_driver (@{ $driver->drivers }) {
-        my $x = $sub_driver->get_driver($obj, @args);
         $obj = Storable::dclone($orig_obj);
         $ret = $sub_driver->$meth($obj, @args);
     }
