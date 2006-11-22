@@ -4,6 +4,8 @@ package Data::ObjectDriver::Driver::Multiplexer;
 use strict;
 use warnings;
 
+use Storable();
+
 use base qw( Data::ObjectDriver Class::Accessor::Fast );
 
 __PACKAGE__->mk_accessors(qw( on_search drivers ));
@@ -29,7 +31,11 @@ sub lookup_multi {
 }
 
 sub exists {
-    croak "exists is not implemented in ", __PACKAGE__;
+    my $driver = shift;
+    my($class, $terms, $args) = @_;
+    ## just assume that the first driver declared is the more efficient one
+    my $sub_driver = $driver->drivers->[0];
+    return $sub_driver->exists(@_);
 }
 
 sub search {
@@ -74,10 +80,18 @@ sub _find_sub_driver {
 
 sub _exec_multiplexed {
     my $driver = shift;
-    my($meth, @args) = @_;
+    my($meth, $obj, @args) = @_;
+    my $orig_obj = Storable::dclone($obj);
+    my $ret;
+    ## We want to be sure to have the initial and final state of the object
+    ## strictly identical as if we made only one call on $obj
+    ## (Perhaps it's a bit overkill ? playing with 'changed_cols' may suffice)
     for my $sub_driver (@{ $driver->drivers }) {
-        $sub_driver->$meth(@args);
+        my $x = $sub_driver->get_driver($obj, @args);
+        $obj = Storable::dclone($orig_obj);
+        $ret = $sub_driver->$meth($obj, @args);
     }
+    return $ret;
 }
 
 1;
@@ -122,7 +136,7 @@ Note that this driver has the following limitations currently:
 
 =over 4
 
-=item 1. It only supports I<search>, I<replace>, I<insert>, and I<remove>.
+=item 1. It only supports I<search>, I<exists>, I<replace>, I<insert>, and I<remove>.
 
 =item 2. It doesn't support objects with primary keys.
 
