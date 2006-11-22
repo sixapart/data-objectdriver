@@ -168,6 +168,18 @@ sub update {
     $driver->fallback->update($obj);
 }
 
+sub replace {
+    my $driver = shift;
+    my($obj) = @_;
+    return $driver->fallback->replace($obj)
+        if $driver->Disabled;
+    if (ref $obj && $obj->has_primary_key) {
+        my $key = $driver->cache_key(ref($obj), $obj->primary_key);
+        $driver->update_cache($key, $driver->deflate($obj));
+    } 
+    $driver->fallback->replace($obj);
+}
+
 sub remove {
     my $driver = shift;
     my($obj) = @_;
@@ -238,7 +250,7 @@ Data::ObjectDriver for a cache miss.
 
 Drivers based on Data::ObjectDriver::Driver::BaseCache support all standard
 operations for Data::ObjectDriver object drivers (lookup, search, update,
-insert, remove, and fetch_data). BaseCache-derived drivers also support:
+insert, replace, remove, and fetch_data). BaseCache-derived drivers also support:
 
 =head2 C<Data::ObjectDriver::Driver::BaseCache-E<gt>new( %params )>
 

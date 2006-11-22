@@ -7,6 +7,9 @@ use base qw( Data::ObjectDriver::Driver::DBD );
 
 use Data::ObjectDriver::Errors;
 
+# yes according to http://www.sqlite.org/lang_replace.html 
+sub can_replace { 1 }
+
 sub fetch_id { $_[2]->func('last_insert_rowid') }
 
 sub bind_param_attributes {

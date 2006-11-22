@@ -19,7 +19,7 @@ BEGIN {
     }
 }
 
-plan tests => 40;
+plan tests => 46;
 
 use Wine;
 use Recipe;
@@ -109,6 +109,30 @@ setup_dbs({
 
     is $r->remove, 1, 'Remove correct number of rows';
     is $i->remove, 1, 'Remove correct number or rows';
+}
+
+# replace
+{ 
+    my $r = Recipe->new;
+    $r->title("to replace");
+    ok $r->replace;
+    ok(my $rid = $r->recipe_id);
+    my $r2 = Recipe->new;
+    $r2->recipe_id($rid);
+    $r2->title('new title');
+    ok $r2->replace;
+    
+    ## check
+    $r = Recipe->lookup($rid);
+    is $r->title, 'new title';
+    
+    $r2 = Recipe->new;
+    $r2->recipe_id($rid);
+    ok $r2->replace;
+
+    ## check
+    $r = Recipe->lookup($rid);
+    is $r->title, undef;
 }
 
 # is_changed interface 

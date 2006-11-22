@@ -453,6 +453,7 @@ sub search {
 sub remove          { shift->_proxy('remove',       @_) }
 sub update          { shift->_proxy('update',       @_) }
 sub insert          { shift->_proxy('insert',       @_) }
+sub replace         { shift->_proxy('replace',      @_) }
 sub fetch_data      { shift->_proxy('fetch_data',   @_) }
 
 sub refresh {

@@ -248,10 +248,30 @@ sub exists {
     return $exists;
 }
 
+sub replace {
+    my $driver = shift;
+    if ($driver->dbd->can_replace) {
+        $driver->_insert_or_replace(@_, { replace => 1 });
+    } else {
+        $driver->remove(@_);
+        $driver->insert(@_);
+    }
+}
+
 sub insert {
     my $driver = shift;
     my($orig_obj) = @_;
+    $driver->_insert_or_replace($orig_obj, { replace => 0 });
+}
 
+sub _insert_or_replace {
+    my $driver = shift;
+    my($orig_obj, $options) = @_;
+
+    ## Syntax switch between INSERT or REPLACE statement based on options
+    $options ||= {};
+    my $INSERT_OR_REPLACE = $options->{replace} ? 'REPLACE' : 'INSERT';
+    
     ## Use a duplicate so the pre_save trigger can modify it.
     my $obj = $orig_obj->clone_all;
     $obj->call_trigger('pre_save', $orig_obj);
@@ -278,7 +298,7 @@ sub insert {
         }
     }
     my $tbl = $driver->table_for($obj);
-    my $sql = "INSERT INTO $tbl\n";
+    my $sql = "$INSERT_OR_REPLACE INTO $tbl\n";
     my $dbd = $driver->dbd;
     $sql .= '(' . join(', ',
                   map { $dbd->db_column_name($tbl, $_) }

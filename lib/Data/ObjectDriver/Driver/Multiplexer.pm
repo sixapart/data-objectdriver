@@ -40,7 +40,8 @@ sub search {
     return $sub_driver->search(@_);
 }
 
-sub insert { shift->_exec_multiplexed('insert', @_) }
+sub replace { shift->_exec_multiplexed('replace', @_) }
+sub insert  { shift->_exec_multiplexed('insert',  @_) }
 
 sub update {
     croak "update is not implemented in ", __PACKAGE__;
@@ -121,7 +122,7 @@ Note that this driver has the following limitations currently:
 
 =over 4
 
-=item 1. It only supports I<search>, I<insert>, and I<remove>.
+=item 1. It only supports I<search>, I<replace>, I<insert>, and I<remove>.
 
 =item 2. It doesn't support objects with primary keys.
 
