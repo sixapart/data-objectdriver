@@ -30,6 +30,7 @@ sub lookup_multi {
 
 sub exists     { shift->_exec_partitioned('exists',     @_) }
 sub insert     { shift->_exec_partitioned('insert',     @_) }
+sub replace    { shift->_exec_partitioned('replace',    @_) }
 sub update     { shift->_exec_partitioned('update',     @_) }
 sub remove     { shift->_exec_partitioned('remove',     @_) }
 sub fetch_data { shift->_exec_partitioned('fetch_data', @_) }
