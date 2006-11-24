@@ -236,13 +236,12 @@ sub primary_key_to_terms {
         if (ref($id) eq 'HASH') {
             my @keys = sort keys %$id;
             unless (is_same_array(\@keys, [ sort @$pk ])) {
-                Carp::croak("keys don't match with primary keys: @keys");
+                Carp::confess("keys don't match with primary keys: @keys|@$pk");
             }
             return $id;
         }
     }
     $id = [ $id ] unless ref($id) eq 'ARRAY';
-    my $i = 0;
     my %terms;
     @terms{@$pk} = @$id;
     \%terms;
