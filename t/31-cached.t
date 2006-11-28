@@ -16,7 +16,7 @@ BEGIN {
         plan skip_all => 'Tests require Cache::Memory';
     }
 }
-plan tests => 56;
+plan tests => 62;
 
 setup_dbs({
     global   => [ qw( recipes ingredients ) ],
@@ -38,6 +38,10 @@ ok($recipe->save, 'Object updated successfully');
 is($recipe->title, 'My Banana Milkshake', 'Title is My Banana Milkshake');
 
 $tmp = Recipe->lookup($recipe->recipe_id);
+is(ref $tmp, 'Recipe', 'lookup gave us a recipe');
+is($tmp->title, 'My Banana Milkshake', 'Title is My Banana Milkshake');
+## same with a hash lookup
+$tmp = Recipe->lookup({ recipe_id => $recipe->recipe_id });
 is(ref $tmp, 'Recipe', 'lookup gave us a recipe');
 is($tmp->title, 'My Banana Milkshake', 'Title is My Banana Milkshake');
 
@@ -123,6 +127,16 @@ is($all->[0]->name, 'Vanilla Ice Cream', 'lookup_multi results in right order');
 is($all->[1]->name, 'Bananas', 'lookup_multi results in right order');
 is($all->[2]->name, 'Chocolate Chips', 'lookup_multi results in right order');
 
+## lookup_multi using hashes (Same test than above)
+$all = Ingredient->lookup_multi([
+    { recipe_id => $recipe->recipe_id, id => 1 },
+    { recipe_id => $recipe->recipe_id, id => 2 },
+    { recipe_id => $recipe2->recipe_id, id => 1 },
+]);
+is(scalar @$all, 3, 'Got back 3 ingredients from lookup_multi');
+is($all->[0]->name, 'Vanilla Ice Cream', 'lookup_multi results in right order');
+is($all->[1]->name, 'Bananas', 'lookup_multi results in right order');
+is($all->[2]->name, 'Chocolate Chips', 'lookup_multi results in right order');
 
 # fetch_data tests
 my $data = $recipe->fetch_data;

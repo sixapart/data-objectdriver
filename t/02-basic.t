@@ -19,7 +19,7 @@ BEGIN {
     }
 }
 
-plan tests => 46;
+plan tests => 51;
 
 use Wine;
 use Recipe;
@@ -86,7 +86,7 @@ setup_dbs({
     is $w->remove, 1, 'Remove correct number of rows';
 }
 
-# lookup with hash (multiple pk) 
+# lookups with hash (multiple pk) 
 {
     my $r = Recipe->new;
     $r->title("Good one");
@@ -106,10 +106,31 @@ setup_dbs({
     dies_ok  { $i = Ingredient->lookup({ id => $id, quantity => 1 })} "Use Search !";
     lives_ok { $i = Ingredient->lookup({ id => $id, recipe_id => $rid })} "Alive";
     cmp_ok $i->name, 'eq', 'Chouchenn', "simple data test";
+    
+    # lookup_multi with hash (multiple pk) 
+    lives_ok { $i = Ingredient->lookup_multi(
+        [{ id => $id, recipe_id => $rid }])
+    } "Alive";
+    is scalar @$i, 1;
+
+    # add a second ingredient
+    my $i2 = Ingredient->new(
+        recipe_id => $rid,
+        quantity  => 1,
+        name      => 'honey',
+    );
+    $i2->save;
+    my $id2 = $i2->id;
+    lives_ok { $i = Ingredient->lookup_multi(
+        [{ id => $id, recipe_id => $rid }, { id => $id2, recipe_id => $rid } ])
+    } "Alive";
+    is scalar @$i, 2;
 
     is $r->remove, 1, 'Remove correct number of rows';
-    is $i->remove, 1, 'Remove correct number or rows';
+    is $i->[0]->remove, 1, 'Remove correct number or rows';
+    is $i->[1]->remove, 1, 'Remove correct number or rows';
 }
+
 
 # replace
 { 
