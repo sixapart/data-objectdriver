@@ -281,7 +281,7 @@ Looks up/retrieves multiple objects with the IDs I<\@ids>, which should be
 a reference to an array of IDs. As in the case of I<lookup>, an ID can
 be either a scalar or a reference to an array.
 
-Returns a reference to an array of objects in the same order as the IDs
+Returns a reference to an array of objects B<in the same order> as the IDs
 you passed in. Any objects that could not successfully be loaded will be
 represented in that array as an C<undef> element.
 

@@ -19,7 +19,7 @@ BEGIN {
     }
 }
 
-plan tests => 51;
+plan tests => 52;
 
 use Wine;
 use Recipe;
@@ -84,6 +84,24 @@ setup_dbs({
 
     ok $w;
     is $w->remove, 1, 'Remove correct number of rows';
+}
+
+## lookup_multi give a sorted result set 
+{
+
+    my @ids;
+    for (1 .. 14) {
+        my $w = Wine->new(name => "wine-$_");
+        $w->save;
+        push @ids, $w->id;
+    }
+    if (eval { require List::Util }) {
+        @ids = List::Util::shuffle @ids;
+    } else {
+        @ids = reverse @ids;
+    }
+    my @got = map { $_->id } @{ Wine->lookup_multi(\@ids) };
+    is_deeply \@got, \@ids, "Sorted result set";
 }
 
 # lookups with hash (multiple pk) 

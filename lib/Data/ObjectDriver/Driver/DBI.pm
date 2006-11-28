@@ -185,7 +185,9 @@ sub lookup_multi {
     ## use an OR search.
     unless (ref($ids->[0])) {
         my $terms = $class->primary_key_to_terms([ $ids ]);
-        @got = $driver->search($class, $terms, { is_pk => 1 });
+        my @sqlgot = $driver->search($class, $terms, { is_pk => 1 });
+        my %hgot = map { $_->primary_key() => $_ } @sqlgot;
+        @got = map { $hgot{$_} } @$ids;
     } else {
         for my $id (@$ids) {
             push @got, $class->driver->lookup($class, $id);
