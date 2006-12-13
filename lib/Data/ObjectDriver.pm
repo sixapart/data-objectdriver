@@ -50,6 +50,17 @@ sub end_query { }
 sub debug {
     my $driver = shift;
     return unless $DEBUG;
+
+    my $class = ref $driver;
+    my @caller;
+    my $i = 0;
+    while (1) {
+        @caller = caller($i++);
+        last if $caller[0] !~ /^(Data::ObjectDriver|$driver)/;
+    }
+
+    my $where = " in file $caller[1] line $caller[2]\n";
+
     if (@_ == 1 && !ref($_[0])) {
         print STDERR @_;
     } else {
