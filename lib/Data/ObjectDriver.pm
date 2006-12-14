@@ -62,10 +62,10 @@ sub debug {
     my $where = " in file $caller[1] line $caller[2]\n";
 
     if (@_ == 1 && !ref($_[0])) {
-        print STDERR @_;
+        print STDERR @_, $where;
     } else {
         local $Data::Dumper::Indent = 1;
-        print STDERR Data::Dumper::Dumper(@_);
+        print STDERR Data::Dumper::Dumper(@_), $where;
     }
 }
 
