@@ -958,7 +958,7 @@ loaded from or saved to the database, as a list.
 Returns the list of changed columns in C<$obj> as a list, except for any
 columns in C<$obj>'s primary key (even if they have changed).
 
-=head2 C<Class-E<gt>lookup_multi(@ids)>
+=head2 C<Class-E<gt>lookup_multi(\@ids)>
 
 Returns a list (arrayref) of objects as specified by their primary keys.
 
