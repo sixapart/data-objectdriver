@@ -506,6 +506,9 @@ sub has_partitions {
     my $how_many = delete $param{number}
         or Carp::croak("number (of partitions) is required");
 
+    ## save the number of partitions in the class
+    $class->properties->{number_of_partitions} = $how_many;
+
     ## Save the get_driver subref that we were passed, so that the
     ## SimplePartition driver can access it.
     $class->properties->{partition_get_driver} = delete $param{get_driver}

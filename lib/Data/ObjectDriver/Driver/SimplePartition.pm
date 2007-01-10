@@ -5,6 +5,7 @@ use base qw( Data::ObjectDriver::Driver::Partition );
 
 use Carp qw( croak );
 use Data::Dumper;
+use Data::ObjectDriver::Driver::MultiPartition;
 
 sub init {
     my $driver = shift;
@@ -28,9 +29,14 @@ sub _make_get_driver {
     my $col = $class->primary_key_tuple->[0];
     my $get_driver = $class->properties->{partition_get_driver}
         or croak "Partitioning driver not defined for $class";
+        
+    my $number = $class->properties->{number_of_partitions};
+    my $mp_driver = Data::ObjectDriver::Driver::MultiPartition->new(
+        partitions => [ map { $get_driver->($_, @$extra) } (1 .. $number) ]
+    );
 
     return sub {
-        my($terms) = @_;
+        my($terms, $args) = @_;
         my $parent_id;
         if (ref($terms) eq 'HASH') {
             $parent_id = $terms->{ $col };
@@ -42,11 +48,16 @@ sub _make_get_driver {
             $parent_id = ref($terms->[0]) eq 'ARRAY' ?
                 $terms->[0][0] : $terms->[0];
         }
-        croak "Cannot extract $col from terms ", Dumper($terms)
-            unless $parent_id;
-        my $parent = $class->driver->lookup($class, $parent_id)
-            or croak "Member of $class with ID $parent_id not found";
-        return $get_driver->( $parent->partition_id, @$extra );
+        if ($parent_id) {
+            my $parent = $class->driver->lookup($class, $parent_id)
+                or croak "Member of $class with ID $parent_id not found";
+            return $get_driver->( $parent->partition_id, @$extra );
+        } else {
+            unless($args->{multi_partition}) {
+                croak "Cannot extract $col from terms ", Dumper($terms);
+            }
+            return $mp_driver;
+        }
     };
 }
 

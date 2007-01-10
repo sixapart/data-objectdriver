@@ -10,7 +10,7 @@ use Test::More;
 unless (eval { require DBD::SQLite }) {
     plan skip_all => 'Tests require DBD::SQLite';
 }
-plan tests => 48;
+plan tests => 52;
 
 setup_dbs({
     global   => [ qw( recipes ) ],
@@ -106,6 +106,14 @@ is($ingredient3->name, 'Chocolate Chips', 'Name is Chocolate Chips');
 $tmp = Ingredient->lookup([ $recipe2->recipe_id, 1 ]);
 is(ref $tmp, 'Ingredient', 'lookup gave us an ingredient');
 is($tmp->name, 'Chocolate Chips', 'Name is Chocolate Chips');
+
+eval {
+    my @i = Ingredient->search({ name => 'Chocolate Chips' });
+}; ok ($@);
+like $@, qr/Cannot extract/;
+my @i = Ingredient->search({ name => 'Chocolate Chips' }, { multi_partition => 1 });
+is @i, 1;
+is $i[0]->name, 'Chocolate Chips';
 
 is $ingredient->remove, 1, 'Ingredient removed successfully';
 is $ingredient2->remove, 1, 'Ingredient removed successfully';
