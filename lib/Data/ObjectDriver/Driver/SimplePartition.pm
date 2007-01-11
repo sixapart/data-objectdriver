@@ -227,6 +227,10 @@ your application includes the parent ID in all C<search()> calls for the
 partitioned class and instances of partitioned objects before attempting to
 save them.
 
+Optionaly you can enable a basic support of search accross multiple
+partition by passing the 'multi_partition' arg (true value) to the search 
+query. 
+
 =item * C<Member of I<class> with ID I<parent ID> not found>
 
 The parent record associated with the partitioned object could not be loaded.

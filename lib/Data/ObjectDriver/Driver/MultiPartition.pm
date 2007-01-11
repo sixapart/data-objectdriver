@@ -17,8 +17,11 @@ sub search {
     my($class, $terms, $args) = @_;
     
     my @objs;
+    my $only_one_result = $args->{limit} && $args->{limit} == 1;
     for my $partition (@{ $driver->partitions }) {
-        push @objs, $partition->search($class, $terms, $args);
+        my @partial_res = $partition->search($class, $terms, $args);
+        return @partial_res if $only_one_result && @partial_res;
+        push @objs, @partial_res;
     }
     return @objs;
 }
@@ -35,4 +38,9 @@ the partition_key
 =head1 DESCRIPTION
 
 I<Data::ObjectDriver::Driver::MultiPartition> is used internally by 
-I<Data::ObjectDriver::Driver::SimplePartition>
+I<Data::ObjectDriver::Driver::SimplePartition> to do very simple
+search accross partition, if the terms of the query cannot be used to
+determine the partition.
+
+It's just a basic support. For instance 'limit' arg isn't supported
+except if its value is 1.
