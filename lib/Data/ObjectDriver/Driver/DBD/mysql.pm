@@ -17,6 +17,7 @@ sub fetch_id { $_[3]->{mysql_insertid} || $_[3]->{insertid} }
 sub map_error_code {
     my $dbd = shift;
     my($code, $msg) = @_;
+    return if !defined $code;
     return ERROR_MAP->{$code};
 }
 
