@@ -59,6 +59,7 @@ sub init_db {
         Carp::croak(@$ eq "alarm\n" ? "Connection timeout" : $@);
     }
     $driver->dbd->init_dbh($dbh);
+    $driver->{__dbh_init_by_driver} = 1;
     $dbh;
 }
 
@@ -546,7 +547,11 @@ sub _end_txn {
 }
 
 sub DESTROY {
-    if (my $dbh = shift->dbh) {
+    my $driver = shift;
+    ## Don't take the responsability of disconnecting this handler
+    ## if we haven't created it ourself.
+    return if $driver->{__dbh_init_by_driver};
+    if (my $dbh = $driver->dbh) {
         $dbh->disconnect if $dbh;
     }
 }
