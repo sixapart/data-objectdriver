@@ -550,7 +550,7 @@ sub DESTROY {
     my $driver = shift;
     ## Don't take the responsability of disconnecting this handler
     ## if we haven't created it ourself.
-    return if $driver->{__dbh_init_by_driver};
+    return unless $driver->{__dbh_init_by_driver};
     if (my $dbh = $driver->dbh) {
         $dbh->disconnect if $dbh;
     }
