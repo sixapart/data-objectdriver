@@ -11,7 +11,7 @@ use Test::More;
 unless (eval { require DBD::SQLite }) {
     plan skip_all => 'Tests require DBD::SQLite';
 }
-plan tests => 16;
+plan tests => 22;
 
 setup_dbs({
     global1   => [ qw( ingredient2recipe ) ],
@@ -21,19 +21,26 @@ setup_dbs({
 use Ingredient2Recipe;
 
 my $obj;
+my $objs;
 
 for my $driver (@{ Ingredient2Recipe->driver->drivers }) {
     isa_ok $driver, 'Data::ObjectDriver::Driver::DBI';
 }
 
-dies_ok { Ingredient2Recipe->lookup } 'lookup dies';
-dies_ok { Ingredient2Recipe->lookup_multi } 'lookup_multi dies';
-dies_ok { Ingredient2Recipe->exists } 'exists dies';
-
 $obj = Ingredient2Recipe->new;
 $obj->ingredient_id(1);
 $obj->recipe_id(5);
 $obj->insert;
+
+lives_ok { $obj = Ingredient2Recipe->lookup(5) } 'lookup lives';
+lives_ok { $objs = Ingredient2Recipe->lookup_multi([5, 5]) } 'lookup_multi lives';
+lives_ok { $obj->exists } 'exists lives';
+
+is $obj->ingredient_id, 1;
+is $obj->recipe_id, 5;
+isa_ok( $_, 'Ingredient2Recipe' ) for @$objs;
+is $objs->[0]->ingredient_id, 1;
+is $objs->[1]->ingredient_id, 1;
 
 for my $driver (@{ Ingredient2Recipe->driver->drivers }) {
     my $ok = $driver->select_one(<<SQL, [ 1, 5 ]);

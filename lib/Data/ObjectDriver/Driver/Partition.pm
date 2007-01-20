@@ -47,7 +47,7 @@ sub _exec_partitioned {
     ## If called as a class method, pass in the stuff in @rest.
     my $d;
     if (ref($obj)) {
-        my $arg = $obj->is_pkless ? $obj->column_values : $obj->primary_key;
+        my $arg = $obj->column_values;
         $d = $driver->get_driver->($arg);
     } else {
         $d = $driver->get_driver->(@rest);

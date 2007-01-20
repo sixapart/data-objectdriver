@@ -8,7 +8,7 @@ use Storable();
 
 use base qw( Data::ObjectDriver Class::Accessor::Fast );
 
-__PACKAGE__->mk_accessors(qw( on_search drivers ));
+__PACKAGE__->mk_accessors(qw( on_search on_lookup drivers ));
 
 use Carp qw( croak );
 
@@ -16,18 +16,26 @@ sub init {
     my $driver = shift;
     $driver->SUPER::init(@_);
     my %param = @_;
-    for my $key (qw( on_search drivers )) {
+    for my $key (qw( on_search on_lookup drivers )) {
         $driver->$key( $param{$key} );
     }
     return $driver;
 }
 
 sub lookup {
-    croak "lookup is not implemented in ", __PACKAGE__;
+    my $driver = shift;
+    my $subdriver = $driver->on_lookup;
+    croak "on_lookup is not defined in $driver"
+        unless $subdriver;
+    return $subdriver->lookup(@_);
 }
 
 sub lookup_multi {
-    croak "lookup_multi is not implemented in ", __PACKAGE__;
+    my $driver = shift;
+    my $subdriver = $driver->on_lookup;
+    croak "on_lookup is not defined in $driver"
+        unless $subdriver;
+    return $subdriver->lookup_multi(@_);
 }
 
 sub exists {
