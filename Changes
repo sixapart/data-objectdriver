@@ -20,6 +20,10 @@ Revision history for Data::ObjectDriver
       many parameters in one call.
     - This init() method can also be overridden, allowing for custom
       initialization code.
+    - Added parens around terms within complex SQL conditionals, to allow
+      even more complex conditions to be created.
+    - Made the second argument to D::OD::SQL::add_select optional. It defaults
+      to the value of the first argument (the column name).
 
 0.03  2006.08.05
     - Added an inflate and deflate mechanism to memcached caching. When objects

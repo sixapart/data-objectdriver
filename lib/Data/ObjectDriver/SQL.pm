@@ -26,6 +26,7 @@ sub new {
 sub add_select {
     my $stmt = shift;
     my($term, $col) = @_;
+    $col ||= $term;
     push @{ $stmt->select }, $term;
     $stmt->select_map->{$term} = $col;
     $stmt->select_map_reverse->{$col} = $term;
@@ -163,7 +164,7 @@ sub _mk_term {
             my @terms;
             for my $v (@values) {
                 my($term, $bind) = $stmt->_mk_term($col, $v);
-                push @terms, $term;
+                push @terms, "($term)";
                 push @bind, @$bind;
             }
             $term = join " $logic ", @terms;
@@ -172,7 +173,8 @@ sub _mk_term {
             @bind = @$val;
         }
     } elsif (ref($val) eq 'HASH') {
-        $term = "$col $val->{op} ?";
+        my $c = $val->{column} || $col;
+        $term = "$c $val->{op} ?";
         push @bind, $val->{value};
     } elsif (ref($val) eq 'SCALAR') {
         $term = "$col $$val";
@@ -357,11 +359,13 @@ multiple ordering fields.
 
 Creates a new, empty SQL statement.
 
-=head2 C<$sql-E<gt>add_select($column, $term)>
+=head2 C<$sql-E<gt>add_select($column [, $term ])>
 
 Adds the database column C<$column> to the list of fields to return in a
 C<SELECT> query. The requested object member will be indicated to be C<$term>
 in the statement's C<select_map> and C<select_map_reverse> attributes.
+
+C<$term> is optional, and defaults to the same value as C<$column>.
 
 =head2 C<$sql-E<gt>add_join($table, \@joins)>
 
@@ -390,17 +394,24 @@ record to pass.
 =item * a hashref
 
 The value of C<$column> must compare against the condition represented by
-C<$value>, which must contain the members:
+C<$value>, which can contain the members:
 
 =over 4
 
 =item * C<value>
 
-The value with which to compare.
+The value with which to compare (required).
 
 =item * C<op>
 
-The SQL operator with which to compare C<value> and the value of C<$column>.
+The SQL operator with which to compare C<value> and the value of C<$column>
+(required).
+
+=item * C<column>
+
+The column name for the comparison. If this is present, it overrides the
+column name C<$column>, allowing you to build more complex conditions
+like C<((foo = 1 AND bar = 2) OR (baz = 3))>.
 
 =back
 
