@@ -310,7 +310,7 @@ sub clone_all {
     my $obj = shift;
     my $clone = ref($obj)->new();
     $clone->set_values_internal($obj->column_values);
-    $clone->{changed_cols} = $obj->{changed_cols};
+    $clone->{changed_cols} = defined $obj->{changed_cols} ? { %{$obj->{changed_cols}} } : undef;
     $clone;
 }
 
