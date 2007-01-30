@@ -11,7 +11,7 @@ use Test::More;
 unless (eval { require DBD::SQLite }) {
     plan skip_all => 'Tests require DBD::SQLite';
 }
-plan tests => 22;
+plan tests => 26;
 
 setup_dbs({
     global1   => [ qw( ingredient2recipe ) ],
@@ -59,6 +59,23 @@ SELECT 1 FROM ingredient2recipe WHERE ingredient_id = ? and recipe_id = ?
 SQL
     is $ok, 1, "Record is removed from $driver backend database";
 }
+
+## Object remove()
+$obj = Ingredient2Recipe->new;
+$obj->ingredient_id(4);
+$obj->recipe_id(42);
+$obj->replace;
+
+my $pk = $obj->primary_key;
+is $pk, 42;
+my $obj2 = Ingredient2Recipe->lookup($pk);
+ok $obj2, "got our object back";
+$obj2->remove;
+
+$obj = Ingredient2Recipe->lookup($pk);
+is $obj, undef, "Object deleted";
+($obj) = Ingredient2Recipe->search({ingredient_id => 4});
+is $obj, undef, "the other driver has deleted it too";
 
 sub _check_object {
     my($obj) = @_;

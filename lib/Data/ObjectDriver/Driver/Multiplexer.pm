@@ -64,16 +64,18 @@ sub update {
 sub remove {
     my $driver = shift;
     my(@stuff) = @_;
-    if (ref $stuff[0]) {
-        croak "Object-based remove is not implemented in ", __PACKAGE__;
-    } else {
-        my $removed = 0;
-        for my $key (keys %{ $stuff[1] }) {
-            my $sub_driver = $driver->on_search->{$key} or next;
-            $removed += $sub_driver->remove(@stuff);
-        }
-        return $removed;
+    my $stuff = $stuff[0];
+    my $terms = $stuff[1];
+    if (ref $stuff) {
+        ## hackish... use on_search as a to_hash() method 
+        $terms = { map { $_ => $stuff->$_() } keys %{ $driver->on_search } };
     }
+    my $removed = 0;
+    for my $key (keys %{ $terms }) {
+        my $sub_driver = $driver->on_search->{$key} or next;
+        $removed += $sub_driver->remove(@stuff);
+    }
+    return $removed;
 }
 
 sub _find_sub_driver {
@@ -120,13 +122,13 @@ Data::ObjectDriver::Driver::Multiplexer - Multiplex multiple partitioned drivers
 
     __PACKAGE__->install_properties({
         columns => [ qw( foo_id bar_id value ) ],
-
+        primary_key => 'foo_id',
         driver => Data::ObjectDriver::Driver::Multiplexer->new(
             on_search => {
                 foo_id => $foo_driver,
                 bar_id => $bar_driver,
             },
-
+            on_lookup => $foo_driver,
             drivers => [ $foo_driver, $bar_driver ],
         ),
     });
@@ -143,11 +145,14 @@ Note that this driver has the following limitations currently:
 
 =over 4
 
-=item 1. It only supports I<search>, I<exists>, I<replace>, I<insert>, and I<remove>.
+=item 1. It's very experimental.
 
-=item 2. It doesn't support objects with primary keys.
+=item 2. It's very experimental.
 
-=item 3. It's very experimental.
+=item 3. IT'S VERY EXPERIMENTAL.
+
+=item 4. This documentation you're reading is incomplete. the api is likely
+to evolve  
 
 =back
 
