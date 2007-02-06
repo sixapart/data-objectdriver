@@ -19,7 +19,7 @@ BEGIN {
     }
 }
 
-plan tests => 52;
+plan tests => 58;
 
 use Wine;
 use Recipe;
@@ -174,6 +174,40 @@ setup_dbs({
     is $r->title, undef;
 }
 
+# let's test atomicity of replace
+{
+    my $r = Recipe->new;
+    $r->title("to replace");
+    $r->insert;
+
+    ## too long title:
+    # Oh! right it's a feature :( 
+    # http://www.sqlite.org/faq.html#q3
+    #$r->title(join '', ("0123456789" x 6));
+    #dies_ok { $r->replace };
+    #$r->refresh;
+    my $id = $r->recipe_id;
+    $r->title('replaced');
+    $r->recipe_id("lamer");
+    dies_ok { $r->replace };
+    $r = Recipe->lookup($id);
+    ok $r;
+    is $r->title, "to replace";
+    
+    # emulate a driver which doesn't support REPLACE INTO
+    { 
+        local *Data::ObjectDriver::Driver::DBD::SQLite::can_replace = sub { 0 };
+        $r->title('replaced');
+        $r->recipe_id("lamer");
+        dies_ok { $r->replace };
+        $r = Recipe->lookup($id);
+        ok $r;
+        is $r->title, "to replace";
+        # emulate a driver which doesn't support REPLACE INTO
+    }
+}
+
+
 # is_changed interface 
 {
     my $w = Wine->new;
@@ -210,5 +244,5 @@ setup_dbs({
     is (Wine->remove({}, { nofetch => 1 }), '0E0', 'removing all bad wine');
 }
 
-teardown_dbs(qw( global ));
+#teardown_dbs(qw( global ));
 

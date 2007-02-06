@@ -36,6 +36,8 @@ sub can_delete_with_limit { 0 }
 # searches are case sensitive by default.  MySql overrides.
 sub is_case_insensitive { 0 }
 
+sub can_replace { 0 }
+
 1;
 
 __END__
@@ -151,6 +153,11 @@ Returns true if the database this driver represents normally compares string
 fields case insensitively.
 
 By default, C<is_case_insensitive> returns false.
+
+=head2 C<$dbd-E<gt>can_replace()>
+
+Returns true or false if the driver can do "REPLACE INTO" only Mysql and
+SQLite does. By default returns false.
 
 =head1 LICENSE
 

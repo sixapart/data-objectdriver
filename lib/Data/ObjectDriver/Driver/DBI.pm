@@ -132,7 +132,7 @@ sub fetch {
 sub search {
     my($driver) = shift;
     my($class, $terms, $args) = @_;
-
+    
     my $rec = {};
     my $sth = $driver->fetch($rec, $class, $terms, $args);
 
@@ -256,8 +256,16 @@ sub replace {
     if ($driver->dbd->can_replace) {
         $driver->_insert_or_replace(@_, { replace => 1 });
     } else {
-        $driver->remove(@_);
-        $driver->insert(@_);
+        $driver->begin_work;
+        eval {
+            $driver->remove(@_);
+            $driver->insert(@_);
+        };
+        if ($@) {
+            $driver->rollback;
+            Carp::croak("REPLACE transaction error $driver: $@");
+        }
+        $driver->commit;
     }
 }
 
