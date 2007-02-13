@@ -38,6 +38,8 @@ sub is_case_insensitive { 0 }
 
 sub can_replace { 0 }
 
+sub sql_class { 'DBD::ObjectDriver::SQL' }
+
 1;
 
 __END__
@@ -158,6 +160,14 @@ By default, C<is_case_insensitive> returns false.
 
 Returns true or false if the driver can do "REPLACE INTO" only Mysql and
 SQLite does. By default returns false.
+
+=head2 C<$dbd-E<gt>sql_class()>
+
+Provides the package name of the class responsible for representing SQL
+queries. This method returns 'Data::ObjectDriver::SQL', but may be
+overridden to return a package that has a similar interface but produces
+SQL that is compatible with that DBD driver. The package provided must
+already be loaded and available for use.
 
 =head1 LICENSE
 

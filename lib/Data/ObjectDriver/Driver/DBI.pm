@@ -568,11 +568,11 @@ sub prepare_statement {
     my $driver = shift;
     my($class, $terms, $args) = @_;
 
-    my $stmt = $args->{sql_statement} || Data::ObjectDriver::SQL->new;
+    my $dbd = $driver->dbd;
+    my $stmt = $args->{sql_statement} || $dbd->sql_class->new;
 
     if (my $tbl = $driver->table_for($class)) {
         my $cols = $class->column_names;
-        my $dbd = $driver->dbd;
         my %fetch = $args->{fetchonly} ?
             (map { $_ => 1 } @{ $args->{fetchonly} }) : ();
         my $skip = $stmt->select_map_reverse;
