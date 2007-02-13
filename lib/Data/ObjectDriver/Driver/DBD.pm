@@ -38,7 +38,7 @@ sub is_case_insensitive { 0 }
 
 sub can_replace { 0 }
 
-sub sql_class { 'DBD::ObjectDriver::SQL' }
+sub sql_class { 'Data::ObjectDriver::SQL' }
 
 1;
 
