@@ -324,7 +324,7 @@ sub _insert_or_replace {
     for my $col (@$cols) {
         my $val = $obj->column($col);
         my $type = $col_defs->{$col} || 'char';
-        my $attr = $dbd->bind_param_attributes($type);
+        my $attr = $dbd->bind_param_attributes($type, $obj, $col);
         $sth->bind_param($i++, $val, $attr);
     }
     $sth->execute;
@@ -390,7 +390,7 @@ sub update {
     for my $col (@changed_cols) {
         my $val = $obj->column($col);
         my $type = $col_defs->{$col} || 'char';
-        my $attr = $dbd->bind_param_attributes($type);
+        my $attr = $dbd->bind_param_attributes($type, $obj, $col);
         $sth->bind_param($i++, $val, $attr);
     }
 
