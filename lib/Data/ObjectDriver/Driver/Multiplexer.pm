@@ -103,6 +103,15 @@ sub _exec_multiplexed {
     return $ret;
 }
 
+## Nobody should ask a dbh for us directly, if someone does, this
+## is probably to change handler properties (transaction). So 
+## we assume that only the on_lookup is important (I said it was experimental..)
+sub get_dbh {
+    my $driver = shift;
+    my $subdriver = $driver->on_lookup;
+    return $subdriver->get_dbh(@_);
+}
+
 1;
 __END__
 
