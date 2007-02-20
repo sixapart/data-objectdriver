@@ -48,7 +48,7 @@ sub _exec_partitioned {
     my $d;
     if (ref($obj)) {
         my $arg = $obj->column_values;
-        $d = $driver->get_driver->($arg);
+        $d = $driver->get_driver->($arg, @rest);
     } else {
         $d = $driver->get_driver->(@rest);
     }
