@@ -14,21 +14,34 @@ use Class::Trigger qw( pre_save post_save post_load pre_search
 sub install_properties {
     my $class = shift;
     my($props) = @_;
+    my $columns = delete $props->{columns}; 
+    $props->{columns} = [];
     {
         no strict 'refs'; ## no critic
         *{"${class}::__properties"} = sub { $props };
     }
 
-    # predefine getter/setter methods here
-    foreach my $col (@{ $props->{columns} }) {
-        # Skip adding this method if the class overloads it.
-        # this lets the SUPER::columnname magic do it's thing
-        if (! $class->can($col)) {
-            no strict 'refs'; ## no critic
-            *{"${class}::$col"} = $class->column_func($col);
-        }
+    foreach my $col (@$columns) {
+        $class->install_column($col);
     }
-    $props;
+    return $props;
+}
+
+sub install_column {
+    my($class, $col, $type) = @_;
+    my $props = $class->properties;
+
+    push @{ $props->{columns} }, $col;
+    # predefine getter/setter methods here
+    # Skip adding this method if the class overloads it.
+    # this lets the SUPER::columnname magic do it's thing
+    if (! $class->can($col)) {
+        no strict 'refs'; ## no critic
+        *{"${class}::$col"} = $class->column_func($col);
+    }
+    if ($type) {
+        $props->{column_defs}{$col} = $type;
+    }
 }
 
 sub properties {
@@ -646,6 +659,11 @@ actual database handle is being created.
 
 Custom object drivers may define other properties for your object classes.
 Consult the documentation of those object drivers for more information.
+
+=head2 C<Class-E<gt>install_column($col, $def)>
+
+Modify the Class definition to declare a new column C<$col> of definition <$def>
+(see L<column_defs>).
 
 =head2 C<Class-E<gt>has_a(@definitions)>
 
