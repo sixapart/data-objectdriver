@@ -32,6 +32,7 @@ sub install_column {
     my $props = $class->properties;
 
     push @{ $props->{columns} }, $col;
+    $props->{column_names}{$col} = ();
     # predefine getter/setter methods here
     # Skip adding this method if the class overloads it.
     # this lets the SUPER::columnname magic do it's thing
@@ -328,10 +329,7 @@ sub clone_all {
 }
 
 sub has_column {
-    my $obj = shift;
-    my($col) = @_;
-    $obj->{__col_names} ||= { map { $_ => 1 } @{ $obj->column_names } };
-    exists $obj->{__col_names}->{$col};
+    return exists $_[0]->properties->{column_names}{$_[1]};
 }
 
 sub column_names {
