@@ -35,6 +35,12 @@ my $recipe = Recipe->new;
 $recipe->title('Cake');
 $recipe->save;
 
+## disable caching because it makes the test more complicate
+## to understand. Indeed inflate and deflate generates additional
+## queries difficult to account for
+use Data::ObjectDriver::Driver::Cache::Cache;
+Data::ObjectDriver::Driver::Cache::Cache->Disabled(1);
+
 my $profiler = Data::ObjectDriver->profiler;
 
 my $stats = $profiler->statistics;
