@@ -56,10 +56,7 @@ sub search {
 
 sub replace { shift->_exec_multiplexed('replace', @_) }
 sub insert  { shift->_exec_multiplexed('insert',  @_) }
-
-sub update {
-    croak "update is not implemented in ", __PACKAGE__;
-}
+sub update  { shift->_exec_multiplexed('update',  @_) }
 
 sub remove {
     my $driver = shift;
