@@ -596,13 +596,22 @@ sub prepare_statement {
 
         ## Set statement's ORDER clause if any.
         if ($args->{sort} || $args->{direction}) {
-            my $order = $args->{sort} || 'id';
-            my $dir = $args->{direction} &&
-                      $args->{direction} eq 'descend' ? 'DESC' : 'ASC';
-            $stmt->order({
-                column => $dbd->db_column_name($tbl, $order),
-                desc   => $dir,
-            });
+            my @order;
+            my $sort = $args->{sort} || 'id';
+            unless (ref $sort) {
+                $sort = [{column    => $sort,
+                          direction => $args->{direction}||''}];
+            }
+
+            foreach my $pair (@$sort) {
+                my $col = $dbd->db_column_name($tbl, $pair->{column} || 'id');
+                my $dir = $pair->{direction} || '';
+                push @order, {column => $col,
+                              desc   => ($dir eq 'descend') ? 'DESC' : 'ASC',
+                             }
+            }
+
+            $stmt->order(\@order);
         }
     }
     $stmt->limit($args->{limit}) if $args->{limit};
