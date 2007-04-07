@@ -66,6 +66,7 @@ sub init_db {
 sub rw_handle {
     my $driver = shift;
     my $db = shift || 'main';
+    $driver->dbh(undef) if $driver->dbh and !$driver->dbh->ping;
     my $dbh = $driver->dbh;
     unless ($dbh) {
         if (my $getter = $driver->get_dbh) {
