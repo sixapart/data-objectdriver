@@ -846,6 +846,11 @@ driver and configuration.
 
 Deletes C<$obj> from its database.
 
+=head2 C<$obj-E<gt>replace()>
+
+Replaces C<$obj> in the database. Does the right thing if the driver
+knows how to REPLACE object, ala MySQL.
+
 =head1 USAGE
 
 =head2 C<Class-E<gt>new(%columns)>
