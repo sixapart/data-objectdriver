@@ -11,7 +11,7 @@ use Data::ObjectDriver::Profiler;
 
 __PACKAGE__->mk_accessors(qw( pk_generator ));
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 our $DEBUG = $ENV{DOD_DEBUG} || 0;
 our $PROFILE = $ENV{DOD_PROFILE} || 0;
 our $PROFILER = Data::ObjectDriver::Profiler->new;
