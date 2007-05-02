@@ -2,7 +2,7 @@
 
 Revision history for Data::ObjectDriver
 
-0.04_XX
+0.04
     - Fixed a bug where single-PK classes were not returning the
       objects correctly sorted during a lookup_multi.
     - Added experimental support of MySQL 'REPLACE INTO' syntax with
@@ -24,6 +24,8 @@ Revision history for Data::ObjectDriver
       even more complex conditions to be created.
     - Made the second argument to D::OD::SQL::add_select optional. It defaults
       to the value of the first argument (the column name).
+    - Pass along $orig_obj (original object) when calling post_save/post_update
+      triggers, even when the object hasn't changed.
 
 0.03  2006.08.05
     - Added an inflate and deflate mechanism to memcached caching. When objects

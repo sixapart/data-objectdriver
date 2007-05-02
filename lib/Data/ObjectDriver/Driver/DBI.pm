@@ -366,8 +366,8 @@ sub update {
     ## If there's no updated columns, update() is no-op
     ## but we should call post_* triggers
     unless (@changed_cols) {
-        $obj->call_trigger('post_save');
-        $obj->call_trigger('post_update');
+        $obj->call_trigger('post_save', $orig_obj);
+        $obj->call_trigger('post_update', $orig_obj);
         return 1;
     }
 
