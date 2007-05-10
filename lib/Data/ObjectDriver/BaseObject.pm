@@ -4,7 +4,12 @@ package Data::ObjectDriver::BaseObject;
 use strict;
 use warnings;
 
+our $HasWeaken;
+eval "use Scalar::Util qw(weaken)";
+$HasWeaken = !$@;
+
 use Scalar::Util qw(weaken);
+
 use Carp ();
 
 use Class::Trigger qw( pre_save post_save post_load pre_search
@@ -110,8 +115,12 @@ sub has_a {
                     ;
                 ## Hold in a variable here too, so we don't lose it immediately
                 ## by having only the weak reference.
-                my $ret = $obj->{$cachekey} = $parentclass->lookup($id);
-                weaken $obj->{$cachekey};
+                my $ret = $parentclass->lookup($id);
+                if ($HasWeaken) {
+                    no warnings 'void';
+                    $obj->{$cachekey} = $ret;
+                    weaken $obj->{$cachekey};
+                }
                 return $ret;
             };
         } else {
