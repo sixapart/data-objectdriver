@@ -8,8 +8,6 @@ our $HasWeaken;
 eval "use Scalar::Util qw(weaken)";
 $HasWeaken = !$@;
 
-use Scalar::Util qw(weaken);
-
 use Carp ();
 
 use Class::Trigger qw( pre_save post_save post_load pre_search
@@ -117,9 +115,8 @@ sub has_a {
                 ## by having only the weak reference.
                 my $ret = $parentclass->lookup($id);
                 if ($HasWeaken) {
-                    no warnings 'void';
                     $obj->{$cachekey} = $ret;
-                    weaken $obj->{$cachekey};
+                    weaken($obj->{$cachekey});
                 }
                 return $ret;
             };
