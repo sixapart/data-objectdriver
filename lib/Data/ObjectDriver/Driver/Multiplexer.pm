@@ -63,7 +63,7 @@ sub remove {
     my(@stuff) = @_;
     my $stuff = $stuff[0];
     my $terms = $stuff[1];
-    if (ref $stuff) {
+    if (ref $stuff && ! $terms) {
         ## hackish... use on_search as a to_hash() method 
         $terms = { map { $_ => $stuff->$_() } keys %{ $driver->on_search } };
     }
