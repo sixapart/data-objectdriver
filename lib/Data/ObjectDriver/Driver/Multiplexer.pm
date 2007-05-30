@@ -60,19 +60,14 @@ sub update  { shift->_exec_multiplexed('update',  @_) }
 
 sub remove {
     my $driver = shift;
-    my(@stuff) = @_;
-    my $stuff = $stuff[0];
-    my $terms = $stuff[1];
-    if (ref $stuff && ! $terms) {
-        ## hackish... use on_search as a to_hash() method 
-        $terms = { map { $_ => $stuff->$_() } keys %{ $driver->on_search } };
-    }
     my $removed = 0;
-    for my $key (keys %{ $terms }) {
-        my $sub_driver = $driver->on_search->{$key} or next;
-        $removed += $sub_driver->remove(@stuff);
+    for my $sub_driver (@{ $driver->drivers }) {
+        $removed += $sub_driver->remove(@_);
     }
-    return $removed;
+    if ($removed % 2) {
+        warn "remove count looks incorrect, we might miss one object";
+    }
+    return $removed || 0E0;
 }
 
 sub _find_sub_driver {

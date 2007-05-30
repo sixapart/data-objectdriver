@@ -51,7 +51,7 @@ SQL
 
 _check_object($obj);
 
-is(Ingredient2Recipe->remove({ ingredient_id => 1, recipe_id => 5 }, { nofetch => 1 }), 2, 'Removed 2 records');
+is(Ingredient2Recipe->remove({ ingredient_id => 1, recipe_id => 5 }, { nofetch => 1 }), 2, 'Removed 2 records for 1 object');
 
 for my $driver (@{ Ingredient2Recipe->driver->drivers }) {
     my $ok = !$driver->select_one(<<SQL, [ 1, 5 ]);
