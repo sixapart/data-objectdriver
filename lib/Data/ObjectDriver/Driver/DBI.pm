@@ -427,8 +427,8 @@ sub remove {
             my $result = 0;
             my @obj = $driver->search($orig_obj, @_);
             for my $obj (@obj) {
-                $result ++;
-                $obj->remove(@_);
+                my $res = $obj->remove(@_) || 0;
+                $result += $res;
             }
             return $result || 0E0;
         }

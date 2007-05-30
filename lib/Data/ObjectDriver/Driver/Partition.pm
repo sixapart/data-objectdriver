@@ -47,8 +47,11 @@ sub _exec_partitioned {
     ## If called as a class method, pass in the stuff in @rest.
     my $d;
     if (ref($obj)) {
-        my $arg = $obj->column_values;
-        $d = $driver->get_driver->($arg, @rest);
+        my $terms = $obj->column_values;
+        # @rest should only contain $args, but just in case
+        # don't assume we have nothing else and build @rest2
+        (undef, my @rest2) = @rest;
+        $d = $driver->get_driver->($terms, @rest2);
     } else {
         $d = $driver->get_driver->(@rest);
     }
