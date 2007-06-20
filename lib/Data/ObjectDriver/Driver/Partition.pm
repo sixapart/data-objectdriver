@@ -24,8 +24,8 @@ sub lookup {
 
 sub lookup_multi {
     my $driver = shift;
-    my($class, @ids) = @_;
-    $driver->get_driver->($ids[0])->lookup_multi($class, @ids);
+    my($class, $ids) = @_;
+    $driver->get_driver->($ids->[0])->lookup_multi($class, $ids);
 }
 
 sub exists     { shift->_exec_partitioned('exists',     @_) }
