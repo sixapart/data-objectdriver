@@ -163,9 +163,10 @@ sub update {
     my($obj) = @_;
     return $driver->fallback->update($obj)
         if $driver->Disabled;
+    my $ret = $driver->fallback->update($obj);
     my $key = $driver->cache_key(ref($obj), $obj->primary_key);
     $driver->update_cache($key, $driver->deflate($obj));
-    $driver->fallback->update($obj);
+    return $ret;
 }
 
 sub replace {
@@ -173,11 +174,15 @@ sub replace {
     my($obj) = @_;
     return $driver->fallback->replace($obj)
         if $driver->Disabled;
-    if (ref $obj && $obj->has_primary_key) {
+
+    # Collect this logic before $obj changes on the next line via 'replace'
+    my $has_pk = ref $obj && $obj->has_primary_key;
+    my $ret = $driver->fallback->replace($obj);
+    if ($has_pk) {
         my $key = $driver->cache_key(ref($obj), $obj->primary_key);
         $driver->update_cache($key, $driver->deflate($obj));
     } 
-    $driver->fallback->replace($obj);
+    return $ret;
 }
 
 sub remove {
@@ -185,15 +190,21 @@ sub remove {
     my($obj) = @_;
     return $driver->fallback->remove(@_)
         if $driver->Disabled;
-    if (ref $obj) {
-        $driver->remove_from_cache($driver->cache_key(ref($obj), $obj->primary_key));
-    } elsif ($_[2] && $_[2]->{nofetch}) {
+
+    if ($_[2] && $_[2]->{nofetch}) {
         ## since direct_remove isn't an object method, it can't benefit
         ## from inheritance, we're forced to keep things a bit obfuscated here
         ## (I'd rather have a : sub direct_remove { die "unavailable" } in the driver
         Carp::croak("nofetch option isn't compatible with a cache driver");
     }
-    $driver->fallback->remove(@_);
+
+    my $ret = $driver->fallback->remove(@_);
+    if (ref $obj) {
+        $driver->remove_from_cache($driver->cache_key(ref($obj),
+                                   $obj->primary_key));
+    }
+
+    return $ret;
 }
 
 sub cache_key {
