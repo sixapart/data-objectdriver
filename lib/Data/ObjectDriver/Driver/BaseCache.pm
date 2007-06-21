@@ -163,10 +163,9 @@ sub update {
     my($obj) = @_;
     return $driver->fallback->update($obj)
         if $driver->Disabled;
-    my $ret = $driver->fallback->update($obj);
     my $key = $driver->cache_key(ref($obj), $obj->primary_key);
     $driver->update_cache($key, $driver->deflate($obj));
-    return $ret;
+    $driver->fallback->update($obj);
 }
 
 sub replace {
@@ -174,15 +173,11 @@ sub replace {
     my($obj) = @_;
     return $driver->fallback->replace($obj)
         if $driver->Disabled;
-
-    # Collect this logic before $obj changes on the next line via 'replace'
-    my $has_pk = ref $obj && $obj->has_primary_key;
-    my $ret = $driver->fallback->replace($obj);
-    if ($has_pk) {
+    if (ref $obj && $obj->has_primary_key) {
         my $key = $driver->cache_key(ref($obj), $obj->primary_key);
         $driver->update_cache($key, $driver->deflate($obj));
     } 
-    return $ret;
+    $driver->fallback->replace($obj);
 }
 
 sub remove {
@@ -197,14 +192,10 @@ sub remove {
         ## (I'd rather have a : sub direct_remove { die "unavailable" } in the driver
         Carp::croak("nofetch option isn't compatible with a cache driver");
     }
-
-    my $ret = $driver->fallback->remove(@_);
     if (ref $obj) {
-        $driver->remove_from_cache($driver->cache_key(ref($obj),
-                                   $obj->primary_key));
+        $driver->remove_from_cache($driver->cache_key(ref($obj), $obj->primary_key));
     }
-
-    return $ret;
+    $driver->fallback->remove(@_);
 }
 
 sub cache_key {
