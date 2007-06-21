@@ -197,14 +197,10 @@ sub remove {
         ## (I'd rather have a : sub direct_remove { die "unavailable" } in the driver
         Carp::croak("nofetch option isn't compatible with a cache driver");
     }
-
-    my $ret = $driver->fallback->remove(@_);
     if (ref $obj) {
-        $driver->remove_from_cache($driver->cache_key(ref($obj),
-                                   $obj->primary_key));
+        $driver->remove_from_cache($driver->cache_key(ref($obj), $obj->primary_key));
     }
-
-    return $ret;
+    $driver->fallback->remove(@_);
 }
 
 sub cache_key {
