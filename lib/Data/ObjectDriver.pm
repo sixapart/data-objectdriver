@@ -7,16 +7,12 @@ use Class::Accessor::Fast;
 
 use base qw( Class::Accessor::Fast );
 
-use Data::ObjectDriver::Profiler;
-
 __PACKAGE__->mk_accessors(qw( pk_generator ));
 
 our $VERSION = '0.04';
 our $DEBUG = $ENV{DOD_DEBUG} || 0;
 our $PROFILE = $ENV{DOD_PROFILE} || 0;
-our $PROFILER = Data::ObjectDriver::Profiler->new;
-
-use Data::Dumper ();
+our $PROFILER;
 
 sub new {
     my $class = shift;
@@ -40,7 +36,7 @@ sub start_query {
     my($sql, $bind) = @_;
 
     $driver->debug($sql, $bind) if $DEBUG;
-    $PROFILER->record_query($driver, $sql) if $PROFILE;
+    $driver->profiler($sql) if $PROFILE;
 
     return;
 }
@@ -51,12 +47,12 @@ sub debug {
     my $driver = shift;
     return unless $DEBUG;
 
-    my $class = ref $driver;
+    my $class = ref $driver || $driver;
     my @caller;
     my $i = 0;
     while (1) {
         @caller = caller($i++);
-        last if $caller[0] !~ /^(Data::ObjectDriver|$driver)/;
+        last if $caller[0] !~ /^(Data::ObjectDriver|$class)/;
     }
 
     my $where = " in file $caller[1] line $caller[2]\n";
@@ -64,13 +60,22 @@ sub debug {
     if (@_ == 1 && !ref($_[0])) {
         print STDERR @_, $where;
     } else {
+        require Data::Dumper;
         local $Data::Dumper::Indent = 1;
         print STDERR Data::Dumper::Dumper(@_), $where;
     }
 }
 
 sub profiler {
-    return $PROFILER;
+    my $driver = shift;
+    my ($sql) = @_;
+    $PROFILER ||= eval {
+        require Data::ObjectDriver::Profiler;
+        Data::ObjectDriver::Profiler->new;
+    };
+    return $PROFILE = 0 if $@ || !$PROFILER;
+    return $PROFILER unless @_;
+    $PROFILER->record_query($driver, $sql);
 }
 
 sub list_or_iterator {
