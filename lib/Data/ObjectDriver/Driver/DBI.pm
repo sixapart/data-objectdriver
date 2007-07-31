@@ -24,7 +24,7 @@ sub init {
         ## Create a DSN-specific driver (e.g. "mysql").
         my $type;
         if (my $dsn = $driver->dsn) {
-            ($type) = $dsn =~ /^dbi:(\w*)/;
+            ($type) = $dsn =~ /^dbi:(\w*)/i;
         } elsif (my $dbh = $driver->dbh) {
             $type = $dbh->{Driver}{Name};
         } elsif (my $getter = $driver->get_dbh) {

@@ -2,6 +2,8 @@
 
 Revision history for Data::ObjectDriver
 
+    - let DSNs start with "DBI:" instead of only "dbi:"
+
 0.04  2007.05.02
     - Fixed a bug where single-PK classes were not returning the
       objects correctly sorted during a lookup_multi.
