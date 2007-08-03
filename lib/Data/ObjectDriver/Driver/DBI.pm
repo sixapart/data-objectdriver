@@ -461,8 +461,8 @@ sub direct_remove {
     my($class, $orig_terms, $orig_args) = @_;
 
     ## Use (shallow) duplicates so the pre_search trigger can modify them.
-    my $terms = defined $orig_terms ? { %$orig_terms } : undef;
-    my $args  = defined $orig_args  ? { %$orig_args  } : undef;
+    my $terms = defined $orig_terms ? { %$orig_terms } : {};
+    my $args  = defined $orig_args  ? { %$orig_args  } : {};
     $class->call_trigger('pre_search', $terms, $args);
 
     my $stmt = $driver->prepare_statement($class, $terms, $args);
