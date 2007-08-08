@@ -13,12 +13,24 @@ our $VERSION = '0.04';
 our $DEBUG = $ENV{DOD_DEBUG} || 0;
 our $PROFILE = $ENV{DOD_PROFILE} || 0;
 our $PROFILER;
+our $LOGGER;
 
 sub new {
     my $class = shift;
     my $driver = bless {}, $class;
     $driver->init(@_);
     $driver;
+}
+
+sub logger {
+    my $class = shift;
+    if ( @_ ) {
+        return $LOGGER = shift;
+    } else {
+        return $LOGGER ||= sub {
+            print STDERR @_;
+        };
+    }
 }
 
 sub init {
@@ -58,11 +70,11 @@ sub debug {
     my $where = " in file $caller[1] line $caller[2]\n";
 
     if (@_ == 1 && !ref($_[0])) {
-        print STDERR @_, $where;
+        $driver->logger->( @_, $where );
     } else {
         require Data::Dumper;
         local $Data::Dumper::Indent = 1;
-        print STDERR Data::Dumper::Dumper(@_), $where;
+        $driver->logger->( Data::Dumper::Dumper(@_), $where );
     }
 }
 
