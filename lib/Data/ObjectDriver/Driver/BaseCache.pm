@@ -54,6 +54,8 @@ sub lookup {
     return $driver->fallback->lookup($class, $id)
         if $driver->Disabled;
     my $key = $driver->cache_key($class, $id);
+    $driver->debug("CACHE GET $key FROM " . ref $driver)
+        if $Data::ObjectDriver::DEBUG;
     my $obj = $driver->get_from_cache($key);
     if ($obj) {
         $obj = $driver->inflate($class, $obj);
