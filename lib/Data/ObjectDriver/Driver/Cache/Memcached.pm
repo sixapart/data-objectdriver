@@ -21,11 +21,30 @@ sub inflate {
     $class->inflate($data);
 }
 
-sub add_to_cache            { shift->cache->add(@_)       }
-sub update_cache            { shift->cache->set(@_)       }
-sub remove_from_cache       { shift->cache->delete(@_)    }
-sub get_from_cache          { shift->cache->get(@_)       }
-sub get_multi_from_cache    { shift->cache->get_multi(@_) }
+my %memc_method_for = (
+    add_to_cache         => 'add',
+    update_cache         => 'set',
+    remove_from_cache    => 'delete',
+    get_from_cache       => 'get',
+    get_multi_from_cache => 'get_multi',
+);
+
+for my $driver_method (keys %memc_method_for) {
+    my $memc_method = $memc_method_for{$driver_method};
+    my $sub = sub {
+        my $driver = shift;
+
+        $driver->start_query('MEMCACHED_' . uc($memc_method) . ' ?', \@_);
+        my $ret = $driver->cache->$memc_method(@_);
+        $driver->end_query(undef);
+
+        return if !defined $ret;
+        return $ret;
+    };
+
+    no strict 'refs';
+    *{join q{::}, __PACKAGE__, $driver_method} = $sub;
+}
 
 1;
 
