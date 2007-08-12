@@ -30,6 +30,14 @@ sub lookup {
     return $subdriver->lookup(@_);
 }
 
+sub fetch_data { 
+    my $driver = shift;
+    my $subdriver = $driver->on_lookup;
+    croak "on_lookup is not defined in $driver"
+        unless $subdriver;
+    return $subdriver->fetch_data(@_);
+}
+
 sub lookup_multi {
     my $driver = shift;
     my $subdriver = $driver->on_lookup;
