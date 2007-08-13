@@ -25,23 +25,51 @@ sub r {
 }
 
 sub get_from_cache {
-    my $r = $_[0]->r or return;
-    $r->pnotes($_[1]);
+    my $driver = shift;
+    my $r = $driver->r or return;
+
+    $driver->start_query('APACHECACHE_GET ?', \@_);
+    my $ret = $r->pnotes($_[0]);
+    $driver->end_query(undef);
+
+    return if !defined $ret;
+    return $ret;
 }
 
 sub add_to_cache {
-    my $r = $_[0]->r or return;
-    $r->pnotes($_[1], $_[2]);
+    my $driver = shift;
+    my $r = $driver->r or return;
+
+    $driver->start_query('APACHECACHE_ADD ?,?', \@_);
+    my $ret = $r->pnotes($_[0], $_[1]);
+    $driver->end_query(undef);
+
+    return if !defined $ret;
+    return $ret;
 }
 
 sub update_cache {
-    my $r = $_[0]->r or return;
-    $r->pnotes($_[1], $_[2]);
+    my $driver = shift;
+    my $r = $driver->r or return;
+
+    $driver->start_query('APACHECACHE_UPDATE ?,?', \@_);
+    my $ret = $r->pnotes($_[0], $_[1]);
+    $driver->end_query(undef);
+
+    return if !defined $ret;
+    return $ret;
 }
 
 sub remove_from_cache {
-    my $r = $_[0]->r or return;
-    delete $r->pnotes->{$_[1]};
+    my $driver = shift;
+    my $r = $driver->r or return;
+
+    $driver->start_query('APACHECACHE_REMOVE ?', \@_);
+    my $ret = delete $r->pnotes->{$_[0]};
+    $driver->end_query(undef);
+
+    return if !defined $ret;
+    return $ret;
 }
 
 1;
