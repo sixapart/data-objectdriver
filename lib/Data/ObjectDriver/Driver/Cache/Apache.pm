@@ -163,6 +163,8 @@ to invalidate.
 
 =head1 SEE ALSO
 
+L<Apache>, L<Apache2::RequestUtil>
+
 =head1 LICENSE
 
 I<Data::ObjectDriver> is free software; you may redistribute it and/or modify
