@@ -226,7 +226,7 @@ to the driver listed in the I<fallback> setting: the partitioning layer.
 =item 2.
 
 The partitioning layer does not know how to look up objects by itself--all
-it knows how to do is to give back a driver that I<does> know how to loko
+it knows how to do is to give back a driver that I<does> know how to look
 up objects in a backend datastore.
 
 In our example above, imagine that we're partitioning our ingredient data
