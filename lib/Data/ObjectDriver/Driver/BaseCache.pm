@@ -51,6 +51,7 @@ sub cache_object {
 sub lookup {
     my $driver = shift;
     my($class, $id) = @_;
+    return unless defined $id;
     return $driver->fallback->lookup($class, $id)
         if $driver->Disabled;
     my $key = $driver->cache_key($class, $id);
@@ -84,7 +85,7 @@ sub lookup_multi {
     return $driver->fallback->lookup_multi($class, $ids)
         if $driver->Disabled;
 
-    my %id2key = map { $_ => $driver->cache_key($class, $_) } @$ids;
+    my %id2key = map { $_ => $driver->cache_key($class, $_) } grep { defined } @$ids;
     my $got = $driver->get_multi_from_cache(values %id2key);
 
     ## If we got back all of the objects from the cache, return immediately.
@@ -102,7 +103,7 @@ sub lookup_multi {
     ## and fall back to the backend to look up those objects.
     my($i, @got, @need, %need2got) = (0);
     for my $id (@$ids) {
-        if (my $obj = $got->{ $id2key{$id} }) {
+        if (defined $id && (my $obj = $got->{ $id2key{$id} })) {
             $obj = $driver->inflate($class, $obj);
             $obj->{__cached}{ref $driver} = 1;
             push @got, $obj;

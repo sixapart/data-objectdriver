@@ -189,7 +189,7 @@ sub lookup_multi {
         my $terms = $class->primary_key_to_terms([ $ids ]);
         my @sqlgot = $driver->search($class, $terms, { is_pk => 1 });
         my %hgot = map { $_->primary_key() => $_ } @sqlgot;
-        @got = map { $hgot{$_} } @$ids;
+        @got = map { defined $_ ? $hgot{$_} : undef } @$ids;
     } else {
         for my $id (@$ids) {
             push @got, $class->driver->lookup($class, $id);
