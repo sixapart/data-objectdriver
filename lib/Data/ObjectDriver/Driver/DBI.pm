@@ -48,15 +48,13 @@ sub init_db {
     my $driver = shift;
     my $dbh;
     eval {
-        local $SIG{ALRM} = sub { die "alarm\n" };
         $dbh = DBI->connect($driver->dsn, $driver->username, $driver->password,
             { RaiseError => 1, PrintError => 0, AutoCommit => 1,
               %{$driver->connect_options || {}} })
             or Carp::croak("Connection error: " . $DBI::errstr);
-        alarm 0;
     };
     if ($@) {
-        Carp::croak(@$ eq "alarm\n" ? "Connection timeout" : $@);
+        Carp::croak($@);
     }
     $driver->dbd->init_dbh($dbh);
     $driver->{__dbh_init_by_driver} = 1;
