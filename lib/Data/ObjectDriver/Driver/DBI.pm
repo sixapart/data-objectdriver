@@ -70,7 +70,7 @@ sub rw_handle {
         if (my $getter = $driver->get_dbh) {
             $dbh = $getter->();
         } else {
-            $dbh = $driver->init_db($db) or die $driver->errstr;
+            $dbh = $driver->init_db($db) or die $driver->last_error;
             $driver->dbh($dbh);
         }
     }
