@@ -2,7 +2,13 @@
 
 Revision history for Data::ObjectDriver
 
-    - let DSNs start with "DBI:" instead of only "dbi:"
+    - Let DSNs start with "DBI:" instead of only "dbi:"
+    - Fix a bug where the iterator version of search() (search() called
+      in scalar context) wasn't calling finish() on $sth. It was generating
+      warnings on certain circumstances.
+    - search() now returns a subref blessed in new Data::ObjectDriver::Iterator
+      you can now explictely call $iter->next() instead of just $iter->() though
+      backward compatibility is ensured.
 
 0.04  2007.05.02
     - Fixed a bug where single-PK classes were not returning the

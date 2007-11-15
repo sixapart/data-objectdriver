@@ -344,6 +344,14 @@ a subroutine that acts as an iterator object, like so:
         ...
     }
 
+C<$iter> is blessed in L<Data::ObjectDriver::Iterator> package, so the above
+could also be written:
+
+    my $iter = Ingredient->search({ recipe_id => 5 });
+    while (my $ingredient = $iter->next()) {
+        ...
+    }
+
 The keys in I<%terms> should be column names for the database table
 modeled by I<Class> (and the values should be the desired values for those
 columns).

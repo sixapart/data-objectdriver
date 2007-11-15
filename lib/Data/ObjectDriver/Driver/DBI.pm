@@ -114,7 +114,7 @@ sub fetch {
     $sql .= "\nFOR UPDATE" if $orig_args->{for_update};
     my $dbh = $driver->r_handle($class->properties->{db});
     $driver->start_query($sql, $stmt->{bind});
-    my $sth = $orig_args->{no_cached_prepare} ? $dbh->prepare($sql) : $dbh->prepare_cached($sql, {}, 3);
+    my $sth = $orig_args->{no_cached_prepare} ? $dbh->prepare($sql) : $dbh->prepare_cached($sql);
     $sth->execute(@{ $stmt->{bind} });
     $sth->bind_columns(undef, @bind);
 
@@ -125,8 +125,7 @@ sub fetch {
         }
     }
 
-    # TBD what happens if $sth goes out of scope without finish() being called ?
-    $sth;
+    return $sth;
 }
 
 sub search {
