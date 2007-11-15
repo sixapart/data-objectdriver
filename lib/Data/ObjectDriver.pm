@@ -6,6 +6,7 @@ use warnings;
 use Class::Accessor::Fast;
 
 use base qw( Class::Accessor::Fast );
+use Data::ObjectDriver::Iterator;
 
 __PACKAGE__->mk_accessors(qw( pk_generator ));
 
@@ -99,7 +100,8 @@ sub list_or_iterator {
     if (wantarray) {
         return @{$objs};
     } else {
-        return sub { shift @{$objs} };
+        my $iter = sub { shift @{$objs} };
+        return Data::ObjectDriver::Iterator->new($iter);
     }
 }
 

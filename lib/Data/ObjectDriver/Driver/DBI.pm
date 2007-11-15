@@ -11,6 +11,7 @@ use Carp ();
 use Data::ObjectDriver::Errors;
 use Data::ObjectDriver::SQL;
 use Data::ObjectDriver::Driver::DBD;
+use Data::ObjectDriver::Iterator;
 
 __PACKAGE__->mk_accessors(qw( dsn username password connect_options dbh get_dbh dbd prefix ));
 
@@ -154,6 +155,8 @@ sub search {
         $obj->call_trigger('post_load') unless $args->{no_triggers};
         $obj;
     };
+    my $iterator = Data::ObjectDriver::Iterator->new($iter, sub { $sth->finish() });
+
     if (wantarray) {
         my @objs = ();
 
@@ -162,7 +165,7 @@ sub search {
         }
         return @objs;
     } else {
-        return $iter;
+        return $iterator;
     }
     return;
 }
