@@ -14,10 +14,12 @@ use Class::Trigger qw( pre_save post_save post_load pre_search
                        pre_insert post_insert pre_update post_update
                        pre_remove post_remove post_inflate );
 
+use Data::ObjectDriver::ResultSet;
+
 sub install_properties {
     my $class = shift;
     my($props) = @_;
-    my $columns = delete $props->{columns}; 
+    my $columns = delete $props->{columns};
     $props->{columns} = [];
     {
         no strict 'refs'; ## no critic
@@ -447,6 +449,19 @@ sub lookup_multi {
         $driver->cache_object($obj) if $obj;
     }
     $objs;
+}
+
+sub result {
+    my $class = shift;
+    my ($terms, $args) = @_;
+
+    return Data::ObjectDriver::ResultSet->new({
+                          class     => (ref $class || $class),
+                          page_size => delete $args->{page_size},
+                          paging    => delete $args->{no_paging},
+                          terms     => $terms,
+                          args      => $args,
+                          });
 }
 
 sub search {
@@ -881,7 +896,7 @@ accessors than reading the properties directly.
 =head2 C<Class-E<gt>driver()>
 
 Returns the object driver for this class, invoking the class's I<get_driver>
-function (and caching the result for future calls) if necessary. 
+function (and caching the result for future calls) if necessary.
 
 =head2 C<Class-E<gt>get_driver($get_driver_fn)>
 
