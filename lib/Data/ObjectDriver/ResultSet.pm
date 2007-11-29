@@ -136,7 +136,7 @@ sub load_results {
 
         $self->add_offset($self->page * $self->page_size);
 
-        my $pk = MT::Entry->properties->{primary_key};
+        my $pk = $self->class->properties->{primary_key};
         $pk = [$pk] unless ref $pk;
 
         $self->add_order([map { {column => $_} } @$pk]);
