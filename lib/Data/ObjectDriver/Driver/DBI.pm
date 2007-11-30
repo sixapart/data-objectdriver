@@ -98,7 +98,7 @@ sub fetch {
     my($rec, $class, $orig_terms, $orig_args) = @_;
 
     ## Use (shallow) duplicates so the pre_search trigger can modify them.
-    my $terms = defined $orig_terms ? { %$orig_terms } : undef;
+    my $terms = defined $orig_terms ? ( ref $orig_terms eq 'ARRAY' ? [ @$orig_terms ] : { %$orig_terms } ) : undef;
     my $args  = defined $orig_args  ? { %$orig_args  } : undef;
     $class->call_trigger('pre_search', $terms, $args);
 
@@ -591,9 +591,21 @@ sub prepare_statement {
         $stmt->from([ $tbl ]);
 
         if (defined($terms)) {
-            for my $col (keys %$terms) {
-                my $db_col = $dbd->db_column_name($tbl, $col);
-                $stmt->add_where(join('.', $tbl, $db_col), $terms->{$col});
+            if (ref $terms eq 'ARRAY') {
+                # Used for translating property names deep within the
+                # $terms structure to column names
+                $stmt->column_mutator(sub {
+                    my ($col) = @_;
+                    return $dbd->db_column_name($tbl, $col);
+                });
+                $stmt->add_complex_where($terms);
+                $stmt->column_mutator(undef);
+            }
+            else {
+                for my $col (keys %$terms) {
+                    my $db_col = $dbd->db_column_name($tbl, $col);
+                    $stmt->add_where(join('.', $tbl, $db_col), $terms->{$col});
+                }
             }
         }
 

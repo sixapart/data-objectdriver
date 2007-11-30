@@ -6,7 +6,7 @@ use warnings;
 
 use base qw( Class::Accessor::Fast );
 
-__PACKAGE__->mk_accessors(qw( select select_map select_map_reverse from joins where bind limit offset group order having where_values ));
+__PACKAGE__->mk_accessors(qw( select select_map select_map_reverse from joins where bind limit offset group order having where_values column_mutator ));
 
 sub new {
     my $class = shift;
@@ -119,10 +119,54 @@ sub add_where {
     ## xxx Need to support old range and transform behaviors.
     my($col, $val) = @_;
     Carp::croak("Invalid/unsafe column name $col") unless $col =~ /^[\w\.]+$/;
-    my($term, $bind) = $stmt->_mk_term($col, $val);
+    my($term, $bind, $tcol) = $stmt->_mk_term($col, $val);
     push @{ $stmt->{where} }, "($term)";
     push @{ $stmt->{bind} }, @$bind;
-    $stmt->where_values->{$col} = $val;
+    $stmt->where_values->{$tcol} = $val;
+}
+
+sub add_complex_where {
+    my $stmt = shift;
+    my ($terms) = @_;
+    my ($where, $bind) = $stmt->_parse_array_terms($terms);
+    push @{ $stmt->{where} }, $where;
+    push @{ $stmt->{bind} }, @$bind;
+}
+
+sub _parse_array_terms {
+    my $stmt = shift;
+    my ($term_list) = @_;
+
+    my @out;
+    my $logic = 'AND';
+    my @bind;
+    foreach my $t ( @$term_list ) {
+        if (! ref $t ) {
+            $logic = $1 if uc($t) =~ m/^-?(OR|AND|OR_NOT|AND_NOT)$/;
+            $logic =~ s/_/ /;
+            next;
+        }
+        my $out;
+        if (ref $t eq 'HASH') {
+            # bag of terms to apply $logic with
+            my @out;
+            foreach my $t2 ( keys %$t ) {
+                my ($term, $bind, $col) = $stmt->_mk_term($t2, $t->{$t2});
+                $stmt->where_values->{$col} = $t->{$t2};
+                push @out, $term;
+                push @bind, @$bind;
+            }
+            $out .= '(' . join(" AND ", @out) . ")";
+        }
+        elsif (ref $t eq 'ARRAY') {
+            # another array of terms to process!
+            my ($where, $bind) = $stmt->_parse_array_terms( $t );
+            push @bind, @$bind;
+            $out = '(' . $where . ')';
+        }
+        push @out, (@out ? ' ' . $logic . ' ' : '') . $out;
+    }
+    return (join("", @out), \@bind);
 }
 
 sub has_where {
@@ -151,9 +195,9 @@ sub _mk_term {
     my $stmt = shift;
     my($col, $val) = @_;
     my $term = '';
-    my @bind;
+    my (@bind, $m);
     if (ref($val) eq 'ARRAY') {
-        if (ref $val->[0] or $val->[0] eq '-and') {
+        if (ref $val->[0] or (($val->[0] || '') eq '-and')) {
             my $logic = 'OR';
             my @values = @$val;
             if ($val->[0] eq '-and') {
@@ -169,20 +213,24 @@ sub _mk_term {
             }
             $term = join " $logic ", @terms;
         } else {
+            $col = $m->($col) if $m = $stmt->column_mutator;
             $term = "$col IN (".join(',', ('?') x scalar @$val).')';
             @bind = @$val;
         }
     } elsif (ref($val) eq 'HASH') {
         my $c = $val->{column} || $col;
+        $c = $m->($c) if $m = $stmt->column_mutator;
         $term = "$c $val->{op} ?";
         push @bind, $val->{value};
     } elsif (ref($val) eq 'SCALAR') {
+        $col = $m->($col) if $m = $stmt->column_mutator;
         $term = "$col $$val";
     } else {
+        $col = $m->($col) if $m = $stmt->column_mutator;
         $term = "$col = ?";
         push @bind, $val;
     }
-    ($term, \@bind);
+    ($term, \@bind, $col);
 }
 
 1;
@@ -444,6 +492,18 @@ an infinite SQL statement (for example, by specifying a arrayref C<$value> that
 itself contains C<$value>). As C<add_where()> evaluates your expressions before
 storing the conditions in the C<where> attribute as a generated SQL string,
 this will occur when calling C<add_where()>, not C<as_sql()>. So don't do that.
+
+=head2 C<$sql-E<gt>add_complex_where(\@list)>
+
+This method accepts an array reference of clauses that are glued together with
+logical operators. With it, you can express where clauses that mix logical
+operators together to produce more complex queries. For instance:
+
+    [ { foo => 1, bar => 2 }, -or => { baz => 3 } ]
+
+The values given for the columns support all the variants documented for the
+C<add_where()> method above. Logical operators used inbetween the hashref
+elements can be one of: '-or', '-and', '-or_not', '-and_not'.
 
 =head2 C<$sql-E<gt>has_where($column, [$value])>
 
