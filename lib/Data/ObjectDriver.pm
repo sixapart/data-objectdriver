@@ -398,6 +398,20 @@ I<FOR UPDATE> clause.
 
 =back
 
+=head2 Class->search(\@terms [, \%options ])
+
+This is an alternative calling signature for the search method documented
+above. When providing an array of terms, it allows for constructing complex
+expressions that mix 'and' and 'or' clauses. For example:
+
+    my $iter = Ingredient->search([ { recipe_id => 5 },
+        -or => { calories => { value => 300, op => '<' } } ]);
+    while (my $ingredient = $iter->()) {
+        ...
+    }
+
+Supported logic operators are: '-and', '-or', '-and_not', '-or_not'.
+
 =head2 Class->add_trigger($trigger, \&callback)
 
 Adds a trigger to all objects of class I<Class>, such that when the event
