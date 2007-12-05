@@ -119,7 +119,7 @@ sub clear_offset    { shift->clear_constraint(undef, ['offset'])      }
 sub add_order       { shift->add_constraint(undef, {sort => $_[0]}) }
 sub clear_order     { shift->clear_constraint(undef, ['sort'])       }
 
-sub result_idx {
+sub index {
     my $self = shift;
 
     return ($self->page_size * $self->page) + $self->cursor;
@@ -153,8 +153,6 @@ sub next {
 
     return if $self->is_finished;
 
-    $self->cursor($self->cursor + 1);
-
     # Boundary check
     if ($self->paging and ($self->cursor >= $self->page_size)) {
         $self->page($self->page + 1);
@@ -166,6 +164,9 @@ sub next {
     my $results = $self->results || $self->load_results;
 
     my $obj = $results->[$self->cursor];
+
+    $self->cursor($self->cursor + 1);
+
     if ($obj) {
         return $obj;
     } else {
