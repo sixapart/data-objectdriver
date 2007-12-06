@@ -43,6 +43,19 @@ sub new {
     return $self;
 }
 
+sub iterator {
+    my $class = shift;
+    my ($objs) = @_;
+
+    my $self = bless {}, ref $class || $class;
+    $self->results($objs);
+    $self->cursor(-1);
+    $self->paging(0);
+    $self->is_finished(0);
+
+    return $self;
+}
+
 sub disable_paging { shift->paging(0) }
 sub enable_paging  { shift->paging(1) }
 
@@ -369,7 +382,22 @@ Return value:
 
 This method returns a Data::ObjectDriver::ResultSet object
 
-=== Data::ObjectDriver::ResultSet ===
+=head2 $new_result = Data::ObjectDriver::ResultSet->iterator(\@data)
+
+Create a new result set object that takes existing data and operates only as an
+iterator, without any of the query managment.
+
+Arguments:
+
+=over 4
+
+=item $data - An array ref of data elements
+
+=back
+
+Return value:
+
+A L<Data::ObjectDriver::ResultSet> object
 
 =head2 $num = $result->page_size($num)
 
