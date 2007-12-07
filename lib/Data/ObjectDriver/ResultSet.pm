@@ -154,7 +154,7 @@ sub load_results {
         my $pk = $self->class->properties->{primary_key};
         $pk = [$pk] unless ref $pk;
 
-        $self->add_order([map { {column => $_} } @$pk]);
+        $self->add_order([map { {column => $_} } @$pk]) unless $args->{sort};
     }
 
     my @r = $self->class->search($self->terms, $self->args);
