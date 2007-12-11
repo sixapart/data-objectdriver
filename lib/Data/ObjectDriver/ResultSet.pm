@@ -314,6 +314,12 @@ sub last {
     return $results->[$self->cursor];
 }
 
+sub is_last {
+    my $self = shift;
+    my $results = $self->results || $self->load_results;
+    return (scalar @{$results} == $self->cursor + 1) ? 1 : 0;
+}
+
 1;
 
 __END__
@@ -732,7 +738,7 @@ Arguments:
 
 ; Example
 
-  $obj = $res->next;
+  $obj = $res->prev;
 
 =head2 curr
 
@@ -871,6 +877,26 @@ Arguments:
 
   $obj = $res->last
 
+=head2 is_last
+
+Returns 1 if the cursor is on the last row of the result set, 0 if it is not.
+
+Arguments:
+
+=over 4
+
+=item I<none>
+
+=back
+
+; Return value
+: Returns I<1> if the cursor is on the last row of the result set, I<0> if it is not.
+
+; Example
+
+  if ( $res->is_last ) {
+     ## do some stuff
+  }
 
 =cut
 
