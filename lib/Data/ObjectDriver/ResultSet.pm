@@ -34,9 +34,8 @@ sub new {
     # we know if the user originally wanted paging turned off
     $self->no_paging($param->{no_paging});
 
-    $self->terms($param->{terms});
-    $self->args($param->{args});
     $self->is_finished(0);
+    $self->add_constraint($param->{terms}, $param->{args});
 
     $self->cursor(-1);
 
