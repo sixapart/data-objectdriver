@@ -257,12 +257,12 @@ sub count {
 
     return $self->cached_count if defined $self->cached_count;
 
-    # If we're not paging and we already have results, we already know the count
-    if (not $self->paging and $self->results) {
-        $c = scalar @{ $self->results };
+    # If we're not paging, we already know the count
+    unless ($self->paging) {
+        $c = scalar @{ $self->results || $self->load_results };
+    } else {
+        $c = $self->class->count($self->terms, $self->args) || 0;
     }
-
-    $c = $self->class->count($self->terms, $self->args) || 0;
 
     $self->cached_count($c);
 
