@@ -56,13 +56,19 @@ sub iterator {
 sub clone {
     my $self = shift;
 
+    my $terms = $self->_terms ? { %{$self->_terms} } : {};
+    my $args  = $self->_args  ? { %{$self->_args} }  : {};
+
     my $clone = $self->new({class => $self->class,
-                            terms => $self->_terms,
-                            args  => $self->_args,
+                            terms => $terms,
+                            args  => $args,
                            });
 
     # Pull in filtered results if they've been loaded on the original object
-    $clone->_results($self->_load_results) if $self->_results_loaded;
+    if ($self->_results_loaded) {
+        my $res = $self->_load_results;
+        $clone->_results([@$res]) if $res;
+    }
 
     return $clone;
 }
