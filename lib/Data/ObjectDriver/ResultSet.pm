@@ -5,21 +5,17 @@ use strict;
 use base qw( Class::Accessor::Fast );
 
 __PACKAGE__->mk_accessors(qw(class
-                             terms
-                             args
+                             is_finished
 
-                             page_size
-                             paging
-                             no_paging
-                             page
+                             _terms
+                             _args
+                             _filter_terms
+                             _filter_args
 
-                             cursor
-                             results
-                             cached_count
-
-                             is_finished ));
-
-use constant DEF_PAGE_SIZE => 500;
+                             _cursor
+                             _results
+                             _results_loaded
+                         ));
 
 sub new {
     my $class = shift;
@@ -27,17 +23,11 @@ sub new {
     my $self = bless {}, ref $class || $class;
 
     $self->class($param->{class});
-    $self->page_size($param->{page_size} || DEF_PAGE_SIZE);
-    $self->paging($param->{no_paging} ? 0 : 1);
-
-    # We automatically set 'paging' when a limit term is cleared, so make sure
-    # we know if the user originally wanted paging turned off
-    $self->no_paging($param->{no_paging});
 
     $self->is_finished(0);
     $self->add_constraint($param->{terms}, $param->{args});
 
-    $self->cursor(-1);
+    $self->_cursor(-1);
 
     return $self;
 }
@@ -47,16 +37,12 @@ sub iterator {
     my ($objs) = @_;
 
     my $self = bless {}, ref $class || $class;
-    $self->results($objs);
-    $self->cursor(-1);
-    $self->paging(0);
+    $self->_results($objs);
+    $self->_cursor(-1);
     $self->is_finished(0);
 
     return $self;
 }
-
-sub disable_paging { shift->paging(0) }
-sub enable_paging  { shift->paging(1) }
 
 sub add_constraint {
     my $self = shift;
@@ -66,25 +52,30 @@ sub add_constraint {
         die "First argument to 'add_constraint' must be a hash reference"
           if ref $terms ne 'HASH';
 
-        my $cur_terms = $self->terms || {};
+        # Get current terms and any terms we are using as a filter on existing
+        # result sets
+        my $cur_terms    = $self->_terms || {};
+        my $filter_terms = $self->_filter_terms || {};
         foreach my $k (keys %$terms) {
             $cur_terms->{$k} = $terms->{$k};
+            $filter_terms->{$k} = 1 if $self->_results_loaded;
         }
-        $self->terms($cur_terms);
+        $self->_terms($cur_terms);
+        $self->_filter_terms($filter_terms) if $self->_results_loaded;
     }
 
     if ($args) {
         die "Second argument to 'add_constraint' must be a hash reference"
           if ref $args ne 'HASH';
 
-        my $cur_args = $self->args || {};
+        my $cur_args    = $self->_args || {};
+        my $filter_args = $self->_filter_args || {};
         foreach my $k (keys %$args) {
             $cur_args->{$k} = $args->{$k};
-
-            # Turn off paging if we get a limit term
-            $self->paging(0) if $k eq 'limit';
+            $filter_args->{$k} = 1 if $self->_results_loaded;
         }
-        $self->args($cur_args);
+        $self->_args($cur_args);
+        $self->_filter_args($filter_args) if $self->_results_loaded;
     }
 
     return 1;
@@ -94,7 +85,7 @@ sub clear_constraint {
     my $self = shift;
     my ($term_names, $arg_names) = @_;
 
-    my $terms = $self->terms;
+    my $terms = $self->_terms;
     if ($term_names and $terms) {
         die "First argument to 'clear_constraint' must be an array reference"
           if ref $term_names ne 'ARRAY';
@@ -104,17 +95,13 @@ sub clear_constraint {
         }
     }
 
-    my $args = $self->args;
+    my $args = $self->_args;
     if ($arg_names and $args) {
         die "Second argument to 'clear_constraint' must be an array reference"
           if ref $arg_names ne 'ARRAY';
 
         foreach my $n (@$arg_names) {
             delete $args->{$n};
-
-            # Turn on paging if we clear a limit term unless the user explicitly
-            # said they didn't want any paging
-            $self->paging(1) if ($n eq 'limit') and not $self->no_paging;
         }
     }
 
@@ -136,30 +123,7 @@ sub clear_order     { shift->clear_constraint(undef, ['sort'])       }
 sub index {
     my $self = shift;
 
-    return ($self->page_size * $self->page) + $self->cursor;
-}
-
-sub load_results {
-    my $self = shift;
-
-    if ($self->paging) {
-        # Set limit directly as to not trigger the 'turn paging off' code
-        my $args = $self->args || {};
-        $args->{limit} = $self->page_size;
-        $self->args($args);
-
-        $self->add_offset($self->page * $self->page_size);
-
-        my $pk = $self->class->properties->{primary_key};
-        $pk = [$pk] unless ref $pk;
-
-        $self->add_order([map { {column => $_} } @$pk]) unless $args->{sort};
-    }
-
-    my @r = $self->class->search($self->terms, $self->args);
-    $self->results(\@r);
-
-    return \@r;
+    return $self->_cursor;
 }
 
 sub next {
@@ -167,19 +131,12 @@ sub next {
 
     return if $self->is_finished;
 
-    $self->cursor($self->cursor + 1);
-
-    # Boundary check
-    if ($self->paging and ($self->cursor >= $self->page_size)) {
-        $self->page($self->page + 1);
-        $self->cursor(-1);
-        $self->results(undef);
-    }
+    $self->_cursor($self->_cursor + 1);
 
     # Load the results and return an object
-    my $results = $self->results || $self->load_results;
+    my $results = $self->_load_results;
 
-    my $obj = $results->[$self->cursor];
+    my $obj = $results->[$self->_cursor];
 
     if ($obj) {
         return $obj;
@@ -192,24 +149,15 @@ sub next {
 sub prev {
     my $self = shift;
 
-    $self->cursor($self->cursor - 1);
+    $self->_cursor($self->_cursor - 1);
 
     # Boundary check
-    if ($self->cursor == -1) {
-        # If we can, go back a page
-        if ($self->paging and ($self->page > 0)) {
-            $self->page($self->page - 1);
-            $self->cursor($self->page_size - 1);
-            $self->results(undef);
-        } else {
-            return;
-        }
-    }
+    return if $self->_cursor == -1;
 
     # Load the results and return an object
-    my $results = $self->results || $self->load_results;
+    my $results = $self->_load_results;
 
-    my $obj = $results->[$self->cursor];
+    my $obj = $results->[$self->_cursor];
     if ($obj) {
         return $obj;
     } else {
@@ -220,7 +168,7 @@ sub prev {
 sub curr {
     my $self = shift;
 
-    return $self->results->[$self->cursor];
+    return $self->_load_results->[$self->_cursor];
 }
 
 sub slice {
@@ -229,44 +177,24 @@ sub slice {
     my $limit = $end - $start;
 
     # Do we already have results?
-    if ($self->results) {
-        if ($self->paging) {
-            my $cur_start = $self->page * $self->page_size;
-            my $cur_end   = ($self->page+1) * $self->page_size;
-
-            # See if this slice is in the results we already have
-            if (($start >= $cur_start) and ($end < $cur_end)) {
-                $start -= $cur_start;
-            }
-        } else {
-            return @{ $self->results }[$start, $end];
-        }
+    if ($self->_results) {
+        return @{ $self->_results }[$start, $end];
     }
 
     $self->add_offset($start);
     $self->add_limit($limit);
 
-    my $r = $self->load_results;
+    my $r = $self->_load_results;
 
     return wantarray ? @$r : $r;
 }
 
 sub count {
     my $self = shift;
-    my $c;
 
-    return $self->cached_count if defined $self->cached_count;
+    my $results = $self->_load_results;
 
-    # If we're not paging, we already know the count
-    unless ($self->paging) {
-        $c = scalar @{ $self->results || $self->load_results };
-    } else {
-        $c = $self->class->count($self->terms, $self->args) || 0;
-    }
-
-    $self->cached_count($c);
-
-    return $c;
+    return scalar @$results;
 }
 
 sub first {
@@ -274,19 +202,11 @@ sub first {
 
     # Clear is finished in case they are comming back from the last element
     $self->is_finished(0);
+    $self->_cursor(0);
 
-    $self->cursor(0);
+    my $results = $self->_load_results;
 
-    if ($self->paging) {
-        if ($self->page > 0) {
-            $self->page(0);
-            $self->results(undef);
-        }
-    }
-
-    my $results = $self->results || $self->load_results;
-
-    my $obj = $results->[$self->cursor];
+    my $obj = $results->[$self->_cursor];
     if ($obj) {
         return $obj;
     } else {
@@ -298,26 +218,93 @@ sub last {
     my $self = shift;
     my $results;
 
-    if ($self->paging) {
-        # Figure out what the last page is
-        my $last_page = int($self->count/$self->page_size);
+    $results = $self->_load_results;
+    $self->_cursor($#$results);
 
-        if ($last_page > $self->page) {
-            $self->page($last_page);
-            $self->results(undef);
-        }
-    }
-
-    $results = $self->results || $self->load_results;
-    $self->cursor($#$results);
-
-    return $results->[$self->cursor];
+    return $results->[$self->_cursor];
 }
 
 sub is_last {
     my $self = shift;
-    my $results = $self->results || $self->load_results;
-    return (scalar @{$results} == $self->cursor + 1) ? 1 : 0;
+    my $results = $self->_load_results;
+    return (scalar @{$results} == $self->_cursor + 1) ? 1 : 0;
+}
+
+sub _filtered_results {
+    my $self = shift;
+    my $results      = $self->_results;
+    my $filter_terms = $self->_filter_terms;
+    my $filter_args  = $self->_filter_args;
+
+    # Return right away if we don't have any new filters
+    return $results unless $filter_terms or $filter_args;
+
+    my $new_results;
+
+    # Check terms
+    if ($filter_terms) {
+        while (my $obj = shift @$results) {
+            push @$new_results, $obj if $self->_in_terms_filter($obj);
+        }
+    } else {
+        $new_results = $results;
+    }
+
+    # Check args
+    if ($filter_args) {
+        # See if we've got a new limit
+        my $limit = $self->_args->{limit};
+        if ($limit and (scalar @$new_results > $limit)) {
+            # Truncate the array
+            splice @$new_results, $limit, $#$new_results;
+        }
+    }
+
+    $self->_filter_terms(undef);
+    $self->_filter_args(undef);
+
+    $self->_results($new_results);
+
+    return $new_results;
+}
+
+sub _in_terms_filter {
+    my $self = shift;
+    my ($obj) = @_;
+
+    # Always matches filter if we don't have any filters
+    return 1 unless $self->_filter_terms;
+
+    if ($self->_filter_terms) {
+        # Look through each filter
+        foreach my $key (keys %{$self->_filter_terms}) {
+            # If something doesn't match return with undef
+            if ($obj->$key ne $self->_terms->{$key}) {
+                return;
+            }
+        }
+    }
+
+    return 1;
+}
+
+sub _load_results {
+    my $self = shift;
+
+    # If results are already loaded, see if they need to be filtered and return
+    # them
+    if ($self->_results_loaded) {
+        my $results = $self->_filtered_results;
+
+        return $self->_results;
+    }
+
+    my @r = $self->class->search($self->_terms, $self->_args);
+
+    $self->_results(\@r);
+    $self->_results_loaded(1);
+
+    return \@r;
 }
 
 1;
@@ -371,15 +358,7 @@ Arguments:
 
 =item I<$terms> - A hashref.  Same format as the first argument to Data::ObjectDriver::DBI::search
 
-=item I<$args> - A hashref.  Same format as the second argument to Data::ObjectDriver::DBI::search with the addition of the following keys:
-
-=over 4
-
-=item 'page_size' - The size of the pages retrieved.  Default I<500>
-
-=item 'no_paging' - Turn off internal paging
-
-=back
+=item I<$args> - A hashref.  Same format as the second argument to Data::ObjectDriver::DBI::search
 
 =back
 
@@ -403,72 +382,6 @@ Arguments:
 Return value:
 
 A L<Data::ObjectDriver::ResultSet> object
-
-=head2 $num = $result->page_size($num)
-
-Set the internal page size used when retrieving results from the DB.  The caller does not have to manage pages, this is only to keep an upper bound on the amount of memory and time taken to pull objects from potentially large datasets.  The
-
-Arguments:
-
-=over 4
-
-=item $num - A scalar integer giving the number of pages. Default I<500>
-
-=back
-
-; Return Value
-: Returns the page size
-
-; Notes
-: I<None>
-
-; Example
-
-  $res->page_size(1_000)
-
-=head2 disable_paging
-
-Turn off internal paging.  There is no normal usage situation where this is necessary.
-
-Arguments:
-
-=over 4
-
-=item I<none>
-
-=back
-
-; Return Value
-: A true value
-
-; Notes
-: I<None>
-
-; Example
-
-  $res->disable_paging
-
-=head2 enable_paging
-
-Turn on internal paging.  By default paging is on.  This method is only here to compliment I<disable_paging>.
-
-Arguments:
-
-=over 4
-
-=item I<none>
-
-=back
-
-; Return Value
-: A true value
-
-; Notes
-: I<None>
-
-; Example
-
-  $res->enable_paging
 
 =head2 add_constraint
 
