@@ -1,10 +1,17 @@
+# $Id: BaseObject.pm 418 2007-11-29 18:08:10Z garth $
+
 package Data::ObjectDriver::ResultSet;
+
+## Dependencies
 
 use strict;
 
 use base qw( Class::Accessor::Fast );
 
-__PACKAGE__->mk_accessors(qw(class
+## Public/_Private Accessors
+
+__PACKAGE__->mk_accessors(qw(
+                             class
                              is_finished
 
                              _terms
@@ -16,6 +23,8 @@ __PACKAGE__->mk_accessors(qw(class
                              _results
                              _results_loaded
                          ));
+
+## Constructors
 
 sub new {
     my $class = shift;
@@ -43,6 +52,22 @@ sub iterator {
 
     return $self;
 }
+
+sub clone {
+    my $self = shift;
+
+    my $clone = $self->new({class => $self->class,
+                            terms => $self->_terms,
+                            args  => $self->_args,
+                           });
+
+    # Pull in filtered results if they've been loaded on the original object
+    $clone->_results($self->_load_results) if $self->_results_loaded;
+
+    return $clone;
+}
+
+## Public Instance Methods
 
 sub add_constraint {
     my $self = shift;
@@ -229,6 +254,8 @@ sub is_last {
     my $results = $self->_load_results;
     return (scalar @{$results} == $self->_cursor + 1) ? 1 : 0;
 }
+
+## Private Instance Methods
 
 sub _filtered_results {
     my $self = shift;
