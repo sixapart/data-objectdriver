@@ -141,15 +141,23 @@ sub clear_constraint {
 
 sub add_term        { shift->add_constraint($_[0])                    }
 sub clear_term      { shift->clear_constraint(\@_)                    }
+sub get_term        { my $self = shift;
+                      $self->_terms && $self->_terms->{$_[0]}         }
 
 sub add_limit       { shift->add_constraint(undef, {limit => $_[0]})  }
 sub clear_limit     { shift->clear_constraint(undef, ['limit'])       }
+sub get_limit       { my $self = shift;
+                      $self->_args && $self->_args->{limit}           }
 
 sub add_offset      { shift->add_constraint(undef, {offset => $_[0]}) }
 sub clear_offset    { shift->clear_constraint(undef, ['offset'])      }
+sub get_offset      { my $self = shift;
+                      $self->_args && $self->_args->{offset}          }
 
-sub add_order       { shift->add_constraint(undef, {sort => $_[0]}) }
-sub clear_order     { shift->clear_constraint(undef, ['sort'])       }
+sub add_order       { shift->add_constraint(undef, {sort => $_[0]})   }
+sub clear_order     { shift->clear_constraint(undef, ['sort'])        }
+sub get_order       { my $self = shift;
+                      $self->_args && $self->_args->{order}           }
 
 sub index {
     my $self = shift;
