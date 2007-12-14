@@ -157,8 +157,12 @@ sub get_offset      { my $self = shift;
 sub add_order       { shift->add_constraint(undef, {sort => $_[0]})   }
 sub clear_order     { shift->clear_constraint(undef, ['sort'])        }
 sub get_order       { my $self = shift;
-                      $self->_args && $self->_args->{order}           }
+                      $self->_args && $self->_args->{sort}           }
 
+sub add_filter       { shift->add_constraint(undef, {filter => $_[0]})   }
+sub clear_filter     { shift->clear_constraint(undef, ['filter'])        }
+sub get_filter       { my $self = shift;
+                      $self->_args && $self->_args->{filter}           }
 sub index {
     my $self = shift;
 
