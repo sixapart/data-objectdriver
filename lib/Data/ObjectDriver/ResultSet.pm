@@ -165,7 +165,7 @@ sub get_order       { my $self = shift;
 sub add_filter       { shift->add_constraint(undef, {filter => $_[0]})   }
 sub clear_filter     { shift->clear_constraint(undef, ['filter'])        }
 sub get_filter       { my $self = shift;
-                      $self->_args && $self->_args->{filter}           }
+                      $self->_args && $self->_args->{filters}           }
 sub index {
     my $self = shift;
 
