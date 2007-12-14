@@ -354,6 +354,8 @@ sub _load_results {
     if ($self->dod_debug){
         local $Data::ObjectDriver::DEBUG = 1;
         @r = $self->class->search($self->_terms, $self->_args);
+    } else {
+        @r = $self->class->search($self->_terms, $self->_args);
     }
 
     $self->_results(\@r);
