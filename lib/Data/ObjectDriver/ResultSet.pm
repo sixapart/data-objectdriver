@@ -14,6 +14,8 @@ __PACKAGE__->mk_accessors(qw(
                              class
                              is_finished
 
+                             dod_debug
+
                              _terms
                              _args
                              _filter_terms
@@ -344,7 +346,11 @@ sub _load_results {
         return $self->_results;
     }
 
-    my @r = $self->class->search($self->_terms, $self->_args);
+    my @r;
+    if ($self->dod_debug){
+        local $Data::ObjectDriver::DEBUG = 1;
+        @r = $self->class->search($self->_terms, $self->_args);
+    }
 
     $self->_results(\@r);
     $self->_results_loaded(1);
@@ -790,6 +796,11 @@ Arguments:
       my $obj = $res->next;
       # Stuff ...
   }
+
+=head2 dod_debug
+
+Set this and you'll see $Data::ObjectDriver::DEBUG output when 
+I go to get the results.
 
 =head2 first
 
