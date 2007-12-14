@@ -299,12 +299,16 @@ sub _filtered_results {
 
     # Check args
     if ($filter_args) {
-        # See if we've got a new limit
-        my $limit = $self->_args->{limit};
-        if ($limit and (scalar @$new_results > $limit)) {
-            # Truncate the array
-            splice @$new_results, $limit, $#$new_results;
+        # See if we've got a new limit and offset
+        if (my $offset = $self->_args->{offset}) {
+            splice @$new_results, 0, $offset;
         }
+        if (my $limit = $self->_args->{limit}) {
+            if (scalar @$new_results > $limit) {
+                # Truncate the array
+                splice @$new_results, $limit, $#$new_results;
+            } 
+        } 
     }
 
     $self->_filter_terms(undef);
