@@ -49,6 +49,7 @@ sub iterator {
 
     my $self = bless {}, ref $class || $class;
     $self->_results($objs);
+    $self->_results_loaded(1);
     $self->_cursor(-1);
     $self->is_finished(0);
 
@@ -352,13 +353,8 @@ sub _load_results {
         return $self->_results;
     }
 
-    my @r;
-    if ($self->dod_debug){
-        local $Data::ObjectDriver::DEBUG = 1;
-        @r = $self->class->search($self->_terms, $self->_args);
-    } else {
-        @r = $self->class->search($self->_terms, $self->_args);
-    }
+    local $Data::ObjectDriver::DEBUG = 1 if $self->dod_debug;
+    my @r = $self->class->search($self->_terms, $self->_args);
 
     $self->_results(\@r);
     $self->_results_loaded(1);
