@@ -300,18 +300,23 @@ sub _filtered_results {
 
     # Check args
     if ($filter_args) {
+        if ($filter_args->{sort}) {
+            @$new_results = sort { $self->_dod_sort($a, $b) } @$new_results;
+        }
+
         # See if we've got a new limit and offset
         if ($filter_args->{offset}) {
             my $offset = $self->_args->{offset};
             splice @$new_results, 0, $offset;
         }
+
         if ($filter_args->{limit}) {
             my $limit = $self->_args->{limit};
             if (scalar @$new_results > $limit) {
                 # Truncate the array
                 splice @$new_results, $limit, $#$new_results;
-            } 
-        } 
+            }
+        }
     }
 
     $self->_filter_terms(undef);
@@ -320,6 +325,26 @@ sub _filtered_results {
     $self->_results($new_results);
 
     return $new_results;
+}
+
+sub _dod_sort {
+    my $self = shift;
+    my ($a, $b) = @_;
+    my $sort = $self->_args->{sort};
+
+    foreach my $order_data (@$sort) {
+        my $col = $order_data->{column};
+        my $dir = $order_data->{direction};
+        my $result;
+
+        $result = ($dir eq 'ascend') ? $a->$col cmp $b->$col
+                                     : $b->$col cmp $a->$col;
+
+        # Return the sort result unless they are the same
+        return $result unless $result == 0;
+    }
+
+    return 0;
 }
 
 sub _in_terms_filter {
