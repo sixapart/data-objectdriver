@@ -105,7 +105,16 @@ sub add_constraint {
         my $cur_args    = $self->_args || {};
         my $filter_args = $self->_filter_args || {};
         foreach my $k (keys %$args) {
-            $cur_args->{$k} = $args->{$k};
+            my $val = $args->{$k};
+
+            # If we get a limit arg that is bigger than our existing limit, then
+            # make sure we force a requery.  Same for any filter arguments.
+            if ((($k eq 'limit') and (($cur_args->{$k}||0) < $val)) or
+                ($k eq 'filter')) {
+                $self->_results_loaded(0);
+            }
+
+            $cur_args->{$k} = $val;
             $filter_args->{$k} = 1 if $self->_results_loaded;
         }
         $self->_args($cur_args);
