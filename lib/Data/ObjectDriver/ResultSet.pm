@@ -109,7 +109,9 @@ sub add_constraint {
 
             # If we get a limit arg that is bigger than our existing limit, then
             # make sure we force a requery.  Same for any filter arguments.
-            if ((($k eq 'limit') and (($cur_args->{$k}||0) < $val)) or
+            # Same for offset arg that is  smaller than existing one.
+            if ((($k eq 'limit')  and (($cur_args->{'limit'}||0)  < $val)) or
+                (($k eq 'offset') and (($cur_args->{'offset'}||0) > $val)) or
                 ($k eq 'filter')) {
                 $self->_results_loaded(0);
             }
@@ -144,6 +146,14 @@ sub clear_constraint {
           if ref $arg_names ne 'ARRAY';
 
         foreach my $n (@$arg_names) {
+            # If we get a limit arg that is bigger than our existing limit, then
+            # make sure we force a requery.  Same for any filter arguments.
+            # Same for offset arg that is  smaller than existing one.
+            if (($n eq 'limit')  and (($args->{'limit'}||0)  > 0) or
+                ($n eq 'offset') and (($args->{'offset'}||0) > 0) or
+                ($n eq 'filter')) {
+                $self->_results_loaded(0);
+            }
             delete $args->{$n};
         }
     }
