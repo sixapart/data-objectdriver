@@ -112,7 +112,7 @@ sub add_constraint {
             # Same for offset arg that is  smaller than existing one.
             if ((($k eq 'limit')  and (($cur_args->{'limit'}||0)  < $val)) or
                 (($k eq 'offset') and (($cur_args->{'offset'}||0) > $val)) or
-                ($k eq 'filter')) {
+                ($k eq 'filters')) {
                 $self->_results_loaded(0);
             }
 
@@ -151,7 +151,7 @@ sub clear_constraint {
             # Same for offset arg that is  smaller than existing one.
             if (($n eq 'limit')  and (($args->{'limit'}||0)  > 0) or
                 ($n eq 'offset') and (($args->{'offset'}||0) > 0) or
-                ($n eq 'filter')) {
+                ($n eq 'filters')) {
                 $self->_results_loaded(0);
             }
             delete $args->{$n};
