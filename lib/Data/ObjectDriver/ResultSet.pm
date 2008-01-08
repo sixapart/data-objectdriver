@@ -654,7 +654,7 @@ Arguments:
 
 =over 4
 
-=item [0] = $order = I< - A scalar string value giving the sort order for the results, one of I<ascend> or I<descend>
+=item [0] = $order = I< - A scalar string value giving the sort order for the results, one of I<ascend> or I<descend>>
 
 =back
 
