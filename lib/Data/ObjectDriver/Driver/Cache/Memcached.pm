@@ -6,9 +6,6 @@ use warnings;
 
 use base qw( Data::ObjectDriver::Driver::BaseCache );
 
-use Cache::Memcached;
-use Carp ();
-
 sub deflate {
     my $driver = shift;
     my($obj) = @_;
