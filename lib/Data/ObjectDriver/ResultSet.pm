@@ -257,7 +257,8 @@ sub slice {
 sub count {
     my $self = shift;
 
-    if ($self->_results_loaded) {
+    # Get/load the results if we already have them or if we have a limit term
+    if ($self->_results_loaded or $self->get_limit) {
         my $results = $self->_load_results;
         return scalar @$results;
     } else {
