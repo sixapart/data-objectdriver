@@ -251,15 +251,19 @@ sub slice {
 
     my $r = $self->_load_results;
 
-    return wantarray ? @$r : $r;
+    return $r;
 }
 
 sub count {
     my $self = shift;
 
-    my $results = $self->_load_results;
-
-    return scalar @$results;
+    if ($self->_results_loaded) {
+        my $results = $self->_load_results;
+        return scalar @$results;
+    } else {
+        local $Data::ObjectDriver::DEBUG = 1 if $self->dod_debug;
+        return $self->class->count($self->_terms, $self->_args);
+    }
 }
 
 sub first {
