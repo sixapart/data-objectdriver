@@ -394,10 +394,6 @@ sub _in_terms_filter {
 sub _load_results {
     my $self = shift;
 
-    # An iterator only ResultSet doesn't have a class (or any paramaters for
-    # that matter) so don't try to search for anything.
-    return unless $self->class;
-
     # If results are already loaded, see if they need to be filtered and return
     # them
     if ($self->_results_loaded) {
@@ -405,6 +401,10 @@ sub _load_results {
 
         return $self->_results;
     }
+
+    # An iterator only ResultSet doesn't have a class (or any paramaters for
+    # that matter) so don't try to search for anything.
+    return unless $self->class;
 
     local $Data::ObjectDriver::DEBUG = 1 if $self->dod_debug;
     my @r = $self->class->search($self->_terms, $self->_args);
