@@ -2,13 +2,27 @@
 
 Revision history for Data::ObjectDriver
 
+0.05  2008.02.24
+    - Added a new Data::ObjectDriver::ResultSet abstraction for building
+      result sets with lazy-loading of the actual results. This allows for
+      passing around a representation of a full result set (no limit, no
+      offset, etc), and allowing callers to modify the set as needed.
+    - search() now returns a subref blessed into the new D::OD::Iterator class.
+      It's backwards-compatible (you can still call $iter->()), but it now
+      supports $iter->next() as well.
+    - Added a D::OD::SQL::add_complex_where method, for creating more complex
+      WHERE clauses with boolean operations.
+    - Added instrumentation/profiling for the memcached, Apache, and RAM
+      caching drivers.
+    - Improved "remove" support in the experimental Multiplexer driver.
+    - Fixed an ordering bug with BaseCache->update: the cache is now updated
+      after the fallback (a persistent store, usually) is updated, to prevent
+      the cache being updated but the backend erroring out.
     - Let DSNs start with "DBI:" instead of only "dbi:"
     - Fix a bug where the iterator version of search() (search() called
       in scalar context) wasn't calling finish() on $sth. It was generating
       warnings on certain circumstances.
-    - search() now returns a subref blessed in new Data::ObjectDriver::Iterator
-      you can now explictely call $iter->next() instead of just $iter->() though
-      backward compatibility is ensured.
+    - Fixed a circular reference when using has_a.
 
 0.04  2007.05.02
     - Fixed a bug where single-PK classes were not returning the
