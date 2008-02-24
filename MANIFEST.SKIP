@@ -11,3 +11,4 @@
 ^ToDo$
 \.tar\.gz$
 \.svn
+\.shipit$
