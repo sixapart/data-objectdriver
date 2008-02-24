@@ -10,7 +10,7 @@ use Data::ObjectDriver::Iterator;
 
 __PACKAGE__->mk_accessors(qw( pk_generator ));
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 our $DEBUG = $ENV{DOD_DEBUG} || 0;
 our $PROFILE = $ENV{DOD_PROFILE} || 0;
 our $PROFILER;
