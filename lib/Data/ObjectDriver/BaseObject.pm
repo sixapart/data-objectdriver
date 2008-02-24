@@ -843,6 +843,12 @@ C<SELECT> query will include a C<FOR UPDATE> clause.
 All options are passed to the object driver, so your driver may support
 additional options.
 
+=head2 C<Class-E<gt>result(\%terms, [\%args])>
+
+Takes the same I<%terms> and I<%args> arguments that I<search> takes, but
+instead of executing the query immediately, returns a
+I<Data::ObjectDriver::ResultSet> object representing the set of results.
+
 =head2 C<$obj-E<gt>exists()>
 
 Returns true if C<$obj> already exists in the database.
