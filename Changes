@@ -2,6 +2,9 @@
 
 Revision history for Data::ObjectDriver
 
+0.06
+    - Fixed compilation error with Perl 5.10. Thanks to smpeters for the patch.
+
 0.05  2008.02.24
     - Added a new Data::ObjectDriver::ResultSet abstraction for building
       result sets with lazy-loading of the actual results. This allows for
