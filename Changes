@@ -3,6 +3,8 @@
 Revision history for Data::ObjectDriver
 
 0.06
+    - Localized creation of D::OD::Iterator object. Thanks to Hirotaka Ogawa
+      for the patch.
     - Fixed compilation error with Perl 5.10. Thanks to smpeters for the patch.
 
 0.05  2008.02.24

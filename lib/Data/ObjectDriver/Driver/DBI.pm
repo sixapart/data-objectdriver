@@ -154,9 +154,6 @@ sub search {
         $obj->call_trigger('post_load') unless $args->{no_triggers};
         $obj;
     };
-    my $iterator = Data::ObjectDriver::Iterator->new(
-        $iter, sub { $sth->finish; $driver->end_query($sth) },
-    );
 
     if (wantarray) {
         my @objs = ();
@@ -166,6 +163,9 @@ sub search {
         }
         return @objs;
     } else {
+        my $iterator = Data::ObjectDriver::Iterator->new(
+            $iter, sub { $sth->finish; $driver->end_query($sth) },
+        );
         return $iterator;
     }
     return;
