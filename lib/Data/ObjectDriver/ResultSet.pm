@@ -107,10 +107,12 @@ sub add_constraint {
         foreach my $k (keys %$args) {
             my $val = $args->{$k};
 
-            # If we get a limit arg that is bigger than our existing limit, then
+            # If we get a limit arg that is bigger than our existing limit (and
+            # we *have* an existing limit), then
             # make sure we force a requery.  Same for any filter arguments.
             # Same for offset arg that is  smaller than existing one.
-            if ((($k eq 'limit')  and (($cur_args->{'limit'}||0)  < $val)) or
+            if ((($k eq 'limit')  and
+            ( exists $cur_args->{'limit'} && defined $cur_args->{'limit'} && ($cur_args->{'limit'}||0)  < $val)) or
                 (($k eq 'offset') and (($cur_args->{'offset'}||0) > $val)) or
                 ($k eq 'filters')) {
                 $self->_results_loaded(0);
