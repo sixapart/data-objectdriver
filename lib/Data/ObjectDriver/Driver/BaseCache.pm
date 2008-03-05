@@ -199,9 +199,17 @@ sub remove {
         Carp::croak("nofetch option isn't compatible with a cache driver");
     }
     if (ref $obj) {
-        $driver->remove_from_cache($driver->cache_key(ref($obj), $obj->primary_key));
+        $driver->uncache_object($obj);
     }
     $driver->fallback->remove(@_);
+}
+
+sub uncache_object {
+    my $driver = shift;
+    my($obj) = @_;
+    my $key = $driver->cache_key(ref($obj), $obj->primary_key);
+    delete $obj->{__cached};
+    return $driver->remove_from_cache($key);
 }
 
 sub cache_key {

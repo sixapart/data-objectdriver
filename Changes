@@ -6,6 +6,9 @@ Revision history for Data::ObjectDriver
     - Localized creation of D::OD::Iterator object. Thanks to Hirotaka Ogawa
       for the patch.
     - Fixed compilation error with Perl 5.10. Thanks to smpeters for the patch.
+    - Added a new $object->uncache_object as a mirror of cache_object(), which
+      purge one object from the cache layer, for the cases where you want a manual
+      control over it.
 
 0.05  2008.02.24
     - Added a new Data::ObjectDriver::ResultSet abstraction for building

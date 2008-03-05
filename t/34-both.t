@@ -18,7 +18,7 @@ BEGIN {
     }
 }
 
-plan tests => 46;
+plan tests => 49;
 
 use Recipe;
 use Ingredient;
@@ -114,9 +114,14 @@ my $i4 = Ingredient->lookup([ $recipe->recipe_id, $i3->id ]);
 ok !$i4->{__cached};
 is $i4->name, 'Flour';
 
+## verify it's in the cache
+my $key = $i4->driver->cache_key(ref($i4), $i4->primary_key);
+my $data = $i4->driver->get_from_cache($key);
+ok $data;
+is $data->{columns}{id}, $i3->id, "it's in the cache";
 ## Delete it from the cache, so that the next test is actually accurate.
-my $driver = Ingredient->driver;
-$driver->remove_from_cache($driver->cache_key('Ingredient', $i4->primary_key));
+$i4->uncache_object;
+ok ! $i4->driver->get_from_cache($key), "It's been purged from the cache";
 
 ## Now look up the ingredients again. Milk and Eggs should already be cached,
 ## and doing the search should now cache Flour.

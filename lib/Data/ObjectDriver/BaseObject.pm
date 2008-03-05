@@ -481,11 +481,12 @@ sub search {
     $driver->list_or_iterator(\@objs);
 }
 
-sub remove          { shift->_proxy('remove',       @_) }
-sub update          { shift->_proxy('update',       @_) }
-sub insert          { shift->_proxy('insert',       @_) }
-sub replace         { shift->_proxy('replace',      @_) }
-sub fetch_data      { shift->_proxy('fetch_data',   @_) }
+sub remove         { shift->_proxy( 'remove',         @_ ) }
+sub update         { shift->_proxy( 'update',         @_ ) }
+sub insert         { shift->_proxy( 'insert',         @_ ) }
+sub replace        { shift->_proxy( 'replace',        @_ ) }
+sub fetch_data     { shift->_proxy( 'fetch_data',     @_ ) }
+sub uncache_object { shift->_proxy( 'uncache_object', @_ ) }
 
 sub refresh {
     my $obj = shift;
@@ -495,6 +496,7 @@ sub refresh {
     $obj->call_trigger('post_load');
     return 1;
 }
+
 
 sub _proxy {
     my $obj = shift;

@@ -106,6 +106,7 @@ sub list_or_iterator {
 }
 
 sub cache_object { }
+sub uncache_object { }
 
 1;
 __END__
