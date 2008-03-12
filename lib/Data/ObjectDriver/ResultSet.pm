@@ -213,6 +213,23 @@ sub next {
     }
 }
 
+# look at next() without incrementing the cursor
+# like if you just want to see what's coming down the road at you
+sub peek_next {
+    my $self = shift;
+
+    return undef if $self->is_finished;
+
+    # Load the results and return an object
+    my $results = $self->_load_results;
+
+    my $obj = $results->[$self->_cursor + 1];
+
+    return $obj;
+}
+
+
+
 sub prev {
     my $self = shift;
 
@@ -740,6 +757,39 @@ Arguments:
 ; Example
 
   $obj = $res->next;
+
+=head2 peek_next
+
+Retrieve the next item in the resultset WITHOUT advancing the cursor.
+
+Arguments:
+
+=over 4
+
+=item I<none>
+
+=back
+
+; Return value
+: The next object or undef if past the end of the result set
+
+; Notes
+: Calling this method will force a DB query.  All subsequent calls to I<curr> will return this object
+
+; Example
+
+  while ($bottle = $res->next){
+            
+      if ($bottle->type eq 'Bud Light' 
+          && $res->peek_next->type eq 'Chimay'){
+
+          $bottle->pass; #don't spoil my palate
+
+      }else{
+          $bottle->drink;
+      }
+  }
+            
 
 =head2 prev
 
