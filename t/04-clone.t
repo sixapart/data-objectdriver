@@ -18,7 +18,7 @@ BEGIN {
     }
 }
 
-plan tests => 26;
+plan tests => 29;
 
 use Wine;
 use Recipe;
@@ -68,6 +68,10 @@ test_basic_cloning('clone_all');
     ok !defined $clone->id, 'Basic clone has no id';
 
     ok $clone->save, 'Basic clone could be saved';
+    is $clone->name, 'Cul de Veau à la Sauge';
+    is $clone->is_changed('name'), '', "This is documentation ;-)";
+    $clone->refresh;
+    is $clone->name, 'Cul de Veau à la Sauge';
     ok defined $clone->id, 'Basic clone has an id after saving';
     isnt $w->id, $clone->id, q(Basic clone's id differs from original's id);
 }
