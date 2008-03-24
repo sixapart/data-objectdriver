@@ -434,6 +434,12 @@ sub _load_results {
     return \@r;
 }
 
+sub rewind {
+    my $self = shift;
+    $self->is_finished(0);
+    $self->_cursor(-1);
+    return $self;
+}
 1;
 
 __END__
@@ -910,6 +916,10 @@ Arguments:
 
 Set this and you'll see $Data::ObjectDriver::DEBUG output when 
 I go to get the results.
+
+=head2 rewind
+
+Move back to the start of the iterator for this instance of results of a query.
 
 =head2 first
 
