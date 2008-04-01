@@ -91,6 +91,7 @@ sub add_constraint {
         my $cur_terms    = $self->_terms || {};
         my $filter_terms = $self->_filter_terms || {};
         foreach my $k (keys %$terms) {
+            $self->_results_loaded(0) unless $cur_terms->{$k};
             $cur_terms->{$k} = $terms->{$k};
             $filter_terms->{$k} = 1 if $self->_results_loaded;
         }
@@ -138,7 +139,9 @@ sub clear_constraint {
           if ref $term_names ne 'ARRAY';
 
         foreach my $n (@$term_names) {
-            delete $terms->{$n};
+            if (delete $terms->{$n}) {
+                $self->_results_loaded(0);
+            }
         }
     }
 
