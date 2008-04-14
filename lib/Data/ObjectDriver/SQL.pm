@@ -6,12 +6,13 @@ use warnings;
 
 use base qw( Class::Accessor::Fast );
 
-__PACKAGE__->mk_accessors(qw( select select_map select_map_reverse from joins where bind limit offset group order having where_values column_mutator ));
+__PACKAGE__->mk_accessors(qw( select distinct select_map select_map_reverse from joins where bind limit offset group order having where_values column_mutator ));
 
 sub new {
     my $class = shift;
     my $stmt = $class->SUPER::new(@_);
     $stmt->select([]);
+    $stmt->distinct(0);
     $stmt->select_map({});
     $stmt->select_map_reverse({});
     $stmt->bind([]);
@@ -46,6 +47,7 @@ sub as_sql {
     my $sql = '';
     if (@{ $stmt->select }) {
         $sql .= 'SELECT ';
+        $sql .= 'DISTINCT ' if $stmt->distinct;
         $sql .= join(', ',  map {
             my $alias = $stmt->select_map->{$_};
             $alias && /(?:^|\.)\Q$alias\E$/ ? $_ : "$_ $alias";
@@ -275,6 +277,10 @@ modification (for example, C<add_where()> for the C<where> attribute).
 =head2 C<select> (arrayref)
 
 The database columns to select in a C<SELECT> query.
+
+=head2 C<distinct> (boolean)
+
+Whether the C<SELECT> query should return DISTINCT rows only.
 
 =head2 C<select_map> (hashref)
 

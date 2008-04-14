@@ -3,7 +3,7 @@
 use strict;
 
 use Data::ObjectDriver::SQL;
-use Test::More tests => 58;
+use Test::More tests => 60;
 
 my $stmt = ns();
 ok($stmt, 'Created SQL object');
@@ -211,5 +211,13 @@ HAVING (COUNT(*) = ?)
 ORDER BY foo DESC
 LIMIT 2
 SQL
+
+# DISTINCT
+$stmt = ns();
+$stmt->add_select(foo => 'foo');
+$stmt->from([ qw(baz) ]);
+is($stmt->as_sql, "SELECT foo\nFROM baz\n", "DISTINCT is absent by default");
+$stmt->distinct(1);
+is($stmt->as_sql, "SELECT DISTINCT foo\nFROM baz\n", "we can turn on DISTINCT");
 
 sub ns { Data::ObjectDriver::SQL->new }
