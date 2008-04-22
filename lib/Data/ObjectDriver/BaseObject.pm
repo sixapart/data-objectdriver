@@ -269,6 +269,23 @@ sub primary_key_to_terms {
     \%terms;
 }
 
+sub is_same {
+    my($obj, $other) = @_;
+
+    my @a;
+    for my $o ($obj, $other) {
+        push @a, [ map { $o->$_() } @{ $o->primary_key_tuple }];
+    }
+    return is_same_array( @a );
+}
+
+sub pk_str {
+    my ($obj) = @_;
+    my $pk = $obj->primary_key;
+    return $pk unless ref ($pk) eq 'ARRAY';
+    return join (":", @$pk);
+}
+
 sub has_primary_key {
     my $obj = shift;
     return unless @{$obj->primary_key_tuple};
