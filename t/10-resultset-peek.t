@@ -50,7 +50,7 @@ SKIP: {
 
 Wine->bulk_insert(['name', 'rating'], [['Caymus', 4], ['Thunderbird', 1], ['Stags Leap', 3]]);
 
-my $wine;
+$wine = undef;
 my ($result) = Wine->result({name => 'Caymus'});
 is $result->peek_next->name, 'Caymus', 'before we start, peek_next says the first one is Caymus';
 ok! $result->is_finished;
