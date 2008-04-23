@@ -221,7 +221,7 @@ sub next {
 sub peek_next {
     my $self = shift;
 
-    return undef if $self->is_finished;
+    return if $self->is_finished;
 
     # Load the results and return an object
     my $results = $self->_load_results;
