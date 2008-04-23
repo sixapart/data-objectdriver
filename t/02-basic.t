@@ -196,6 +196,7 @@ setup_dbs({
     
     # emulate a driver which doesn't support REPLACE INTO
     { 
+        no warnings 'redefine';
         local *Data::ObjectDriver::Driver::DBD::SQLite::can_replace = sub { 0 };
         $r->title('replaced');
         $r->recipe_id("lamer");
