@@ -209,7 +209,9 @@ sub uncache_object {
     my($obj) = @_;
     my $key = $driver->cache_key(ref($obj), $obj->primary_key);
     delete $obj->{__cached};
-    return $driver->remove_from_cache($key);
+    $driver->remove_from_cache($key);
+    $driver->fallback->uncache_object($obj);
+    return;
 }
 
 sub cache_key {

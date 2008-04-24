@@ -949,9 +949,24 @@ Returns the I<values> of the primary key fields of C<$obj>.
 
 Returns the I<names> of the primary key fields of C<Class> objects.
 
+=head2 C<$obj-E<gt>is_same($other_obj)>
+
+Do a primary key check on C<$obj> and $<other_obj> and returns true only if they
+are identical.
+
+=head2 C<$obj-E<gt>pk_str()>
+
+returns the primay key has a printable string.
+
 =head2 C<$obj-E<gt>has_primary_key()>
 
 Returns whether the given object has values for all of its primary key fields.
+
+=head2 C<$obj-E<gt>uncache_object()>
+
+If you use a Cache driver, returned object will be automatically cached as a result
+of common retrieve operations. In some rare cases you may want the cache to be cleared
+explicitely, and this method provides you with a way to do it.
 
 =head2 C<$obj-E<gt>primary_key_to_terms([$id])>
 
