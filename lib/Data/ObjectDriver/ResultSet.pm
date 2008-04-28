@@ -261,12 +261,13 @@ sub curr {
 sub slice {
     my $self = shift;
     my ($start, $end) = @_;
-    my $limit = $end - $start;
 
     # Do we already have results?
     if ($self->_results) {
-        return @{ $self->_results }[$start, $end];
+        return \@{ $self->_results }[$start..$end];
     }
+
+    my $limit = $end - $start + 1;
 
     $self->add_offset($start);
     $self->add_limit($limit);
