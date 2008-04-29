@@ -6,7 +6,7 @@ use warnings;
 
 use base qw( Class::Accessor::Fast );
 
-__PACKAGE__->mk_accessors(qw( select distinct select_map select_map_reverse from joins where bind limit offset group order having where_values column_mutator ));
+__PACKAGE__->mk_accessors(qw( select distinct select_map select_map_reverse from joins where bind limit offset group order having where_values column_mutator index_hint ));
 
 sub new {
     my $class = shift;
@@ -21,6 +21,7 @@ sub new {
     $stmt->where_values({});
     $stmt->having([]);
     $stmt->joins([]);
+    $stmt->index_hint({});
     $stmt;
 }
 
@@ -42,6 +43,15 @@ sub add_join {
     };
 }
 
+sub add_index_hint {
+    my $stmt = shift;
+    my($table, $hint) = @_;
+    $stmt->index_hint->{$table} = {
+        type => $hint->{type} || 'USE',
+        list => ref($hint->{list}) eq 'ARRAY' ? $hint->{list} : [ $hint->{list} ],
+    };
+}
+
 sub as_sql {
     my $stmt = shift;
     my $sql = '';
@@ -54,11 +64,26 @@ sub as_sql {
         } @{ $stmt->select }) . "\n";
     }
     $sql .= 'FROM ';
+
+    ## Index Hint (eg. "tbl_name USE INDEX (index_hint)" )
+    my $add_index_hint = sub {
+        my ($tbl_name) = @_;
+        my $hint = $stmt->index_hint->{$tbl_name};
+        return $tbl_name unless $hint && ref($hint) eq 'HASH';
+        if ($hint->{list} && @{ $hint->{list} }) {
+            return $tbl_name . ' ' . uc($hint->{type} || 'USE') . ' INDEX (' . 
+                   join (',', @{ $hint->{list} }) .
+                   ')';
+        }
+        return $tbl_name;
+    };
+
     ## Add any explicit JOIN statements before the non-joined tables.
     if ($stmt->joins && @{ $stmt->joins }) {
         my $initial_table_written = 0;
         for my $j (@{ $stmt->joins }) {
             my($table, $joins) = map { $j->{$_} } qw( table joins );
+            $table = $add_index_hint->($table); ## index hint handling
             $sql .= $table unless $initial_table_written++;
             for my $join (@{ $j->{joins} }) {
                 $sql .= ' ' .
@@ -68,7 +93,12 @@ sub as_sql {
         }
         $sql .= ', ' if @{ $stmt->from };
     }
-    $sql .= join(', ', @{ $stmt->from }) . "\n";
+
+    if ($stmt->from && @{ $stmt->from }) {
+        $sql .= join ', ', map { $add_index_hint->($_) } @{ $stmt->from };
+    }
+
+    $sql .= "\n";
     $sql .= $stmt->as_sql_where;
 
     $sql .= $stmt->as_aggregate('group');
