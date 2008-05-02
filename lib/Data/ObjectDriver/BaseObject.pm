@@ -317,7 +317,7 @@ sub set_values {
     my $values = shift;
     for my $col (keys %$values) {
         unless ( $obj->has_column($col) ) {
-            Carp::croak("You tried to set inexistent column $col to value $values->{$col} on " . ref($obj));
+            Carp::croak("You tried to set non-existent column $col to value $values->{$col} on " . ref($obj));
         }
         $obj->$col($values->{$col});
     }
