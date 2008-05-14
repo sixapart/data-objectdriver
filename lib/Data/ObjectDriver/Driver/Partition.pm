@@ -28,6 +28,31 @@ sub lookup_multi {
     $driver->get_driver->($ids->[0])->lookup_multi($class, $ids);
 }
 
+sub begin_work {
+    my $driver = shift;
+    $driver->_do_txn('begin_work', @_);
+}
+
+sub commit {
+    my $driver = shift;
+    $driver->_do_txn('commit', @_);
+}
+
+sub rollback {
+    my $driver = shift;
+    $driver->_do_txn('rollback', @_);
+}
+
+sub _do_txn {
+    my ($driver, $method, $pk_cb) = @_;
+    croak("Partition->$method requires a PK callback")
+        unless ref $pk_cb eq 'CODE';
+
+    my $id = $pk_cb->();
+    $driver->get_driver->($id)->$method;
+
+}
+
 sub exists     { shift->_exec_partitioned('exists',     @_) }
 sub insert     { shift->_exec_partitioned('insert',     @_) }
 sub replace    { shift->_exec_partitioned('replace',    @_) }

@@ -9,7 +9,7 @@ use base qw( Data::ObjectDriver Class::Accessor::Fast
 
 use Carp ();
 
-__PACKAGE__->mk_accessors(qw( cache fallback ));
+__PACKAGE__->mk_accessors(qw( cache fallback txn_active txn_buffer));
 __PACKAGE__->mk_classdata(qw( Disabled ));
 
 sub deflate { $_[1] }
@@ -29,7 +29,39 @@ sub init {
         or Carp::croak("cache is required");
     $driver->fallback($param{fallback})
         or Carp::croak("fallback is required");
+    $driver->txn_active(0);
+    $driver->txn_buffer([]);
     $driver;
+}
+
+sub begin_work {
+    my $driver = shift;
+
+    my $rv = $driver->fallback->begin_work(@_);
+    $driver->txn_active(1);
+    return $rv;
+}
+
+sub commit {
+    my $driver = shift;
+    my $rv = $driver->fallback->commit(@_);
+
+    while (my $cb = shift @{$driver->txn_buffer}) {
+        $cb->();
+    }
+    $driver->txn_active(0);
+
+    return $rv;
+}
+
+sub rollback { 
+    my $driver = shift;
+    my $rv = $driver->fallback->rollback(@_);
+
+    $driver->txn_buffer([]);
+    $driver->txn_active(0);
+
+    return $rv;
 }
 
 sub cache_object {
@@ -40,10 +72,12 @@ sub cache_object {
     ## If it's already cached in this layer, assume it's already cached in
     ## all layers below this, as well.
     unless (exists $obj->{__cached} && $obj->{__cached}{ref $driver}) {
-        $driver->add_to_cache(
+        $driver->modify_cache(sub {
+            $driver->add_to_cache(
                 $driver->cache_key(ref($obj), $obj->primary_key),
                 $driver->deflate($obj)
             );
+        });
         $driver->fallback->cache_object($obj);
     }
 }
@@ -166,7 +200,9 @@ sub update {
         if $driver->Disabled;
     my $ret = $driver->fallback->update($obj);
     my $key = $driver->cache_key(ref($obj), $obj->primary_key);
-    $driver->update_cache($key, $driver->deflate($obj));
+    $driver->modify_cache(sub {
+        $driver->update_cache($key, $driver->deflate($obj));
+    });
     return $ret;
 }
 
@@ -181,7 +217,9 @@ sub replace {
     my $ret = $driver->fallback->replace($obj);
     if ($has_pk) {
         my $key = $driver->cache_key(ref($obj), $obj->primary_key);
-        $driver->update_cache($key, $driver->deflate($obj));
+        $driver->modify_cache(sub {
+            $driver->update_cache($key, $driver->deflate($obj));
+        });
     } 
     return $ret;
 }
@@ -208,10 +246,11 @@ sub uncache_object {
     my $driver = shift;
     my($obj) = @_;
     my $key = $driver->cache_key(ref($obj), $obj->primary_key);
-    delete $obj->{__cached};
-    $driver->remove_from_cache($key);
-    $driver->fallback->uncache_object($obj);
-    return;
+    return $driver->modify_cache(sub {
+        delete $obj->{__cached};
+        $driver->remove_from_cache($key);
+        $driver->fallback->uncache_object($obj);
+    });
 }
 
 sub cache_key {
@@ -225,6 +264,16 @@ sub cache_key {
         $key .= ':' . $v->();
     }
     return $key;
+}
+
+# if we're operating within a transaction then we need to buffer CRUD
+# and only commit to the cache upon commit
+sub modify_cache {
+    my ($driver, $cb) = @_;
+    unless ($driver->txn_active) {
+        return $cb->();
+    }
+    push @{$driver->txn_buffer} => $cb;
 }
 
 sub DESTROY { }
