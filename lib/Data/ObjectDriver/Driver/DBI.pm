@@ -194,7 +194,7 @@ sub lookup_multi {
         @got = map { defined $_ ? $hgot{$_} : undef } @$ids;
     } else {
         for my $id (@$ids) {
-            push @got, $class->driver->lookup($class, $id);
+            push @got, eval{ $class->driver->lookup($class, $id) };
         }
     }
     \@got;
