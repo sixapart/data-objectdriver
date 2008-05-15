@@ -524,20 +524,17 @@ sub bulk_insert {
 sub begin_work {
     my $driver = shift;
     my $dbh = $driver->dbh;
-
     unless ($dbh) {
         $driver->{__delete_dbh_after_txn} = 1;
         $dbh = $driver->rw_handle;
         $driver->dbh($dbh);
     }
-    return unless $dbh->{AutoCommit};
-
     eval {
         $dbh->begin_work;
     };
-    if (my $err = $@) {
+    if ($@) {
         $driver->rollback;
-        Carp::croak("Begin work failed for driver $driver: $err");
+        Carp::croak("Begin work failed for driver $driver: $@");
     }
 }
 
@@ -547,12 +544,8 @@ sub rollback { shift->_end_txn('rollback') }
 sub _end_txn {
     my $driver = shift;
     my($action) = @_;
-
     my $dbh = $driver->dbh
         or Carp::croak("$action called without a stored handle--begin_work?");
-
-    return if $dbh->{AutoCommit};
-
     eval { $dbh->$action() };
     if ($@) {
         Carp::croak("$action failed for driver $driver: $@");
