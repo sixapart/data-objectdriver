@@ -112,7 +112,7 @@ sub as_sql {
 
     $sql .= $stmt->as_limit;
     my $comment = $stmt->comment;
-    if ($comment && $comment =~ /(\w+)/) {
+    if ($comment && $comment =~ /([ 0-9a-zA-Z.:;()_#&,]+)/) {
         $sql .= "-- $1" if $1;
     }
     return $sql;
