@@ -18,7 +18,7 @@ BEGIN {
     }
 }
 
-plan tests => 49;
+plan tests => 50;
 
 use Recipe;
 use Ingredient;
@@ -126,6 +126,10 @@ ok ! $i4->driver->get_from_cache($key), "It's been purged from the cache";
 ## Now look up the ingredients again. Milk and Eggs should already be cached,
 ## and doing the search should now cache Flour.
 @is = Ingredient->search({ recipe_id => $recipe->recipe_id });
+is scalar(@is), 3;
+
+## this is still working if we add a comment 
+@is = Ingredient->search({ recipe_id => $recipe->recipe_id }, { comment => "mytest" });
 is scalar(@is), 3;
 
 ## Flour should now be cached.

@@ -629,8 +629,9 @@ sub prepare_statement {
             $stmt->order(\@order);
         }
     }
-    $stmt->limit($args->{limit}) if $args->{limit};
-    $stmt->offset($args->{offset}) if $args->{offset};
+    $stmt->limit( $args->{limit} )     if $args->{limit};
+    $stmt->offset( $args->{offset} )   if $args->{offset};
+    $stmt->comment( $args->{comment} ) if $args->{comment};
 
     if (my $terms = $args->{having}) {
         for my $col (keys %$terms) {

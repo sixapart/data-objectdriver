@@ -3,7 +3,7 @@
 use strict;
 
 use Data::ObjectDriver::SQL;
-use Test::More tests => 64;
+use Test::More tests => 67;
 
 my $stmt = ns();
 ok($stmt, 'Created SQL object');
@@ -244,5 +244,16 @@ $stmt->add_join(baz => [
     ]);
 is($stmt->as_sql, "SELECT foo\nFROM baz USE INDEX (index_hint) INNER JOIN baz b1 ON baz.baz_id = b1.baz_id AND b1.quux_id = 1 LEFT JOIN baz b2 ON baz.baz_id = b2.baz_id AND b2.quux_id = 2\n", 'USE INDEX with JOINs');
 
+$stmt = ns();
+$stmt->add_select(foo => 'foo');
+$stmt->from([ qw(baz) ]);
+$stmt->comment("mycomment");
+is($stmt->as_sql, "SELECT foo\nFROM baz\n-- mycomment");
+
+$stmt->comment("\nbad\n\nmycomment");
+is($stmt->as_sql, "SELECT foo\nFROM baz\n-- bad", "correctly untainted");
+
+$stmt->comment("\G\\G");
+is($stmt->as_sql, "SELECT foo\nFROM baz\n-- G", "correctly untainted");
 
 sub ns { Data::ObjectDriver::SQL->new }

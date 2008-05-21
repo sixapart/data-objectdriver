@@ -397,6 +397,10 @@ Optional; the default is to fetch the values of all of the columns.
 If set to a true value, the I<SELECT> statement generated will include a
 I<FOR UPDATE> clause.
 
+=item * comment
+
+A sql comment to watermark the SQL query.
+
 =back
 
 =head2 Class->search(\@terms [, \%options ])

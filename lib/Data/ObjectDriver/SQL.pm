@@ -6,7 +6,12 @@ use warnings;
 
 use base qw( Class::Accessor::Fast );
 
-__PACKAGE__->mk_accessors(qw( select distinct select_map select_map_reverse from joins where bind limit offset group order having where_values column_mutator index_hint ));
+__PACKAGE__->mk_accessors(qw(
+    select distinct select_map select_map_reverse
+    from joins where bind limit offset group order
+    having where_values column_mutator index_hint
+    comment
+));
 
 sub new {
     my $class = shift;
@@ -106,7 +111,11 @@ sub as_sql {
     $sql .= $stmt->as_aggregate('order');
 
     $sql .= $stmt->as_limit;
-    $sql;
+    my $comment = $stmt->comment;
+    if ($comment && $comment =~ /(\w+)/) {
+        $sql .= "-- $1" if $1;
+    }
+    return $sql;
 }
 
 sub as_limit {
@@ -436,6 +445,10 @@ specify a descending order. This member is optional.
 
 Note you can set a single ordering field, or use an arrayref containing
 multiple ordering fields.
+
+=head2 C<$sql-E<gt>comment([ $comment ])>
+
+Returns or sets a simple comment to the SQL statement
 
 =head1 USAGE
 
