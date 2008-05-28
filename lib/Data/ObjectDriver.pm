@@ -56,6 +56,20 @@ sub start_query {
 
 sub end_query { }
 
+# Not all drivers support transactional operations, but some will override
+# these methods with their own implementations
+sub begin_work {
+    print STDERR "->begin_work not implemented on $_[0], continuing non-transactionally\n";
+}
+
+sub commit {
+    print STDERR "->commit not implemented on $_[0], continuing non-transactionally\n";
+}
+
+sub rollback { 
+    print STDERR "->rollback not implemented on $_[0], continuing non-transactionally\n";
+}
+
 sub debug {
     my $driver = shift;
     return unless $DEBUG;
