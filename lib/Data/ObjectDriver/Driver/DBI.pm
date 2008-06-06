@@ -530,6 +530,8 @@ sub begin_work {
         $dbh = $driver->rw_handle;
         $driver->dbh($dbh);
     }
+    return unless $dbh->{AutoCommit};
+
     eval {
         $dbh->begin_work;
     };
