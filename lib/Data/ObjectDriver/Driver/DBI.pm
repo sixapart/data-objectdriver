@@ -151,6 +151,7 @@ sub search {
         $obj->set_values_internal($rec);
         ## Don't need a duplicate as there's no previous version in memory
         ## to preserve.
+        $obj->{__is_stored} = 1;
         $obj->call_trigger('post_load') unless $args->{no_triggers};
         $obj;
     };
@@ -349,6 +350,7 @@ sub _insert_or_replace {
     $obj->call_trigger('post_save', $orig_obj);
     $obj->call_trigger('post_insert', $orig_obj);
 
+    $orig_obj->{__is_stored} = 1;
     $orig_obj->{changed_cols} = {};
     1;
 }
@@ -455,6 +457,7 @@ sub remove {
 
     $obj->call_trigger('post_remove', $orig_obj);
 
+    $orig_obj->{__is_stored} = 1;
     return $result;
 }
 

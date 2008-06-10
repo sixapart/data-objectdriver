@@ -19,7 +19,7 @@ BEGIN {
     }
 }
 
-plan tests => 64;
+plan tests => 67;
 
 use Wine;
 use Recipe;
@@ -263,6 +263,16 @@ setup_dbs({
     ok !$w3->is_same($w2);
 
     like $w1->pk_str, qr/\d+/;
+}
+
+# Test the new flag for persistent store insertion
+{
+    my $w = Wine->new(name => 'flag test', rating=> 4);
+    ok $w->is_ephemeral, "this object needs to be saved!";
+    $w->save;
+    ok !$w->is_ephemeral, "this object is no saved";
+    my $w2 = Wine->lookup( $w->id );
+    ok !$w2->is_ephemeral, "an object fetched from the database is by definition NOT ephemeral";
 }
 
 teardown_dbs(qw( global ));

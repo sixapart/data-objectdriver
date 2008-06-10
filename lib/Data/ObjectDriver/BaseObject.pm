@@ -279,6 +279,10 @@ sub is_same {
     return is_same_array( @a );
 }
 
+sub is_ephemeral {
+    my $obj = shift;
+    return $obj->{__is_stored} ? 0 : 1;
+}
 sub pk_str {
     my ($obj) = @_;
     my $pk = $obj->primary_key;
@@ -953,6 +957,12 @@ Returns the I<names> of the primary key fields of C<Class> objects.
 
 Do a primary key check on C<$obj> and $<other_obj> and returns true only if they
 are identical.
+
+=head2 C<$obj-E<gt>is_ephemeral()>
+
+Returns true if the object hasn't been stored in the database yet.
+This is particularily useful in triggers where you can then determine
+if the object is being INSERTED or just UPDATED.
 
 =head2 C<$obj-E<gt>pk_str()>
 
