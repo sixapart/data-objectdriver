@@ -70,25 +70,12 @@ sub as_sql {
     }
     $sql .= 'FROM ';
 
-    ## Index Hint (eg. "tbl_name USE INDEX (index_hint)" )
-    my $add_index_hint = sub {
-        my ($tbl_name) = @_;
-        my $hint = $stmt->index_hint->{$tbl_name};
-        return $tbl_name unless $hint && ref($hint) eq 'HASH';
-        if ($hint->{list} && @{ $hint->{list} }) {
-            return $tbl_name . ' ' . uc($hint->{type} || 'USE') . ' INDEX (' . 
-                   join (',', @{ $hint->{list} }) .
-                   ')';
-        }
-        return $tbl_name;
-    };
-
     ## Add any explicit JOIN statements before the non-joined tables.
     if ($stmt->joins && @{ $stmt->joins }) {
         my $initial_table_written = 0;
         for my $j (@{ $stmt->joins }) {
             my($table, $joins) = map { $j->{$_} } qw( table joins );
-            $table = $add_index_hint->($table); ## index hint handling
+            $table = $stmt->_add_index_hint($table); ## index hint handling
             $sql .= $table unless $initial_table_written++;
             for my $join (@{ $j->{joins} }) {
                 $sql .= ' ' .
@@ -100,7 +87,7 @@ sub as_sql {
     }
 
     if ($stmt->from && @{ $stmt->from }) {
-        $sql .= join ', ', map { $add_index_hint->($_) } @{ $stmt->from };
+        $sql .= join ', ', map { $stmt->_add_index_hint($_) } @{ $stmt->from };
     }
 
     $sql .= "\n";
@@ -272,6 +259,19 @@ sub _mk_term {
         push @bind, $val;
     }
     ($term, \@bind, $col);
+}
+
+sub _add_index_hint {
+    my $stmt = shift;
+    my ($tbl_name) = @_;
+    my $hint = $stmt->index_hint->{$tbl_name};
+    return $tbl_name unless $hint && ref($hint) eq 'HASH';
+    if ($hint->{list} && @{ $hint->{list} }) {
+        return $tbl_name . ' ' . uc($hint->{type} || 'USE') . ' INDEX (' . 
+                join (',', @{ $hint->{list} }) .
+                ')';
+    }
+    return $tbl_name;
 }
 
 1;
