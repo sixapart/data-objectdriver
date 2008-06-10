@@ -567,6 +567,23 @@ Adds an expression to the C<HAVING> portion of the statement's C<GROUP ...
 HAVING> clause. The expression compares C<$column> using C<$value>, which can
 be any of the structures described above for the C<add_where()> method.
 
+=head2 C<$sql-E<gt>add_index_hint($table, \@hints)>
+
+Addes the index hint into a C<SELECT> query. The structure for the set of 
+C<\@hints> are arrayref of hashrefs containing these members:
+
+=over 4
+
+=item * C<type> (scalar)
+
+The name of the type. "USE", "IGNORE or "FORCE".
+
+=item * C<list> (arrayref)
+
+The list of name of indexes which to use.
+
+=back
+
 =head2 C<$sql-E<gt>as_sql()>
 
 Returns the SQL fully representing the SQL statement C<$sql>.
