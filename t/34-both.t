@@ -32,6 +32,7 @@ setup_dbs({
 ## Install some deflate/inflate in the Cache driver.
 {
     no warnings 'once';
+    no warnings 'redefine';
     *Data::ObjectDriver::Driver::Cache::Cache::deflate = sub {
         $_[1]->deflate;
     };

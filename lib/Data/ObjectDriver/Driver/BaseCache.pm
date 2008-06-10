@@ -186,14 +186,36 @@ sub search {
     local $args->{fetchonly} = $class->primary_key_tuple;
     ## Disable triggers for this load. We don't want the post_load trigger
     ## being called twice.
-    $args->{no_triggers} = 1;
+    local $args->{no_triggers} = 1;
     my @objs = $driver->fallback->search($class, $terms, $args);
 
-    ## Load all of the objects using a lookup_multi, which is fast from
-    ## cache.
-    my $objs = $driver->lookup_multi($class, [ map { $_->primary_key } @objs ]);
+    my $windowed = (!wantarray) && $args->{window_size};
 
-    $driver->list_or_iterator($objs);
+    if ( $windowed ) {
+        my @window;
+        my $window_size = $args->{window_size};
+        my $iter = sub {
+            my $d = $driver;
+            while ( (!@window) && @objs ) {
+                my $objs = $driver->lookup_multi(
+                    $class,
+                    [ map { $_->primary_key }
+                          splice( @objs, 0, $window_size ) ]
+                );
+                # A small possibility exists that we may fetch
+                # some IDs here that no longer exist; grep these out
+                @window = grep { defined $_ } @$objs if $objs;
+            }
+            return @window ? shift @window : undef;
+        };
+        return Data::ObjectDriver::Iterator->new($iter, sub { @objs = (); @window = () });
+    } else {
+        ## Load all of the objects using a lookup_multi, which is fast from
+        ## cache.
+        my $objs = $driver->lookup_multi($class, [ map { $_->primary_key } @objs ]);
+
+        return $driver->list_or_iterator($objs);
+    }
 }
 
 sub update {

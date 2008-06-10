@@ -12,6 +12,9 @@ Revision history for Data::ObjectDriver
       manual control over it.
     - Added a "distinct" method to D::OD::SQL that forces the DISTINCT keyword
       in the generated SQL statement. Thanks to John Berthels for the patch.
+    - Added a "window_size" argument for the search() method of the caching
+      layer to constrain the number of objects loaded from the database for
+      large or unbounded searches. 
 
 0.05  2008.02.24
     - Added a new Data::ObjectDriver::ResultSet abstraction for building

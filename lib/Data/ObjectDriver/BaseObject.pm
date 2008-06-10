@@ -489,17 +489,35 @@ sub search {
     my $class = shift;
     my($terms, $args) = @_;
     my $driver = $class->driver;
-    my @objs = $driver->search($class, $terms, $args);
+    if (wantarray) {
+        my @objs = $driver->search($class, $terms, $args);
 
-    ## Don't attempt to cache objects where the caller specified fetchonly,
-    ## because they won't be complete.
-    ## Also skip this step if we don't get any objects back from the search
-    if (!$args->{fetchonly} || !@objs) {
-        for my $obj (@objs) {
-            $driver->cache_object($obj) if $obj;
+        ## Don't attempt to cache objects where the caller specified fetchonly,
+        ## because they won't be complete.
+        ## Also skip this step if we don't get any objects back from the search
+        if (!$args->{fetchonly} || !@objs) {
+            for my $obj (@objs) {
+                $driver->cache_object($obj) if $obj;
+            }
         }
+        return @objs;
+    } else {
+        my $iter = $driver->search($class, $terms, $args);
+        return $iter if $args->{fetchonly};
+
+        my $caching_iter = sub {
+            my $d = $driver;
+
+            my $o = $iter->();
+            unless ($o) {
+                $iter->end;
+                return;
+            }
+            $driver->cache_object($o);
+            return $o;
+        };
+        return Data::ObjectDriver::Iterator->new($caching_iter, sub { $iter->end });
     }
-    $driver->list_or_iterator(\@objs);
 }
 
 sub remove         { shift->_proxy( 'remove',         @_ ) }

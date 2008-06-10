@@ -98,8 +98,8 @@ sub fetch {
     my($rec, $class, $orig_terms, $orig_args) = @_;
 
     ## Use (shallow) duplicates so the pre_search trigger can modify them.
-    my $terms = defined $orig_terms ? ( ref $orig_terms eq 'ARRAY' ? [ @$orig_terms ] : { %$orig_terms } ) : undef;
-    my $args  = defined $orig_args  ? { %$orig_args  } : undef;
+    my $terms = defined $orig_terms ? ( ref $orig_terms eq 'ARRAY' ? [ @$orig_terms ] : { %$orig_terms } ) : {};
+    my $args  = defined $orig_args  ? { %$orig_args  } : {};
     $class->call_trigger('pre_search', $terms, $args);
 
     my $stmt = $driver->prepare_statement($class, $terms, $args);
@@ -187,7 +187,7 @@ sub lookup_multi {
     return [] unless @$ids;
     my @got;
     ## If it's a single-column PK, assume it's in one partition, and
-    ## use an OR search.
+    ## use an OR search. FIXME: can we instead check for partitioning?
     unless (ref($ids->[0])) {
         my $terms = $class->primary_key_to_terms([ $ids ]);
         my @sqlgot = $driver->search($class, $terms, { is_pk => 1 });
@@ -238,6 +238,7 @@ sub exists {
     my $terms = $obj->primary_key_to_terms;
 
     my $class = ref $obj;
+    $terms ||= {};
     $class->call_trigger('pre_search', $terms);
 
     my $tbl = $driver->table_for($obj);

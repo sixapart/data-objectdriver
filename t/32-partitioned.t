@@ -48,6 +48,7 @@ $tmp = $iter->();
 ok(!$iter->(), 'Iterator gave us only one recipe');
 is(ref $tmp, 'Recipe', 'Iterator gave us a recipe');
 is($tmp->title, 'My Banana Milkshake', 'Title is My Banana Milkshake');
+$iter->end();
 
 my $ingredient = Ingredient->new;
 $ingredient->recipe_id($recipe->recipe_id);
@@ -72,6 +73,7 @@ $tmp = $iter->();
 ok(!$iter->(), 'Iterator gave us only one ingredient');
 is(ref $tmp, 'Ingredient', 'Iterator gave us an ingredient');
 is($tmp->name, 'Vanilla Ice Cream', 'Name is Vanilla Ice Cream');
+$iter->end();
 
 my $ingredient2 = Ingredient->new;
 $ingredient2->recipe_id($recipe->recipe_id);

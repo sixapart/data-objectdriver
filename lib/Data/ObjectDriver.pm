@@ -415,6 +415,19 @@ I<FOR UPDATE> clause.
 
 A sql comment to watermark the SQL query.
 
+=item * window_size
+
+Used when requesting an iterator for the search method and selecting
+a large result set or a result set of unknown size. In such a case,
+no LIMIT clause is assigned, which can load all available objects into
+memory. Specifying C<window_size> will load objects in manageable chunks.
+This will also cause any caching driver to be bypassed for issuing
+the search itself. Objects are still placed into the cache upon load.
+
+This attribute is ignored when the search method is invoked in an array
+context, or if a C<limit> attribute is also specified that is smaller than
+the C<window_size>.
+
 =back
 
 =head2 Class->search(\@terms [, \%options ])

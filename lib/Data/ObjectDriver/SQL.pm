@@ -470,6 +470,10 @@ Adds the join statement indicated by C<$table> and C<\@joins> to the list of
 C<JOIN> table references for the statement. The structure for the set of joins
 are as described for the C<joins> attribute member above.
 
+=head2 C<$sql-E<gt>add_index_hint($table, $index)>
+
+Specifies a particular index to use for a particular table.
+
 =head2 C<$sql-E<gt>add_where($column, $value)>
 
 Adds a condition on the value of the database column C<$column> to the

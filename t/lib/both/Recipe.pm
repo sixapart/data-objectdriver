@@ -20,13 +20,17 @@ __PACKAGE__->install_properties({
     ),
 });
 
+my %drivers;
 __PACKAGE__->has_partitions(
     number => 2,
     get_driver => sub {
-        return Data::ObjectDriver::Driver::DBI->new(
-            dsn => 'dbi:SQLite:dbname=cluster' . shift() . '.db',
-            @_,
-        ),
+        my $cluster = shift;
+        my $driver = $drivers{$cluster} ||= 
+            Data::ObjectDriver::Driver::DBI->new(
+                dsn => 'dbi:SQLite:dbname=cluster' . $cluster . '.db',
+                @_,
+            );
+        return $driver;
     },
 );
 
