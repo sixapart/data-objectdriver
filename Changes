@@ -15,6 +15,12 @@ Revision history for Data::ObjectDriver
     - Added a "window_size" argument for the search() method of the caching
       layer to constrain the number of objects loaded from the database for
       large or unbounded searches. 
+    - Added a "comment" argument to search parameter allowing the SQL
+      queries to be watermarked with SQL comments.
+    - Added a "is_ephemeral" method on DOD objects, which returns true until
+      the object has been saved in the persistent store.
+    - Added a "pk_str" method on base objects has a nice shortcut for printing
+      the primary key of an object.
 
 0.05  2008.02.24
     - Added a new Data::ObjectDriver::ResultSet abstraction for building
