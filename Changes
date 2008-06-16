@@ -17,7 +17,7 @@ Revision history for Data::ObjectDriver
       large or unbounded searches. 
     - Added a "comment" argument to search parameter allowing the SQL
       queries to be watermarked with SQL comments.
-    - Added a "is_ephemeral" method on DOD objects, which returns true until
+    - Added a "object_is_stored" method on DOD objects, which returns true until
       the object has been saved in the persistent store.
     - Added a "pk_str" method on base objects has a nice shortcut for printing
       the primary key of an object.
