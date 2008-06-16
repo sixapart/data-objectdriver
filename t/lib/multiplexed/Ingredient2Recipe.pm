@@ -16,7 +16,7 @@ my $global2_driver = Data::ObjectDriver::Driver::DBI->new(
 );
 
 __PACKAGE__->install_properties({
-    columns     => [ 'recipe_id', 'ingredient_id' ],
+    columns     => [ 'recipe_id', 'ingredient_id', "value1" ],
     datasource  => 'ingredient2recipe',
     primary_key => 'recipe_id', ## should match lookup XXX could we auto generate it ? 
     driver      => Data::ObjectDriver::Driver::Multiplexer->new(

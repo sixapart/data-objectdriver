@@ -11,7 +11,7 @@ use Test::More;
 unless (eval { require DBD::SQLite }) {
     plan skip_all => 'Tests require DBD::SQLite';
 }
-plan tests => 26;
+plan tests => 42;
 
 setup_dbs({
     global1   => [ qw( ingredient2recipe ) ],
@@ -59,6 +59,54 @@ SELECT 1 FROM ingredient2recipe WHERE ingredient_id = ? and recipe_id = ?
 SQL
     is $ok, 1, "Record is removed from $driver backend database";
 }
+
+## check transactions
+$obj = Ingredient2Recipe->new;
+$obj->ingredient_id(10);
+$obj->recipe_id(50);
+$obj->insert;
+
+Ingredient2Recipe->driver->begin_work(sub{});
+$obj->value1("will be rolled back");
+$obj->update;
+Ingredient2Recipe->driver->rollback(sub{});
+$obj->refresh;
+is $obj->value1, undef, "properly rolled back";
+_check_object($obj);
+
+Ingredient2Recipe->driver->begin_work(sub{});
+$obj->value1("commit");
+$obj->update;
+Ingredient2Recipe->driver->commit(sub{});
+$obj->refresh;
+is $obj->value1, "commit", "yay";
+_check_object($obj);
+
+## if something goes wrong writing the second partition we roll back
+## the first one
+## set up a trap:
+my $second_driver = Ingredient2Recipe->driver->drivers->[-1];
+my $dbh = $second_driver->dbh;
+my $sth = $dbh->prepare("insert into ingredient2recipe (ingredient_id, recipe_id, value1) values (199, 199, 'tada')");
+$sth->execute;
+$sth->finish;
+
+Ingredient2Recipe->driver->begin_work(sub{});
+$obj = Ingredient2Recipe->new;
+$obj->ingredient_id(199);
+$obj->recipe_id(199);
+$obj->value1("test");
+eval { $obj->insert;}; 
+ok $@, "rollback";
+if ($@) {
+    Ingredient2Recipe->driver->rollback(sub{});
+}
+else {
+    Ingredient2Recipe->driver->commit(sub{});
+}
+# since on_lookup use the first driver this should be undef
+my $void = Ingredient2Recipe->lookup(199);
+is $void, undef, "rolled back";
 
 ## Object remove()
 $obj = Ingredient2Recipe->new;

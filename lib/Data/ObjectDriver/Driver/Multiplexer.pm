@@ -95,7 +95,7 @@ sub _exec_multiplexed {
     my $ret;
     ## We want to be sure to have the initial and final state of the object
     ## strictly identical as if we made only one call on $obj
-    ## (Perhaps it's a bit overkill ? playing with 'changed_cols' may suffice)
+    ## (Perhaps it's a bit overkill ? playing with 'changed_cols' may do the trick)
     for my $sub_driver (@{ $driver->drivers }) {
         $obj = Storable::dclone($orig_obj);
         $ret = $sub_driver->$meth($obj, @args);
@@ -103,13 +103,47 @@ sub _exec_multiplexed {
     return $ret;
 }
 
-## Nobody should ask a dbh for us directly, if someone does, this
-## is probably to change handler properties (transaction). So 
-## we assume that only the on_lookup is important (I said it was experimental..)
-sub get_dbh {
+sub begin_work {
     my $driver = shift;
-    my $subdriver = $driver->on_lookup;
-    return $subdriver->get_dbh(@_);
+    $driver->_do_txn('begin_work', @_);
+}
+
+sub commit {
+    my $driver = shift;
+    $driver->_do_txn('commit', @_);
+}
+
+sub rollback {
+    my $driver = shift;
+    $driver->_do_txn('rollback', @_);
+}
+
+sub _do_txn {
+    my ($driver, $method, $pk_cb) = @_;
+    
+    my @txns;
+    if ( ref $pk_cb eq 'ARRAY' ) {
+        @txns = @$pk_cb;
+    }
+    else {
+        @txns = ($pk_cb);
+    }
+    for my $cb (@txns) {
+        Carp::croak("Multiplexer->$method requires a PK callback")
+            unless ref $cb eq 'CODE';
+
+        $driver->debug(sprintf("%14s", uc($method)) . ": driver=$driver");
+
+        my @id = $cb->();
+        for my $sub_driver (@{ $driver->drivers }) {
+            ## XXX maybe we could provide a get_driver() to all drivers instead?
+            if ($sub_driver->can('get_driver')) {
+                $sub_driver->get_driver->(@id)->$method;
+            } else {
+                $sub_driver->$method;
+            }
+        }
+    }
 }
 
 1;

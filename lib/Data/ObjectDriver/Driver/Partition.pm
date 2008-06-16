@@ -3,6 +3,7 @@
 package Data::ObjectDriver::Driver::Partition;
 use strict;
 use warnings;
+use Carp();
 
 use base qw( Data::ObjectDriver Class::Accessor::Fast );
 
@@ -45,14 +46,23 @@ sub rollback {
 
 sub _do_txn {
     my ($driver, $method, $pk_cb) = @_;
-    croak("Partition->$method requires a PK callback")
-        unless ref $pk_cb eq 'CODE';
 
-    $driver->debug(sprintf("%14s", uc($method)) . ": driver=$driver");
+    my @txns;
+    if ( ref $pk_cb eq 'ARRAY' ) {
+        @txns = @$pk_cb;
+    }
+    else {
+        @txns = ($pk_cb);
+    }
+    for my $cb (@txns) {
+        Carp::croak("Partition->$method requires a PK callback")
+            unless ref $cb eq 'CODE';
 
-    my $id = $pk_cb->();
-    $driver->get_driver->($id)->$method;
+        $driver->debug(sprintf("%14s", uc($method)) . ": driver=$driver");
 
+        my @id = $cb->();
+        $driver->get_driver->(@id)->$method;
+    }
 }
 
 sub exists     { shift->_exec_partitioned('exists',     @_) }
