@@ -555,11 +555,11 @@ sub _end_txn {
     my $dbh = $driver->dbh
         or Carp::croak("$action called without a stored handle--begin_work?");
 
-    return if $dbh->{AutoCommit};
-
-    eval { $dbh->$action() };
-    if ($@) {
-        Carp::croak("$action failed for driver $driver: $@");
+    unless ($dbh->{AutoCommit}) {
+        eval { $dbh->$action() };
+        if ($@) {
+            Carp::croak("$action failed for driver $driver: $@");
+        }
     }
     if ($driver->{__delete_dbh_after_txn}) {
         $driver->dbh(undef);
