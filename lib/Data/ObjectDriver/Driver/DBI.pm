@@ -13,7 +13,7 @@ use Data::ObjectDriver::SQL;
 use Data::ObjectDriver::Driver::DBD;
 use Data::ObjectDriver::Iterator;
 
-__PACKAGE__->mk_accessors(qw( dsn username password connect_options dbh get_dbh dbd prefix ));
+__PACKAGE__->mk_accessors(qw( dsn username password connect_options dbh get_dbh dbd prefix reuse_dbh ));
 
 sub init {
     my $driver = shift;
@@ -45,21 +45,30 @@ sub generate_pk {
     }
 }
 
+my %Handles;
 sub init_db {
     my $driver = shift;
     my $dbh;
-    eval {
-        $dbh = DBI->connect($driver->dsn, $driver->username, $driver->password,
-            { RaiseError => 1, PrintError => 0, AutoCommit => 1,
-              %{$driver->connect_options || {}} })
-            or Carp::croak("Connection error: " . $DBI::errstr);
-    };
-    if ($@) {
-        Carp::croak($@);
+    if ($driver->reuse_dbh) {
+        $dbh = $Handles{$driver->dsn};
+    }
+    unless ($dbh) {
+        eval {
+            $dbh = DBI->connect($driver->dsn, $driver->username, $driver->password,
+                { RaiseError => 1, PrintError => 0, AutoCommit => 1,
+                %{$driver->connect_options || {}} })
+                or Carp::croak("Connection error: " . $DBI::errstr);
+        };
+        if ($@) {
+            Carp::croak($@);
+        }
+    }
+    if ($driver->reuse_dbh) {
+        $Handles{$driver->dsn} = $dbh;
     }
     $driver->dbd->init_dbh($dbh);
     $driver->{__dbh_init_by_driver} = 1;
-    $dbh;
+    return $dbh;
 }
 
 sub rw_handle {
@@ -259,8 +268,9 @@ sub exists {
 sub replace {
     my $driver = shift;
     if ($driver->dbd->can_replace) {
-        $driver->_insert_or_replace(@_, { replace => 1 });
-    } else {
+        return $driver->_insert_or_replace(@_, { replace => 1 });
+    }
+    if (! $driver->txn_active) {
         $driver->begin_work;
         eval {
             $driver->remove(@_);
@@ -271,7 +281,10 @@ sub replace {
             Carp::croak("REPLACE transaction error $driver: $@");
         }
         $driver->commit;
+        return;
     }
+    $driver->remove(@_);
+    $driver->insert(@_);
 }
 
 sub insert {
@@ -527,6 +540,9 @@ sub bulk_insert {
 
 sub begin_work {
     my $driver = shift;
+
+    return if $driver->txn_active;
+
     my $dbh = $driver->dbh;
 
     unless ($dbh) {
@@ -543,6 +559,7 @@ sub begin_work {
         $driver->rollback;
         Carp::croak("Begin work failed for driver $driver: $err");
     }
+    $driver->txn_active(1);
 }
 
 sub commit { shift->_end_txn('commit') }
@@ -551,6 +568,12 @@ sub rollback { shift->_end_txn('rollback') }
 sub _end_txn {
     my $driver = shift;
     my($action) = @_;
+
+    ## if the driver has its own internal txn_active flag
+    ## off, we don't bother ending. Maybe we already did
+    return unless $driver->txn_active;
+    
+    $driver->txn_active(0);
 
     my $dbh = $driver->dbh
         or Carp::croak("$action called without a stored handle--begin_work?");

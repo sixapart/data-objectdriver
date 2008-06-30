@@ -66,18 +66,18 @@ $obj->ingredient_id(10);
 $obj->recipe_id(50);
 $obj->insert;
 
-Ingredient2Recipe->driver->begin_work(sub{});
+Data::ObjectDriver::BaseObject->begin_work();
 $obj->value1("will be rolled back");
 $obj->update;
-Ingredient2Recipe->driver->rollback(sub{});
+Data::ObjectDriver::BaseObject->rollback();
 $obj->refresh;
 is $obj->value1, undef, "properly rolled back";
 _check_object($obj);
 
-Ingredient2Recipe->driver->begin_work(sub{});
+Data::ObjectDriver::BaseObject->begin_work();
 $obj->value1("commit");
 $obj->update;
-Ingredient2Recipe->driver->commit(sub{});
+Data::ObjectDriver::BaseObject->commit();
 $obj->refresh;
 is $obj->value1, "commit", "yay";
 _check_object($obj);
@@ -91,7 +91,7 @@ my $sth = $dbh->prepare("insert into ingredient2recipe (ingredient_id, recipe_id
 $sth->execute;
 $sth->finish;
 
-Ingredient2Recipe->driver->begin_work(sub{});
+Data::ObjectDriver::BaseObject->begin_work();
 $obj = Ingredient2Recipe->new;
 $obj->ingredient_id(199);
 $obj->recipe_id(199);
@@ -99,10 +99,10 @@ $obj->value1("test");
 eval { $obj->insert;}; 
 ok $@, "rollback";
 if ($@) {
-    Ingredient2Recipe->driver->rollback(sub{});
+    Data::ObjectDriver::BaseObject->rollback();
 }
 else {
-    Ingredient2Recipe->driver->commit(sub{});
+    Data::ObjectDriver::BaseObject->commit();
 }
 # since on_lookup use the first driver this should be undef
 my $void = Ingredient2Recipe->lookup(199);

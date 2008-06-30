@@ -9,7 +9,7 @@ use base qw( Data::ObjectDriver Class::Accessor::Fast
 
 use Carp ();
 
-__PACKAGE__->mk_accessors(qw( cache fallback txn_active txn_buffer));
+__PACKAGE__->mk_accessors(qw( cache fallback txn_buffer));
 __PACKAGE__->mk_classdata(qw( Disabled ));
 
 sub deflate { $_[1] }
@@ -29,40 +29,41 @@ sub init {
         or Carp::croak("cache is required");
     $driver->fallback($param{fallback})
         or Carp::croak("fallback is required");
-    $driver->txn_active(0);
     $driver->txn_buffer([]);
     $driver;
 }
 
 sub begin_work {
     my $driver = shift;
-
-    $driver->debug(sprintf("%14s", "BEGIN_WORK") . ": driver=$driver");
     my $rv = $driver->fallback->begin_work(@_);
-    $driver->txn_active(1);
+    $driver->SUPER::begin_work(@_);
     return $rv;
 }
 
 sub commit {
     my $driver = shift;
+    return unless $driver->txn_active;
+
     my $rv = $driver->fallback->commit(@_);
 
     $driver->debug(sprintf("%14s", "COMMIT(" . scalar(@{$driver->txn_buffer}) . ")") . ": driver=$driver");
     while (my $cb = shift @{$driver->txn_buffer}) {
         $cb->();
     }
-    $driver->txn_active(0);
+    $driver->SUPER::commit(@_);
 
     return $rv;
 }
 
 sub rollback { 
     my $driver = shift;
+    return unless $driver->txn_active;
     my $rv = $driver->fallback->rollback(@_);
 
     $driver->debug(sprintf("%14s", "ROLLBACK(" . scalar(@{$driver->txn_buffer}) . ")") . ": driver=$driver");
     $driver->txn_buffer([]);
-    $driver->txn_active(0);
+
+    $driver->SUPER::rollback(@_);
 
     return $rv;
 }
@@ -90,7 +91,7 @@ sub lookup {
     my($class, $id) = @_;
     return unless defined $id;
     return $driver->fallback->lookup($class, $id)
-        if $driver->Disabled;
+        if $driver->Disabled or $driver->txn_active;
     my $key = $driver->cache_key($class, $id);
     my $obj = $driver->get_from_cache($key);
     if ($obj) {
@@ -120,7 +121,7 @@ sub lookup_multi {
     my $driver = shift;
     my($class, $ids) = @_;
     return $driver->fallback->lookup_multi($class, $ids)
-        if $driver->Disabled;
+        if $driver->Disabled or $driver->txn_active;
 
     my %id2key = map { $_ => $driver->cache_key($class, $_) } grep { defined } @$ids;
     my $got = $driver->get_multi_from_cache(values %id2key);
@@ -295,6 +296,7 @@ sub cache_key {
 # and only commit to the cache upon commit
 sub modify_cache {
     my ($driver, $cb) = @_;
+
     unless ($driver->txn_active) {
         return $cb->();
     }

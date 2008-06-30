@@ -8,7 +8,7 @@ use Class::Accessor::Fast;
 use base qw( Class::Accessor::Fast );
 use Data::ObjectDriver::Iterator;
 
-__PACKAGE__->mk_accessors(qw( pk_generator ));
+__PACKAGE__->mk_accessors(qw( pk_generator txn_active ));
 
 our $VERSION = '0.05';
 our $DEBUG = $ENV{DOD_DEBUG} || 0;
@@ -38,6 +38,7 @@ sub init {
     my $driver = shift;
     my %param = @_;
     $driver->pk_generator($param{pk_generator});
+    $driver->txn_active(0);
     $driver;
 }
 
@@ -56,18 +57,27 @@ sub start_query {
 
 sub end_query { }
 
-# Not all drivers support transactional operations, but some will override
-# these methods with their own implementations
 sub begin_work {
-    print STDERR "->begin_work not implemented on $_[0], continuing non-transactionally\n";
+    my $driver = shift;
+    $driver->txn_active(1);
+    $driver->debug(sprintf("%14s", "BEGIN_WORK") . ": driver=$driver");
 }
 
 sub commit {
-    print STDERR "->commit not implemented on $_[0], continuing non-transactionally\n";
+    my $driver = shift;
+    _end_txn($driver, 'commit');
 }
 
 sub rollback { 
-    print STDERR "->rollback not implemented on $_[0], continuing non-transactionally\n";
+    my $driver = shift;
+    _end_txn($driver, 'rollback');
+}
+
+sub _end_txn {
+    my $driver = shift;
+    my $method = shift;
+    $driver->txn_active(0);
+    $driver->debug(sprintf("%14s", uc($method)) . ": driver=$driver");
 }
 
 sub debug {
@@ -602,6 +612,89 @@ I<Data::ObjectDriver::Profiler> instance:
 
 Then see the documentation for I<Data::ObjectDriver::Profiler> to see the
 methods on that class.
+
+
+=head1 TRANSACTIONS
+
+
+Transactions are supported by Data::ObjectDriver's default drivers. So each
+Driver is capable to deal with transactional state independently. Additionally
+<Data::ObjectDriver::BaseObject> class know how to turn transactions switch on
+for all objects.
+
+In the case of a global transaction all drivers used during this time are put
+in a transactional state until the end of the transaction.
+
+=head2 Example
+
+    ## start a transaction
+    Data::ObjectDriver::BaseObject->begin_work;
+
+    $recipe = Recipe->new;
+    $recipe->title('lasagnes');
+    $recipe->save;
+
+    my $ingredient = Ingredient->new;
+    $ingredient->recipe_id($recipe->recipe_id);
+    $ingredient->name("more layers");
+    $ingredient->insert;
+    $ingredient->remove;
+
+    if ($you_are_sure) {
+        Data::ObjectDriver::BaseObject->commit;
+    }
+    else {
+        ## erase all trace of the above
+        Data::ObjectDriver::BaseObject->rollback;
+    }
+
+=head2 Driver implementation 
+
+Drivers have to implement the following methods:
+
+=over 4
+
+=item * begin_work to initialize a transaction
+
+=item * rollback 
+
+=item * commmit
+
+=back
+
+=head2 Nested transactions
+
+Are not supported and will result in warnings and the inner transactions
+to be ignored. Be sure to B<end> each transaction and not to let et long
+running transaction open (i.e you should execute a rollback or commit for
+each open begin_work).
+
+=head2 Transactions and DBI
+
+In order to make transactions work properly you have to make sure that 
+the C<$dbh> for each DBI drivers are shared among drivers using the same
+database (basically dsn).
+
+One way of doing that is to define a get_dbh() subref in each DBI driver
+to return the same dbh if the dsn and attributes of the connection are 
+identical.
+
+The other way is to use the new configuration flag on the DBI driver that
+has been added specifically for this purpose: C<reuse_dbh>. 
+
+    ## example coming from the test suite
+    __PACKAGE__->install_properties({
+        columns => [ 'recipe_id', 'partition_id', 'title' ],
+        datasource => 'recipes',
+        primary_key => 'recipe_id',
+        driver => Data::ObjectDriver::Driver::Cache::Cache->new(
+            cache => Cache::Memory->new,
+            fallback => Data::ObjectDriver::Driver::DBI->new(
+                dsn      => 'dbi:SQLite:dbname=global.db',
+                reuse_dbh => 1,  ## be sure that the corresponding dbh is shared
+            ),
+        ),
+    });
 
 =head1 EXAMPLES
 

@@ -16,6 +16,10 @@ use Class::Trigger qw( pre_save post_save post_load pre_search
 
 use Data::ObjectDriver::ResultSet;
 
+## Global Transaction variables
+our @WorkingDrivers;
+our $TransactionLevel = 0;
+
 sub install_properties {
     my $class = shift;
     my($props) = @_;
@@ -536,11 +540,70 @@ sub refresh {
     return 1;
 }
 
-
+## NOTE: I wonder if it could be useful to BaseObject superclass
+## to override the global transaction flag. If so, I'd add methods
+## to manipulate this flag and the working drivers. -- Yann
 sub _proxy {
     my $obj = shift;
     my($meth, @args) = @_;
-    $obj->driver->$meth($obj, @args);
+    my $driver = $obj->driver;
+    ## faster than $obj->txn_active && ! $driver->txn_active but see note.
+    if ($TransactionLevel && ! $driver->txn_active) {
+        $driver->begin_work;
+        push @WorkingDrivers, $driver;
+    }
+    $driver->$meth($obj, @args);
+}
+
+sub txn_active { $TransactionLevel }
+
+sub begin_work {
+    my $class = shift;
+    if ($TransactionLevel > 0) {
+        warn __PACKAGE__ . ": one ore more transaction already active: $TransactionLevel";
+    }
+    $TransactionLevel++;
+}
+
+sub commit {
+    my $class = shift;
+    $class->_end_txn('commit');
+}
+
+sub rollback {
+    my $class = shift;
+    $class->_end_txn('rollback');
+}
+
+sub _end_txn {
+    my $class = shift;
+    my $meth  =  shift;
+    
+    ## Ignore nested transactions
+    if ($TransactionLevel > 1) {
+        $TransactionLevel--;
+        return;
+    }
+    
+    if (! $TransactionLevel) {
+        warn __PACKAGE__ . ": no transaction active, ignored $meth";
+        return;
+    }
+    my @wd = @WorkingDrivers;
+    $TransactionLevel--;
+    @WorkingDrivers = ();
+    
+    for my $driver (@wd) {
+        $driver->$meth;
+    }
+}
+
+sub txn_debug {
+    my $class = shift;
+    return {
+        txn     => $TransactionLevel,
+        drivers => \@WorkingDrivers,
+    };
 }
 
 sub deflate { { columns => shift->column_values } }
@@ -1114,6 +1177,41 @@ want to store that in the cache, as well.
 Inflates the deflated representation of the object I<$deflated> into a proper
 object in the class I<Class>. That is, undoes the operation C<$deflated =
 $obj-E<gt>deflate()> by returning a new object equivalent to C<$obj>.
+
+=head1 TRANSACTION SUPPORT AND METHODS
+
+=head2 Introduction
+
+When dealing with the methods on this class, the transactions are global,
+i.e: applied to all drivers. You can still enable transactions per driver
+if you directly use the driver API.
+
+=head2 C<Class-E<gt>begin_work>
+
+This enable transactions globally for all drivers until the next L<rollback>
+or L<commit> call on the class.
+
+If begin_work is called while a transaction is still active (nested transaction)
+then the two transactions are merged. So inner transactions are ignored and
+a warning will be emitted.
+
+=head2 C<Class-E<gt>rollback>
+
+This rollbacks all the transactions since the last begin work, and exits
+from the active transaction state.
+
+=head2 C<Class-E<gt>commit>
+
+Commits the transactions, and exits from the active transaction state.
+
+=head2 C<Class-E<gt>txn_debug>
+
+Just return the value of the global flag and the current working drivers
+in a hashref.
+
+=head2 C<Class-E<gt>txn_active>
+
+Returns true if a transaction is already active.
 
 =head1 DIAGNOSTICS
 

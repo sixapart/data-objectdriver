@@ -16,7 +16,7 @@ BEGIN {
         plan skip_all => 'Tests require Cache::Memory';
     }
 }
-plan tests => 62;
+plan tests => 100;
 
 setup_dbs({
     global   => [ qw( recipes ingredients ) ],
@@ -151,6 +151,23 @@ is_deeply $data,
 
 is($ingredient->remove, 1, 'Ingredient removed successfully');
 is($ingredient2->remove, 1, 'Ingredient removed successfully');
+
+## demonstration that we have a problem with caching and transaction
+{
+    # ingredient3 should already be hot in the cache anyway
+    Data::ObjectDriver::BaseObject->begin_work;
+    $ingredient3->quantity(300); # originally was 100
+    $ingredient3->save;
+    
+    my $same = Ingredient->lookup($ingredient3->primary_key);
+    is $same->quantity, 300;
+    
+    Data::ObjectDriver::BaseObject->rollback;
+
+    $same = Ingredient->lookup($ingredient3->primary_key);
+    is $same->quantity, 100;
+}
+
 # let's remove ingredient3 with Class methods
 eval {
     Ingredient->remove({ name => 'Chocolate Chips' }, { nofetch => 1 });
@@ -160,8 +177,9 @@ ok($@, "nofetch option will make the driver dies if cache is involved");
 is(Ingredient->remove({ name => 'Chocolate Chips' }), 1, "Removed with class method");
 ok(! Ingredient->lookup(1), "really deleted");
 
-
 is($recipe->remove, 1, 'Recipe removed successfully');
 is($recipe2->remove, 1, 'Recipe removed successfully');
+
+require 't/txn-common.pl';
 
 teardown_dbs(qw( global ));

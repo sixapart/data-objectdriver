@@ -12,6 +12,7 @@ __PACKAGE__->install_properties({
     primary_key => 'recipe_id',
     driver => Data::ObjectDriver::Driver::DBI->new(
         dsn      => 'dbi:SQLite:dbname=global.db',
+        reuse_dbh => 1,
     ),
 });
 
@@ -23,6 +24,7 @@ __PACKAGE__->has_partitions(
         my $driver = $drivers{$cluster} ||= 
             Data::ObjectDriver::Driver::DBI->new(
                 dsn => 'dbi:SQLite:dbname=cluster' . $cluster . '.db',
+                reuse_dbh => 1,
                 @_,
             );
         return $driver;

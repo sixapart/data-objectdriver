@@ -18,7 +18,7 @@ BEGIN {
     }
 }
 
-plan tests => 50;
+plan tests => 86;
 
 use Recipe;
 use Ingredient;
@@ -185,5 +185,7 @@ $to_replace->replace;
 $replaced = Recipe->lookup($rid);
 ok $replaced->{__cached};
 is $replaced->title, 'Cup Cake';
+
+require 't/txn-common.pl';
 
 teardown_dbs(qw( global cluster1 cluster2 ));

@@ -16,6 +16,7 @@ __PACKAGE__->install_properties({
         cache => Cache::Memory->new,
         fallback => Data::ObjectDriver::Driver::DBI->new(
             dsn      => 'dbi:SQLite:dbname=global.db',
+            reuse_dbh => 1,
         ),
     ),
 });
@@ -28,6 +29,7 @@ __PACKAGE__->has_partitions(
         my $driver = $drivers{$cluster} ||= 
             Data::ObjectDriver::Driver::DBI->new(
                 dsn => 'dbi:SQLite:dbname=cluster' . $cluster . '.db',
+                reuse_dbh => 1,
                 @_,
             );
         return $driver;

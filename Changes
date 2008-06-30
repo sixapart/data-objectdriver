@@ -20,7 +20,12 @@ Revision history for Data::ObjectDriver
     - Added a "object_is_stored" method on DOD objects, which returns true until
       the object has been saved in the persistent store.
     - Added a "pk_str" method on base objects has a nice shortcut for printing
-      the primary key of an object.
+      the primary key of an object. 
+    - Added a "reuse_dbh" option to D::OD::D::DBI, if enabled it caches and reuses
+      $dbh using the dsn as the key.
+    - Exposed the transaction mechanism built in the drivers at the object levels:
+      D::OD::BO->begin_work now starts a global transaction across all drivers
+      ending with a rollback or a commit on the same class.
 
 0.05  2008.02.24
     - Added a new Data::ObjectDriver::ResultSet abstraction for building

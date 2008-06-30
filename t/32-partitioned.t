@@ -10,7 +10,7 @@ use Test::More;
 unless (eval { require DBD::SQLite }) {
     plan skip_all => 'Tests require DBD::SQLite';
 }
-plan tests => 52;
+plan tests => 88;
 
 setup_dbs({
     global   => [ qw( recipes ) ],
@@ -122,5 +122,7 @@ is $ingredient2->remove, 1, 'Ingredient removed successfully';
 is $ingredient3->remove, 1, 'Ingredient removed successfully';
 is $recipe->remove, 1, 'Recipe removed successfully';
 is $recipe2->remove, 1, 'Recipe removed successfully';
+
+require 't/txn-common.pl';
 
 teardown_dbs(qw( global cluster1 cluster2 ));
