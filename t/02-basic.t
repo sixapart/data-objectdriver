@@ -268,11 +268,11 @@ setup_dbs({
 # Test the new flag for persistent store insertion
 {
     my $w = Wine->new(name => 'flag test', rating=> 4);
-    ok $w->object_is_stored, "this object needs to be saved!";
+    ok !$w->object_is_stored, "this object needs to be saved!";
     $w->save;
-    ok !$w->object_is_stored, "this object is no saved";
+    ok $w->object_is_stored, "this object is no saved";
     my $w2 = Wine->lookup( $w->id );
-    ok !$w2->object_is_stored, "an object fetched from the database is by definition NOT ephemeral";
+    ok $w2->object_is_stored, "an object fetched from the database is by definition NOT ephemeral";
 }
 
 teardown_dbs(qw( global ));

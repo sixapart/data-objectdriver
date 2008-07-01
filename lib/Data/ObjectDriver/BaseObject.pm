@@ -285,7 +285,7 @@ sub is_same {
 
 sub object_is_stored {
     my $obj = shift;
-    return $obj->{__is_stored} ? 0 : 1;
+    return $obj->{__is_stored} ? 1 : 0;
 }
 sub pk_str {
     my ($obj) = @_;
