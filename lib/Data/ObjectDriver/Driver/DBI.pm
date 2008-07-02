@@ -550,15 +550,18 @@ sub begin_work {
         $dbh = $driver->rw_handle;
         $driver->dbh($dbh);
     }
-    return unless $dbh->{AutoCommit};
-
-    eval {
-        $dbh->begin_work;
-    };
-    if (my $err = $@) {
-        $driver->rollback;
-        Carp::croak("Begin work failed for driver $driver: $err");
+    
+    if ($dbh->{AutoCommit}) {
+        eval {
+            $dbh->begin_work;
+        };
+        if (my $err = $@) {
+            $driver->rollback;
+            Carp::croak("Begin work failed for driver $driver: $err");
+        }
     }
+    ## if for some reason AutoCommit was 0 but txn_active was false,
+    ## then we set it to true now
     $driver->txn_active(1);
 }
 
@@ -571,17 +574,17 @@ sub _end_txn {
 
     ## if the driver has its own internal txn_active flag
     ## off, we don't bother ending. Maybe we already did
-    return unless $driver->txn_active;
-    
-    $driver->txn_active(0);
+    if ($driver->txn_active) {
+        $driver->txn_active(0);
 
-    my $dbh = $driver->dbh
-        or Carp::croak("$action called without a stored handle--begin_work?");
+        my $dbh = $driver->dbh
+            or Carp::croak("$action called without a stored handle--begin_work?");
 
-    unless ($dbh->{AutoCommit}) {
-        eval { $dbh->$action() };
-        if ($@) {
-            Carp::croak("$action failed for driver $driver: $@");
+        unless ($dbh->{AutoCommit}) {
+            eval { $dbh->$action() };
+            if ($@) {
+                Carp::croak("$action failed for driver $driver: $@");
+            }
         }
     }
     if ($driver->{__delete_dbh_after_txn}) {
