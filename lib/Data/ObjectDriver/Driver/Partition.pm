@@ -21,12 +21,14 @@ sub init {
 sub lookup {
     my $driver = shift;
     my($class, $id) = @_;
+    return unless $id;
     $driver->get_driver->($id)->lookup($class, $id);
 }
 
 sub lookup_multi {
     my $driver = shift;
     my($class, $ids) = @_;
+    return [] unless @$ids;
     $driver->get_driver->($ids->[0])->lookup_multi($class, $ids);
 }
 

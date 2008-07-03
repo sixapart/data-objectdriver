@@ -214,7 +214,6 @@ sub search {
         ## Load all of the objects using a lookup_multi, which is fast from
         ## cache.
         my $objs = $driver->lookup_multi($class, [ map { $_->primary_key } @objs ]);
-
         return $driver->list_or_iterator($objs);
     }
 }
