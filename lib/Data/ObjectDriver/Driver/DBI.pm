@@ -13,7 +13,7 @@ use Data::ObjectDriver::SQL;
 use Data::ObjectDriver::Driver::DBD;
 use Data::ObjectDriver::Iterator;
 
-__PACKAGE__->mk_accessors(qw( dsn username password connect_options dbh get_dbh dbd prefix reuse_dbh ));
+__PACKAGE__->mk_accessors(qw( dsn username password connect_options dbh get_dbh dbd prefix reuse_dbh force_no_prepared_cache));
 
 our $FORCE_NO_PREPARED_CACHE = 0;
 
@@ -59,7 +59,7 @@ sub _prepare_cached {
     my $driver = shift;
     my $dbh    = shift;
     my $sql    = shift;
-    return ($FORCE_NO_PREPARED_CACHE)? $dbh->prepare($sql) : $dbh->prepare_cached($sql);
+    return ($FORCE_NO_PREPARED_CACHE || $driver->force_no_prepared_cache)? $dbh->prepare($sql) : $dbh->prepare_cached($sql);
 }
 
 my %Handles;
