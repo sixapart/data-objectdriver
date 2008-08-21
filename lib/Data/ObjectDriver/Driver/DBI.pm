@@ -15,6 +15,8 @@ use Data::ObjectDriver::Iterator;
 
 __PACKAGE__->mk_accessors(qw( dsn username password connect_options dbh get_dbh dbd prefix reuse_dbh ));
 
+our $FORCE_NO_PREPARED_CACHE = 0;
+
 sub init {
     my $driver = shift;
     my %param = @_;
@@ -43,6 +45,21 @@ sub generate_pk {
     if (my $generator = $driver->pk_generator) {
         return $generator->(@_);
     }
+}
+
+# Some versions of SQLite require the undefing to finalise properly
+sub _close_sth {
+    my $sth = shift;
+    $sth->finish;
+    undef $sth;
+}
+
+# Some versions of SQLite have problems with prepared caching due to finalisation order
+sub _prepare_cached {
+    my $driver = shift;
+    my $dbh    = shift;
+    my $sql    = shift;
+    return ($FORCE_NO_PREPARED_CACHE)? $dbh->prepare($sql) : $dbh->prepare_cached($sql);
 }
 
 my %Handles;
@@ -97,7 +114,7 @@ sub fetch_data {
     my $rec = {};
     my $sth = $driver->fetch($rec, $obj, $terms, $args);
     $sth->fetch;
-    $sth->finish;
+    _close_sth($sth);
     $driver->end_query($sth);
     return $rec;
 }
@@ -123,7 +140,7 @@ sub fetch {
     $sql .= "\nFOR UPDATE" if $orig_args->{for_update};
     my $dbh = $driver->r_handle($class->properties->{db});
     $driver->start_query($sql, $stmt->{bind});
-    my $sth = $orig_args->{no_cached_prepare} ? $dbh->prepare($sql) : $dbh->prepare_cached($sql);
+    my $sth = $orig_args->{no_cached_prepare} ? $dbh->prepare($sql) : $driver->_prepare_cached($dbh, $sql);
     $sth->execute(@{ $stmt->{bind} });
     $sth->bind_columns(undef, @bind);
 
@@ -151,7 +168,7 @@ sub search {
         my $d = $driver;
 
         unless ($sth->fetch) {
-            $sth->finish;
+            _close_sth($sth);
             $driver->end_query($sth);
             return;
         }
@@ -174,7 +191,7 @@ sub search {
         return @objs;
     } else {
         my $iterator = Data::ObjectDriver::Iterator->new(
-            $iter, sub { $sth->finish; $driver->end_query($sth) },
+            $iter, sub { _close_sth($sth); $driver->end_query($sth) },
         );
         return $iterator;
     }
@@ -216,16 +233,16 @@ sub select_one {
     my $dbh = $driver->r_handle;
 
     $driver->start_query($sql, $bind);
-    my $sth = $dbh->prepare_cached($sql);
+    my $sth = $driver->_prepare_cached($dbh, $sql);
     $sth->execute(@$bind);
     $sth->bind_columns(undef, \my($val));
     unless ($sth->fetch) {
-        $sth->finish;
+        _close_sth($sth);
         $driver->end_query($sth);
         return;
     }
 
-    $sth->finish;
+    _close_sth($sth);
     $driver->end_query($sth);
 
     return $val;
@@ -256,10 +273,10 @@ sub exists {
     $sql .= $stmt->as_sql_where;
     my $dbh = $driver->r_handle($obj->properties->{db});
     $driver->start_query($sql, $stmt->{bind});
-    my $sth = $dbh->prepare_cached($sql);
+    my $sth = $driver->_prepare_cached($dbh, $sql);
     $sth->execute(@{ $stmt->{bind} });
     my $exists = $sth->fetch;
-    $sth->finish;
+    _close_sth($sth);
     $driver->end_query($sth);
 
     return $exists;
@@ -336,7 +353,7 @@ sub _insert_or_replace {
             'VALUES (' . join(', ', ('?') x @$cols) . ')' . "\n";
     my $dbh = $driver->rw_handle($obj->properties->{db});
     $driver->start_query($sql, $obj->{column_values});
-    my $sth = $dbh->prepare_cached($sql);
+    my $sth = $driver->_prepare_cached($dbh, $sql);
     my $i = 1;
     my $col_defs = $obj->properties->{column_defs};
     for my $col (@$cols) {
@@ -346,7 +363,7 @@ sub _insert_or_replace {
         $sth->bind_param($i++, $val, $attr);
     }
     $sth->execute;
-    $sth->finish;
+    _close_sth($sth);
     $driver->end_query($sth);
 
     ## Now, if we didn't have an object ID, we need to grab the
@@ -403,7 +420,7 @@ sub update {
 
     my $dbh = $driver->rw_handle($obj->properties->{db});
     $driver->start_query($sql, $obj->{column_values});
-    my $sth = $dbh->prepare_cached($sql);
+    my $sth = $driver->_prepare_cached($dbh, $sql);
     my $i = 1;
     my $col_defs = $obj->properties->{column_defs};
     for my $col (@changed_cols) {
@@ -419,7 +436,7 @@ sub update {
     }
 
     my $rows = $sth->execute;
-    $sth->finish;
+    _close_sth($sth);
     $driver->end_query($sth);
 
     $obj->call_trigger('post_save', $orig_obj);
@@ -464,9 +481,9 @@ sub remove {
     $sql .= $stmt->as_sql_where;
     my $dbh = $driver->rw_handle($obj->properties->{db});
     $driver->start_query($sql, $stmt->{bind});
-    my $sth = $dbh->prepare_cached($sql);
+    my $sth = $driver->_prepare_cached($dbh, $sql);
     my $result = $sth->execute(@{ $stmt->{bind} });
-    $sth->finish;
+    _close_sth($sth);
     $driver->end_query($sth);
 
     $obj->call_trigger('post_remove', $orig_obj);
@@ -499,9 +516,9 @@ sub direct_remove {
 
     my $dbh = $driver->rw_handle($class->properties->{db});
     $driver->start_query($sql, $stmt->{bind});
-    my $sth = $dbh->prepare_cached($sql);
+    my $sth = $driver->_prepare_cached($dbh, $sql);
     my $result = $sth->execute(@{ $stmt->{bind} });
-    $sth->finish;
+    _close_sth($sth);
     $driver->end_query($sth);
     return $result;
 }
