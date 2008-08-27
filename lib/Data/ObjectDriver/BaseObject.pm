@@ -5,7 +5,7 @@ use strict;
 use warnings;
 
 our $HasWeaken;
-eval q{ use Scalar::Util qw(weaken) };
+eval q{ use Scalar::Util qw(weaken) }; ## no critic
 $HasWeaken = !$@;
 
 use Carp ();
