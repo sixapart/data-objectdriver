@@ -12,3 +12,4 @@
 \.tar\.gz$
 \.svn
 \.shipit$
+t/9\d.+\.t$
