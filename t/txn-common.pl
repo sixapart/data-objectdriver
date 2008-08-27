@@ -122,7 +122,7 @@ use Data::ObjectDriver::BaseObject;
     diag "will warn";
     Data::ObjectDriver::BaseObject->begin_work;
     
-    my $ingredient = Ingredient->new;
+    $ingredient = Ingredient->new;
     $ingredient->recipe_id($recipe->recipe_id);
     $ingredient->name("more layers");
     ok $ingredient->insert;

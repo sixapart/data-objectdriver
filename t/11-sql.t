@@ -253,7 +253,7 @@ is($stmt->as_sql, "SELECT foo\nFROM baz\n-- mycomment");
 $stmt->comment("\nbad\n\nmycomment");
 is($stmt->as_sql, "SELECT foo\nFROM baz\n-- bad", "correctly untainted");
 
-$stmt->comment("\G\\G");
+$stmt->comment("G\\G");
 is($stmt->as_sql, "SELECT foo\nFROM baz\n-- G", "correctly untainted");
 
 sub ns { Data::ObjectDriver::SQL->new }
