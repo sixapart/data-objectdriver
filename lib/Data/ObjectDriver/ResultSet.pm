@@ -264,7 +264,7 @@ sub slice {
 
     # Do we already have results?
     if ($self->_results) {
-        return \@{ $self->_results }[$start..$end];
+        return [ @{ $self->_results }[$start..$end] ];
     }
 
     my $limit = $end - $start + 1;
