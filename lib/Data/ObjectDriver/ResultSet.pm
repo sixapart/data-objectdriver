@@ -277,6 +277,21 @@ sub slice {
     return $r;
 }
 
+sub all {
+    my $self = shift;
+
+    return unless $self->count;
+
+    my @obj;
+    push @obj, $self->first;
+    while (my $obj = $self->next) {
+        push @obj, $obj;
+    }
+
+    $self->rewind;
+    return @obj;
+}
+
 sub count {
     my $self = shift;
 
