@@ -11,7 +11,7 @@ use Test::More;
 unless (eval { require DBD::SQLite }) {
     plan skip_all => 'Tests require DBD::SQLite';
 }
-plan tests => 46;
+plan tests => 47;
 
 setup_dbs({
     global => [ qw( wines ) ],
@@ -137,11 +137,12 @@ $result->rewind;
     for my $r (@$rs) {
         isa_ok $r, 'Wine';
     }
-}
 
-{
     my $objs = $result->slice(0, 100);
     is @$objs, 3;
+
+    my $objs = $result->slice(5, 10);
+    is @$objs, 0;
 }
 
 teardown_dbs(qw( global ));
