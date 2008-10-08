@@ -7,6 +7,7 @@ package Data::ObjectDriver::ResultSet;
 use strict;
 
 use base qw( Class::Accessor::Fast );
+use List::Util qw(min);
 
 ## Public/_Private Accessors
 
@@ -264,7 +265,7 @@ sub slice {
 
     # Do we already have results?
     if ($self->_results) {
-        return [ @{ $self->_results }[$start..$end] ];
+        return [ @{ $self->_results }[$start..min($self->count-1, $end)] ];
     }
 
     my $limit = $end - $start + 1;

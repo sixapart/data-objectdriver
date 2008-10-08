@@ -11,7 +11,7 @@ use Test::More;
 unless (eval { require DBD::SQLite }) {
     plan skip_all => 'Tests require DBD::SQLite';
 }
-plan tests => 43;
+plan tests => 46;
 
 setup_dbs({
     global => [ qw( wines ) ],
@@ -50,7 +50,12 @@ Wine->bulk_insert(['name', 'rating'], [['Caymus', 4], ['Thunderbird', 1], ['Stag
 
 {
     my $result = Wine->result({});
+
+    my $objs = $result->slice(0, 100);
+    is @$objs, 4;
+
     my $rs = $result->slice(0, 2);
+    is @$rs, 3;
     for my $r (@$rs) {
         isa_ok $r, 'Wine';
     }
@@ -132,6 +137,11 @@ $result->rewind;
     for my $r (@$rs) {
         isa_ok $r, 'Wine';
     }
+}
+
+{
+    my $objs = $result->slice(0, 100);
+    is @$objs, 3;
 }
 
 teardown_dbs(qw( global ));
