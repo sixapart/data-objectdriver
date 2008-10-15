@@ -138,10 +138,11 @@ $result->rewind;
         isa_ok $r, 'Wine';
     }
 
-    my $objs = $result->slice(0, 100);
+    my $objs;
+    $objs = $result->slice(0, 100);
     is @$objs, 3;
 
-    my $objs = $result->slice(5, 10);
+    $objs = $result->slice(5, 10);
     is @$objs, 0;
 }
 
