@@ -41,6 +41,9 @@ sub can_replace { 0 }
 
 sub sql_class { 'Data::ObjectDriver::SQL' }
 
+# Some drivers have problems with prepared caches
+sub force_no_prepared_cache { 0 };
+
 1;
 
 __END__

@@ -59,7 +59,7 @@ sub _prepare_cached {
     my $driver = shift;
     my $dbh    = shift;
     my $sql    = shift;
-    return ($FORCE_NO_PREPARED_CACHE || $driver->force_no_prepared_cache)? $dbh->prepare($sql) : $dbh->prepare_cached($sql);
+    return ($FORCE_NO_PREPARED_CACHE || $driver->force_no_prepared_cache || $driver->dbd->force_no_prepared_cache)? $dbh->prepare($sql) : $dbh->prepare_cached($sql);
 }
 
 my %Handles;

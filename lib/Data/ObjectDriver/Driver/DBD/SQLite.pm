@@ -56,6 +56,9 @@ sub bulk_insert {
     return 1;
 }
 
+# TODO this should check the version
+sub force_no_prepared_cache { 1 };
+
 
 1;
 
