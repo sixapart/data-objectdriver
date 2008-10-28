@@ -362,7 +362,8 @@ sub _insert_or_replace {
         my $attr = $dbd->bind_param_attributes($type, $obj, $col);
         $sth->bind_param($i++, $val, $attr);
     }
-    $sth->execute;
+    eval { $sth->execute };
+	die "Failed to execute $sql with ".join(", ",@$cols).": $@" if $@;
     _close_sth($sth);
     $driver->end_query($sth);
 
@@ -388,6 +389,7 @@ sub _insert_or_replace {
 
 sub update {
     my $driver = shift;
+
     my($orig_obj, $terms) = @_;
 
     ## Use a duplicate so the pre_save trigger can modify it.
