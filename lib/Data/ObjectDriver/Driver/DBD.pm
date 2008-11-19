@@ -162,8 +162,17 @@ By default, C<is_case_insensitive> returns false.
 
 =head2 C<$dbd-E<gt>can_replace()>
 
-Returns true or false if the driver can do "REPLACE INTO" only Mysql and
-SQLite does. By default returns false.
+Returns true if the database this driver represents supports C<REPLACE INTO>
+statements.
+
+By default, C<can_replace> returns false.
+
+=head2 C<$dbd-E<gt>force_no_prepared_cache()>
+
+Returns false if the database this driver represents supports the
+C<prepare_cached> method on its DBI database handles.
+
+By default, C<force_no_prepared_cache> returns false.
 
 =head2 C<$dbd-E<gt>sql_class()>
 
