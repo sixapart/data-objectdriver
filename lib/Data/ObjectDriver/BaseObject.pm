@@ -559,8 +559,12 @@ sub txn_active { $TransactionLevel }
 
 sub begin_work {
     my $class = shift;
-    if ($TransactionLevel > 0) {
-        warn __PACKAGE__ . ": one ore more transaction already active: $TransactionLevel";
+    if ( $TransactionLevel > 0 ) {
+        Carp::carp(
+            $TransactionLevel > 1
+            ? "$TransactionLevel transactions already active"
+            : "Transaction already active"
+        );
     }
     $TransactionLevel++;
 }
@@ -586,7 +590,7 @@ sub _end_txn {
     }
     
     if (! $TransactionLevel) {
-        warn __PACKAGE__ . ": no transaction active, ignored $meth";
+        Carp::carp("No active transaction to end; ignoring $meth");
         return;
     }
     my @wd = @WorkingDrivers;
