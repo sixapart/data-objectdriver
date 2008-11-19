@@ -296,8 +296,8 @@ sub all {
 sub count {
     my $self = shift;
 
-    # Get/load the results if we already have them or if we have a limit term
-    if ($self->_results_loaded or $self->get_limit) {
+    # Get/load the results if we already have them
+    if ($self->_results_loaded) {
         my $results = $self->_load_results;
         return scalar @$results;
     } else {
