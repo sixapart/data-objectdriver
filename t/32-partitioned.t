@@ -10,7 +10,7 @@ use Test::More;
 unless (eval { require DBD::SQLite }) {
     plan skip_all => 'Tests require DBD::SQLite';
 }
-plan tests => 88;
+plan tests => 92;
 
 setup_dbs({
     global   => [ qw( recipes ) ],

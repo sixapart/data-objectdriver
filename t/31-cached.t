@@ -16,7 +16,7 @@ BEGIN {
         plan skip_all => 'Tests require Cache::Memory';
     }
 }
-plan tests => 100;
+plan tests => 104;
 
 setup_dbs({
     global   => [ qw( recipes ingredients ) ],

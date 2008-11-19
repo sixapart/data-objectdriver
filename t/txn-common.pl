@@ -3,7 +3,7 @@
 use strict;
 use Test::More;
 
-diag "executing common tests";
+diag "executing common transaction tests";
 use Data::ObjectDriver::BaseObject;
 
 ## testing basic rollback
@@ -73,12 +73,22 @@ use Data::ObjectDriver::BaseObject;
     ok(! Ingredient->lookup($ingredient_pk), "finally deleted");
 }
 
+sub warns_ok (&;$) {
+    my ($sub, $msg) = @_;
+
+    my $warn = 0;
+    local $SIG{__WARN__} = sub { $warn++ };
+    $sub->();
+
+    $warn ? pass($msg) : fail($msg);
+}
+
 ## nested transactions
 {
     ## if there is no transaction active this will just warn
     is( Data::ObjectDriver::BaseObject->txn_active, 0);
-    diag "will warn";
-    Data::ObjectDriver::BaseObject->commit;
+    warns_ok { Data::ObjectDriver::BaseObject->commit() }
+        'committing with no active transaction caused warning';
     is( Data::ObjectDriver::BaseObject->txn_active, 0);
     
     ## do a commit in the end
@@ -88,11 +98,13 @@ use Data::ObjectDriver::BaseObject;
     my $recipe = Recipe->new;
     $recipe->title('lasagnes');
     ok($recipe->save, 'Object saved successfully');
-    diag $recipe->recipe_id;
 
-    diag "will warn";
-    Data::ObjectDriver::BaseObject->begin_work;
-    Data::ObjectDriver::BaseObject->begin_work;
+    warns_ok { Data::ObjectDriver::BaseObject->begin_work() }
+        'beginning new transaction with a transaction already open '
+        . 'causes warning';
+    warns_ok { Data::ObjectDriver::BaseObject->begin_work() }
+        'beginning new transaction with two transactions already open '
+        . 'causes warning';
     is( Data::ObjectDriver::BaseObject->txn_active, 3);
 
     
@@ -119,8 +131,9 @@ use Data::ObjectDriver::BaseObject;
     $recipe->title('lasagnes');
     ok($recipe->save, 'Object saved successfully');
 
-    diag "will warn";
-    Data::ObjectDriver::BaseObject->begin_work;
+    warns_ok { Data::ObjectDriver::BaseObject->begin_work() }
+        'beginning new transaction with a transaction already open '
+        . 'still causes warning';
     
     $ingredient = Ingredient->new;
     $ingredient->recipe_id($recipe->recipe_id);

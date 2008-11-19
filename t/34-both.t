@@ -18,7 +18,7 @@ BEGIN {
     }
 }
 
-plan tests => 86;
+plan tests => 90;
 
 use Recipe;
 use Ingredient;
