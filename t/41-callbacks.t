@@ -11,7 +11,7 @@ unless (eval { require DBD::SQLite }) {
     plan skip_all => 'Tests require DBD::SQLite';
 }
 
-plan skip_all => 'This test no longer works with the recent Class::Trigger since it uses undocument API.';
+plan tests => 25;
 
 setup_dbs({
     global => [ qw( wines ) ],
@@ -27,6 +27,13 @@ use Wine;
     ok(My::BaseObject->can('add_trigger'), 'can add triggers to directly derived class');
     ok(Wine->can('add_trigger'), 'can add triggers to doubly derived class');
 };
+
+
+sub clear_triggers {
+    my ($obj, $when) = @_;
+    my $triggers = Class::Trigger::__fetch_triggers($obj);
+    delete $triggers->{$when};
+}
 
 
 ## test pre_save
@@ -71,8 +78,7 @@ use Wine;
     is $saved_wine->rating, 5, 'change in callback did change saved data';
     is $wine->rating, 4, 'change in callback did not change original object';
 
-#    Wine->remove_trigger('pre_save'); # doesn't exist
-    delete $wine->__triggers->{'pre_save'};
+    clear_triggers('Wine', 'pre_save');
     is $wine->remove, 1, 'Remove correct number or rows';
 };
 
@@ -92,8 +98,7 @@ use Wine;
     cmp_ok $wine->name, 'eq', 'I will change rating', "indeed";
     is $wine->remove, 1, 'Remove correct number of rows';
 
-#    Wine->remove_trigger('pre_search'); # doesn't exist
-    delete $wine->__triggers->{'pre_search'};
+    clear_triggers('Wine', 'pre_search');
 }
 
 ## test post_load
@@ -110,8 +115,7 @@ use Wine;
     cmp_ok $wine->rating, '==', 30, "post_load in action";
     ok ! $wine->is_changed, "wine hasn't changed";
 
-#    Wine->remove_trigger('post_load'); # doesn't exist
-    delete $wine->__triggers->{'post_load'};
+    clear_triggers('Wine', 'post_load');
 };
 
 
