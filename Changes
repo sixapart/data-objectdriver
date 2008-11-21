@@ -26,6 +26,14 @@ Revision history for Data::ObjectDriver
     - Exposed the transaction mechanism built in the drivers at the object levels:
       D::OD::BO->begin_work now starts a global transaction across all drivers
       ending with a rollback or a commit on the same class.
+    - Fix problem with prepare_cache in DBD::SQLite
+    - Fix PerlCritic tests
+      http://rt.cpan.org/Ticket/Display.html?id=37197
+    - Fix problems under 5.10
+      http://rt.cpan.org/Ticket/Display.html?id=30941
+    - Fix test failures under Win32
+      http://rt.cpan.org/Ticket/Display.html?id=24480
+
 
 0.05  2008.02.24
     - Added a new Data::ObjectDriver::ResultSet abstraction for building
