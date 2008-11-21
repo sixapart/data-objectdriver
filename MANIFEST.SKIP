@@ -13,3 +13,4 @@
 \.svn
 \.shipit$
 t/9\d.+\.t$
+\.db$
