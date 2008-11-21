@@ -7,7 +7,8 @@ use warnings;
 use base qw( Data::ObjectDriver::Driver::DBD );
 
 # No postgresql doesn't allow MySQL's REPLACE INTO syntax 
-sub can_replace { 1 }
+sub can_replace { 0 }
+
 
 sub init_dbh {
     my $dbd = shift;

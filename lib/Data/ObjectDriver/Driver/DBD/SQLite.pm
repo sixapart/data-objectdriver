@@ -10,6 +10,9 @@ use Data::ObjectDriver::Errors;
 # yes according to http://www.sqlite.org/lang_replace.html 
 sub can_replace { 1 }
 
+# SQLite has problems with prepare_cached
+sub can_prepare_cached { 0 }
+
 sub fetch_id { $_[2]->func('last_insert_rowid') }
 
 sub bind_param_attributes {
@@ -55,10 +58,6 @@ sub bulk_insert {
     # maximum packet size for SQL
     return 1;
 }
-
-# TODO this should check the version
-sub force_no_prepared_cache { 1 };
-
 
 1;
 

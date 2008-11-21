@@ -34,6 +34,7 @@ sub is_case_insensitive { 1 };
 # yes, MySQL invented(?) REPLACE INTO extension
 sub can_replace { 1 }
 
+
 sub bulk_insert {
     my $dbd = shift;
     my $dbh = shift;

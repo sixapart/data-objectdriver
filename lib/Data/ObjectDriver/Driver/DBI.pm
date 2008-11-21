@@ -15,7 +15,6 @@ use Data::ObjectDriver::Iterator;
 
 __PACKAGE__->mk_accessors(qw( dsn username password connect_options dbh get_dbh dbd prefix reuse_dbh force_no_prepared_cache));
 
-our $FORCE_NO_PREPARED_CACHE = 0;
 
 sub init {
     my $driver = shift;
@@ -59,7 +58,7 @@ sub _prepare_cached {
     my $driver = shift;
     my $dbh    = shift;
     my $sql    = shift;
-    return ($FORCE_NO_PREPARED_CACHE || $driver->force_no_prepared_cache || $driver->dbd->force_no_prepared_cache)? $dbh->prepare($sql) : $dbh->prepare_cached($sql);
+    return ($driver->dbd->can_prepare_cached)? $dbh->prepare_cached($sql) : $dbh->prepare($sql);
 }
 
 my %Handles;

@@ -39,10 +39,11 @@ sub is_case_insensitive { 0 }
 
 sub can_replace { 0 }
 
+# Some drivers have problems with prepared caches
+sub can_prepare_cached { 1 };
+
 sub sql_class { 'Data::ObjectDriver::SQL' }
 
-# Some drivers have problems with prepared caches
-sub force_no_prepared_cache { 0 };
 
 1;
 
