@@ -3,7 +3,7 @@
 use strict;
 use Test::More;
 
-diag "executing common transaction tests";
+#diag "executing common transaction tests";
 use Data::ObjectDriver::BaseObject;
 
 ## testing basic rollback
