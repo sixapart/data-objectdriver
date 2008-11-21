@@ -76,7 +76,6 @@ use Ingredient;
     ok($ingredient->recipe_id, 'Ingredient assigned to a recipe');
 };
 
-
-teardown_dbs(qw( global ));
+sub DESTROY { teardown_dbs(qw( global )); }
 
 1;

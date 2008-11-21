@@ -92,4 +92,4 @@ ok $is->[0]->{__cached};
 is $is->[1]->name, 'Milk';
 ok $is->[1]->{__cached};
 
-teardown_dbs(qw( global ));
+sub DESTROY { teardown_dbs(qw( global )); }

@@ -93,4 +93,4 @@ SKIP: {
         like $profiler->report_queries_by_type, qr/SELECT/;
 };
 
-teardown_dbs(qw( global cluster1 cluster2 ));
+sub DESTROY { teardown_dbs(qw( global cluster1 cluster2 )); }

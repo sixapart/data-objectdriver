@@ -188,4 +188,4 @@ is $replaced->title, 'Cup Cake';
 
 require 't/txn-common.pl';
 
-teardown_dbs(qw( global cluster1 cluster2 ));
+sub DESTROY { teardown_dbs(qw( global cluster1 cluster2 )); }

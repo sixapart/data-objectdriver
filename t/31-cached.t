@@ -182,4 +182,4 @@ is($recipe2->remove, 1, 'Recipe removed successfully');
 
 require 't/txn-common.pl';
 
-teardown_dbs(qw( global ));
+sub DESTROY { teardown_dbs(qw( global )); }

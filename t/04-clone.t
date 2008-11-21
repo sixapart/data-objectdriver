@@ -89,5 +89,5 @@ test_basic_cloning('clone_all');
     is $w->id, $clone->id, q(Full clone's id matches original's id);
 }
 
-teardown_dbs(qw( global ));
+sub DESTROY { teardown_dbs(qw( global )); }
 

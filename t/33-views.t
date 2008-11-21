@@ -56,4 +56,4 @@ SKIP: {
     is $ingredients[0]->name, 'Vanilla Ice Cream';
 }
 
-teardown_dbs(qw( global ));
+sub DESTROY { teardown_dbs(qw( global )); }

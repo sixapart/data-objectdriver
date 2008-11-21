@@ -125,4 +125,4 @@ is $recipe2->remove, 1, 'Recipe removed successfully';
 
 require 't/txn-common.pl';
 
-teardown_dbs(qw( global cluster1 cluster2 ));
+sub DESTROY { teardown_dbs(qw( global cluster1 cluster2 )); }
