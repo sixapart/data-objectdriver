@@ -33,7 +33,8 @@ Revision history for Data::ObjectDriver
       http://rt.cpan.org/Ticket/Display.html?id=30941
     - Fix test failures under Win32
       http://rt.cpan.org/Ticket/Display.html?id=24480
-
+    - Pg *can't* handle REPLACE
+      https://rt.cpan.org/Ticket/Display.html?id=38840
 
 0.05  2008.02.24
     - Added a new Data::ObjectDriver::ResultSet abstraction for building
