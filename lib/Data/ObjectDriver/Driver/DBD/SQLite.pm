@@ -11,7 +11,7 @@ use Data::ObjectDriver::Errors;
 sub can_replace { 1 }
 
 # SQLite has problems with prepare_cached
-sub can_prepare_cached { 0 }
+sub can_prepare_cached_statements { 0 }
 
 sub fetch_id { $_[2]->func('last_insert_rowid') }
 

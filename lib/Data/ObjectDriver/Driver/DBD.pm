@@ -40,7 +40,7 @@ sub is_case_insensitive { 0 }
 sub can_replace { 0 }
 
 # Some drivers have problems with prepared caches
-sub can_prepare_cached { 1 };
+sub can_prepare_cached_statements { 1 };
 
 sub sql_class { 'Data::ObjectDriver::SQL' }
 
@@ -153,6 +153,12 @@ Returns true if the database this driver represents supports C<LIMIT> clauses
 on C<DELETE> statements.
 
 By default, C<can_delete_with_limit> returns false.
+
+=head2 C<$dbd-E<gt>can_prepare_cached_statements()>
+
+Returns true if the database this driver can cope with preparing a cached statement.
+
+By default, C<can_delete_with_limit> returns true.
 
 =head2 C<$dbd-E<gt>is_case_insensitive()>
 

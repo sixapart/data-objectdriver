@@ -58,7 +58,7 @@ sub _prepare_cached {
     my $driver = shift;
     my $dbh    = shift;
     my $sql    = shift;
-    return ($driver->dbd->can_prepare_cached)? $dbh->prepare_cached($sql) : $dbh->prepare($sql);
+    return ($driver->dbd->can_prepare_cached_statements)? $dbh->prepare_cached($sql) : $dbh->prepare($sql);
 }
 
 my %Handles;
