@@ -146,4 +146,13 @@ $result->rewind;
     is @$objs, 0;
 }
 
+# test add_term
+{
+    my $result = Wine->result({rating => { op => '<=', 'value' => 4}}, { limit => 2, sort => 'name', direction => 'ascend' });
+    $result->dod_debug(1);
+    ##$result->_load_results; # if this is called, the add_term() doesn't work
+    $result->add_term({rating => 3});
+    is $result->next->rating, 3;
+}
+
 teardown_dbs(qw( global ));
