@@ -11,7 +11,7 @@ use Test::More;
 unless (eval { require DBD::SQLite }) {
     plan skip_all => 'Tests require DBD::SQLite';
 }
-plan tests => 47;
+plan tests => 48;
 
 setup_dbs({
     global => [ qw( wines ) ],
@@ -149,8 +149,7 @@ $result->rewind;
 # test add_term
 {
     my $result = Wine->result({rating => { op => '<=', 'value' => 4}}, { limit => 2, sort => 'name', direction => 'ascend' });
-    $result->dod_debug(1);
-    ##$result->_load_results; # if this is called, the add_term() doesn't work
+    #$result->_load_results; # if this is called, the add_term() doesn't work
     $result->add_term({rating => 3});
     is $result->next->rating, 3;
 }
