@@ -11,7 +11,7 @@ use Test::More;
 unless (eval { require DBD::SQLite }) {
     plan skip_all => 'Tests require DBD::SQLite';
 }
-plan tests => 48;
+plan tests => 49;
 
 setup_dbs({
     global => [ qw( wines ) ],
@@ -148,10 +148,23 @@ $result->rewind;
 
 # test add_term
 {
-    my $result = Wine->result({rating => { op => '<=', 'value' => 4}}, { limit => 2, sort => 'name', direction => 'ascend' });
-    #$result->_load_results; # if this is called, the add_term() doesn't work
+    my $result = Wine->result({rating => { op => '<=', 'value' => 4}}, { sort => 'rating', direction => 'descend' });
     $result->add_term({rating => 3});
     is $result->next->rating, 3;
+}
+## now call add_term after loading objects
+{
+    my $result = Wine->result({rating => { op => '<=', 'value' => 4}}, { sort => 'rating', direction => 'descend' });
+    $result->_load_results;
+    $result->add_term({rating => 3});
+    is $result->next->rating, 3;
+}
+## filtering with 'op', which doesn't work now.
+{
+    my $result = Wine->result({rating => { op => '<=', 'value' => 4}}, { sort => 'rating', direction => 'descend' });
+    $result->_load_results;
+    $result->add_term({rating => { op => '<=', 'value' => 3}});
+    diag "calling next() after add_term() with 'op'" . $result->next; ## this should return the object which has "rating == 3".
 }
 
 teardown_dbs(qw( global ));
