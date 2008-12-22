@@ -27,17 +27,21 @@ sub bind_param_attributes {
 
 sub sequence_name {
     my $dbd = shift;
-    my($class) = @_;
-    join '_', $class->datasource,
+    my($class, $driver) = @_;
+
+    my $datasource = $class ->datasource;
+    my $prefix     = $driver->prefix;
+    $datasource    = join('', $prefix, $datasource) if $prefix;
+    join '_', $datasource,
         $dbd->db_column_name($class->datasource, $class->properties->{primary_key}),
         'seq';
 }
 
 sub fetch_id {
     my $dbd = shift;
-    my($class, $dbh, $sth) = @_;
+    my($class, $dbh, $sth, $driver) = @_;
     $dbh->last_insert_id(undef, undef, undef, undef,
-        { sequence => $dbd->sequence_name($class) });
+        { sequence => $dbd->sequence_name($class, $driver) });
 }
 
 sub bulk_insert {

@@ -371,7 +371,7 @@ sub _insert_or_replace {
     if (!$obj->is_pkless && ! $obj->has_primary_key) {
         my $pk = $obj->primary_key_tuple; ## but do that only for relation that aren't PK-less
         my $id_col = $pk->[0]; # XXX are we sure we will always use '0' ?
-        my $id = $dbd->fetch_id(ref($obj), $dbh, $sth);
+        my $id = $dbd->fetch_id(ref($obj), $dbh, $sth, $driver);
         $obj->$id_col($id);
         ## The ID is the only thing we *are* allowed to change on
         ## the original object.
