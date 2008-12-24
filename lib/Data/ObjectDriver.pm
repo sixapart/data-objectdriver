@@ -758,6 +758,16 @@ has been added specifically for this purpose: C<reuse_dbh>.
 I<Data::ObjectDriver> is free software; you may redistribute it and/or modify
 it under the same terms as Perl itself.
 
+=head1 MAILING LIST, CODE & MORE INFORMATION
+
+I<Data::ObjectDriver> developers can be reached via the following group:
+L<http://groups.google.com/group/data-objectdriver>
+
+Bugs should be reported using the CPAN RT system, patches are encouraged when
+reporting bugs.
+
+L<http://code.sixapart.com/>
+
 =head1 AUTHOR & COPYRIGHT
 
 Except where otherwise noted, I<Data::ObjectDriver> is Copyright 2005-2006
