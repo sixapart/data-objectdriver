@@ -68,7 +68,7 @@ sub commit {
     _end_txn($driver, 'commit');
 }
 
-sub rollback { 
+sub rollback {
     my $driver = shift;
     _end_txn($driver, 'rollback');
 }
@@ -648,7 +648,7 @@ in a transactional state until the end of the transaction.
         Data::ObjectDriver::BaseObject->rollback;
     }
 
-=head2 Driver implementation 
+=head2 Driver implementation
 
 Drivers have to implement the following methods:
 
@@ -656,7 +656,7 @@ Drivers have to implement the following methods:
 
 =item * begin_work to initialize a transaction
 
-=item * rollback 
+=item * rollback
 
 =item * commmit
 
@@ -671,16 +671,16 @@ each open begin_work).
 
 =head2 Transactions and DBI
 
-In order to make transactions work properly you have to make sure that 
+In order to make transactions work properly you have to make sure that
 the C<$dbh> for each DBI drivers are shared among drivers using the same
 database (basically dsn).
 
 One way of doing that is to define a get_dbh() subref in each DBI driver
-to return the same dbh if the dsn and attributes of the connection are 
+to return the same dbh if the dsn and attributes of the connection are
 identical.
 
 The other way is to use the new configuration flag on the DBI driver that
-has been added specifically for this purpose: C<reuse_dbh>. 
+has been added specifically for this purpose: C<reuse_dbh>.
 
     ## example coming from the test suite
     __PACKAGE__->install_properties({

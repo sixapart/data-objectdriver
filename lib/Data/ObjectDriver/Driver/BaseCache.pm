@@ -55,7 +55,7 @@ sub commit {
     return $rv;
 }
 
-sub rollback { 
+sub rollback {
     my $driver = shift;
     return unless $driver->txn_active;
     my $rv = $driver->fallback->rollback(@_);
@@ -245,7 +245,7 @@ sub replace {
         $driver->modify_cache(sub {
             $driver->update_cache($key, $driver->deflate($obj));
         });
-    } 
+    }
     return $ret;
 }
 
@@ -372,7 +372,7 @@ Returns the cache key for an object of the given class with the given primary
 key. The cache key is used with the external cache to identify an object.
 
 In BaseCache's implementation, the key is the class name and all the column
-names of the primary key concatenated, separated by single colons. 
+names of the primary key concatenated, separated by single colons.
 
 =head2 C<$driver-E<gt>get_multi_from_cache(@cache_keys)>
 

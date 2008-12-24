@@ -156,7 +156,7 @@ sub fetch {
 sub search {
     my($driver) = shift;
     my($class, $terms, $args) = @_;
-    
+
     my $rec = {};
     my $sth = $driver->fetch($rec, $class, $terms, $args);
 
@@ -316,7 +316,7 @@ sub _insert_or_replace {
     ## Syntax switch between INSERT or REPLACE statement based on options
     $options ||= {};
     my $INSERT_OR_REPLACE = $options->{replace} ? 'REPLACE' : 'INSERT';
-    
+
     ## Use a duplicate so the pre_save trigger can modify it.
     my $obj = $orig_obj->clone_all;
     $obj->call_trigger('pre_save', $orig_obj);
@@ -568,7 +568,7 @@ sub begin_work {
         $dbh = $driver->rw_handle;
         $driver->dbh($dbh);
     }
-    
+
     if ($dbh->{AutoCommit}) {
         eval {
             $dbh->begin_work;

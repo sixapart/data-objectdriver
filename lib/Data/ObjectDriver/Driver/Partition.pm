@@ -77,7 +77,7 @@ sub add_working_driver {
 
 sub commit {
     my $driver = shift;
-    
+
     ## if the driver has its own internal txn_active flag
     ## off, we don't bother ending. Maybe we already did
     return unless $driver->txn_active;

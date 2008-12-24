@@ -17,7 +17,7 @@ sub search {
 
     # quick hack: don't use HAVING if view class has datasource
     if (! $class->properties->{datasource}) {
-        my %cols = map { $_ => 1 } @{ $class->properties->{columns} }; 
+        my %cols = map { $_ => 1 } @{ $class->properties->{columns} };
         my %having;
         for my $key (keys %$terms) {
             if ($cols{$key} && ! $args->{sql_statement}->has_where($key)) {
@@ -28,7 +28,7 @@ sub search {
         }
         $args->{having} = \%having;
     }
-    
+
     $class->_proxy('search', $terms, $args)
 }
 

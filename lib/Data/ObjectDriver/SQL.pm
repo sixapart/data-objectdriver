@@ -267,7 +267,7 @@ sub _add_index_hint {
     my $hint = $stmt->index_hint->{$tbl_name};
     return $tbl_name unless $hint && ref($hint) eq 'HASH';
     if ($hint->{list} && @{ $hint->{list} }) {
-        return $tbl_name . ' ' . uc($hint->{type} || 'USE') . ' INDEX (' . 
+        return $tbl_name . ' ' . uc($hint->{type} || 'USE') . ' INDEX (' .
                 join (',', @{ $hint->{list} }) .
                 ')';
     }
@@ -295,7 +295,7 @@ Data::ObjectDriver::SQL - an SQL statement
     my $sth = $dbh->prepare($sql->as_sql);
     $sth->execute(@{ $sql->{bind} });
     my @values = $sth->selectrow_array();
-    
+
     my $obj = SomeObject->new();
     $obj->set_columns(...);
 
@@ -573,7 +573,7 @@ be any of the structures described above for the C<add_where()> method.
 
 =head2 C<$sql-E<gt>add_index_hint($table, \@hints)>
 
-Addes the index hint into a C<SELECT> query. The structure for the set of 
+Addes the index hint into a C<SELECT> query. The structure for the set of
 C<\@hints> are arrayref of hashrefs containing these members:
 
 =over 4

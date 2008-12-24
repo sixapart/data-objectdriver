@@ -15,7 +15,7 @@ sub init {
 sub search {
     my $driver = shift;
     my($class, $terms, $args) = @_;
-    
+
     my @objs;
     my $only_one_result = $args->{limit} && $args->{limit} == 1;
     for my $partition (@{ $driver->partitions }) {
@@ -37,7 +37,7 @@ the partition_key
 
 =head1 DESCRIPTION
 
-I<Data::ObjectDriver::Driver::MultiPartition> is used internally by 
+I<Data::ObjectDriver::Driver::MultiPartition> is used internally by
 I<Data::ObjectDriver::Driver::SimplePartition> to do very simple
 search accross partition, if the terms of the query cannot be used to
 determine the partition.

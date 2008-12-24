@@ -805,8 +805,8 @@ Arguments:
 ; Example
 
   while ($bottle = $res->next){
-            
-      if ($bottle->type eq 'Bud Light' 
+
+      if ($bottle->type eq 'Bud Light'
           && $res->peek_next->type eq 'Chimay'){
 
           $bottle->pass; #don't spoil my palate
@@ -815,7 +815,7 @@ Arguments:
           $bottle->drink;
       }
   }
-            
+
 
 =head2 prev
 
@@ -934,7 +934,7 @@ Arguments:
 
 =head2 dod_debug
 
-Set this and you'll see $Data::ObjectDriver::DEBUG output when 
+Set this and you'll see $Data::ObjectDriver::DEBUG output when
 I go to get the results.
 
 =head2 rewind

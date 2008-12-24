@@ -30,7 +30,7 @@ sub lookup {
     return $subdriver->lookup(@_);
 }
 
-sub fetch_data { 
+sub fetch_data {
     my $driver = shift;
     my $subdriver = $driver->on_lookup;
     croak "on_lookup is not defined in $driver"
@@ -93,7 +93,7 @@ sub _exec_multiplexed {
     my($meth, $obj, @args) = @_;
     my $orig_obj = Storable::dclone($obj);
     my $ret;
-    
+
     ## We want to be sure to have the initial and final state of the object
     ## strictly identical as if we made only one call on $obj
     ## (Perhaps it's a bit overkill ? playing with 'changed_cols' may do the trick)
@@ -180,7 +180,7 @@ Note that this driver has the following limitations currently:
 =item 3. IT'S VERY EXPERIMENTAL.
 
 =item 4. This documentation you're reading is incomplete. the api is likely
-to evolve  
+to evolve
 
 =back
 

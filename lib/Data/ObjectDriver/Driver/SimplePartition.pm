@@ -29,7 +29,7 @@ sub _make_get_driver {
     my $col = $class->primary_key_tuple->[0];
     my $get_driver = $class->properties->{partition_get_driver}
         or croak "Partitioning driver not defined for $class";
-        
+
     my $number = $class->properties->{number_of_partitions};
     my $mp_driver = Data::ObjectDriver::Driver::MultiPartition->new(
         partitions => [ map { $get_driver->($_, @$extra) } (1 .. $number) ]
@@ -228,8 +228,8 @@ partitioned class and instances of partitioned objects before attempting to
 save them.
 
 Optionaly you can enable a basic support of search accross multiple
-partition by passing the 'multi_partition' arg (true value) to the search 
-query. 
+partition by passing the 'multi_partition' arg (true value) to the search
+query.
 
 =item * C<Member of I<class> with ID I<parent ID> not found>
 
