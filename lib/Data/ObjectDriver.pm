@@ -753,6 +753,21 @@ has been added specifically for this purpose: C<reuse_dbh>.
 
     1;
 
+=head1 SUPPORTED DATABASES
+
+I<Data::ObjectDriver> is very modular and it's not very diffucult to add new drivers.
+
+=over 4
+
+=item * MySQL is well supported and has been heavily tested.
+
+=item * PostgreSQL has been been used in production and should just work, too.
+
+=item * SQLite is supported, but YMMV depending on the version. This is the
+backend used for the test suite.
+
+=item * Oracle support has been added in 0.06
+
 =head1 LICENSE
 
 I<Data::ObjectDriver> is free software; you may redistribute it and/or modify
