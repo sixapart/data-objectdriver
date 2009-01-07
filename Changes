@@ -38,7 +38,8 @@ Revision history for Data::ObjectDriver
     - Fixed an issue where Pg would look into the wrong sequence if DBI has a
       'prefix' configured (used in a undocumented TheSchwartz feature)
       https://rt.cpan.org/Ticket/Display.html?id=41880
-
+    - Added Oracle support, courtesy of Xiaoou Wu (Oracle)
+      https://rt.cpan.org/Ticket/Display.html?id=41929
 
 0.05  2008.02.24
     - Added a new Data::ObjectDriver::ResultSet abstraction for building

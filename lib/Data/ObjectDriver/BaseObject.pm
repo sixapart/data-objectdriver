@@ -764,7 +764,8 @@ Known C<column_defs> types are:
 =item * C<blob>
 
 A blob of binary data. C<Data::ObjectDriver::Driver::DBD::Pg> maps this to
-C<DBI::Pg::PG_BYTEA>, and C<DBD::SQLite> to C<DBI::SQL_BLOB>.
+C<DBI::Pg::PG_BYTEA>, C<DBD::SQLite> to C<DBI::SQL_BLOB> and C<DBD::Oracle>
+to C<ORA_BLOB>.
 
 =item * C<bin_char>
 
