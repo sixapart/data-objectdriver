@@ -768,6 +768,8 @@ backend used for the test suite.
 
 =item * Oracle support has been added in 0.06
 
+=back
+
 =head1 LICENSE
 
 I<Data::ObjectDriver> is free software; you may redistribute it and/or modify
