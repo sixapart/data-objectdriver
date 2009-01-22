@@ -11,7 +11,7 @@ sub new {
     die "No Driver" unless $name;
     my $subclass = join '::', $class, $name;
     no strict 'refs';
-    unless (defined ${"${subclass}::"}) {
+    unless (defined %{"${subclass}::"}) {
         eval "use $subclass"; ## no critic
         die $@ if $@;
     }
