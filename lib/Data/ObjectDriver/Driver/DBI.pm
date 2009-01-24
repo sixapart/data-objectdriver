@@ -118,9 +118,9 @@ sub fetch_data {
     return $rec;
 }
 
-sub fetch {
+sub prepare_fetch {
     my $driver = shift;
-    my($rec, $class, $orig_terms, $orig_args) = @_;
+    my($class, $orig_terms, $orig_args) = @_;
 
     ## Use (shallow) duplicates so the pre_search trigger can modify them.
     my $terms = defined $orig_terms ? ( ref $orig_terms eq 'ARRAY' ? [ @$orig_terms ] : { %$orig_terms } ) : {};
@@ -129,28 +129,51 @@ sub fetch {
 
     my $stmt = $driver->prepare_statement($class, $terms, $args);
 
+    my $sql = $stmt->as_sql;
+    $sql .= "\nFOR UPDATE" if $orig_args->{for_update};
+    return ($sql, $stmt->{bind}, $stmt)
+}
+
+sub fetch {
+    my $driver = shift;
+    my($rec, $class, $orig_terms, $orig_args) = @_;
+
+    my ($sql, $bind, $stmt) = $driver->prepare_fetch($class, $orig_terms, $orig_args);
+
     my @bind;
     my $map = $stmt->select_map;
     for my $col (@{ $stmt->select }) {
         push @bind, \$rec->{ $map->{$col} };
     }
 
-    my $sql = $stmt->as_sql;
-    $sql .= "\nFOR UPDATE" if $orig_args->{for_update};
     my $dbh = $driver->r_handle($class->properties->{db});
     $driver->start_query($sql, $stmt->{bind});
+
     my $sth = $orig_args->{no_cached_prepare} ? $dbh->prepare($sql) : $driver->_prepare_cached($dbh, $sql);
     $sth->execute(@{ $stmt->{bind} });
     $sth->bind_columns(undef, @bind);
 
     # need to slurp 'offset' rows for DBs that cannot do it themselves
-    if (!$driver->dbd->offset_implemented && $args->{offset}) {
-        for (1..$args->{offset}) {
+    if (!$driver->dbd->offset_implemented && $orig_args->{offset}) {
+        for (1..$orig_args->{offset}) {
             $sth->fetch;
         }
     }
 
     return $sth;
+}
+
+sub load_object_from_rec {
+    my $driver = shift;
+    my ($class, $rec, $no_triggers) = @_;
+
+    my $obj = $class->new;
+    $obj->set_values_internal($rec);
+    ## Don't need a duplicate as there's no previous version in memory
+    ## to preserve.
+    $obj->{__is_stored} = 1;
+    $obj->call_trigger('post_load') unless $no_triggers;
+    return $obj;
 }
 
 sub search {
@@ -171,14 +194,7 @@ sub search {
             $driver->end_query($sth);
             return;
         }
-        my $obj;
-        $obj = $class->new;
-        $obj->set_values_internal($rec);
-        ## Don't need a duplicate as there's no previous version in memory
-        ## to preserve.
-        $obj->{__is_stored} = 1;
-        $obj->call_trigger('post_load') unless $args->{no_triggers};
-        $obj;
+        return $driver->load_object_from_rec($class, $rec, $args->{no_triggers});
     };
 
     if (wantarray) {
