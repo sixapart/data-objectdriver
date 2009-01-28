@@ -4,6 +4,7 @@ inc/Module/AutoInstall.pm
 inc/Module/Install.pm
 inc/Module/Install/AutoInstall.pm
 inc/Module/Install/Base.pm
+inc/Module/Install/Build.pm
 inc/Module/Install/Can.pm
 inc/Module/Install/Fetch.pm
 inc/Module/Install/Include.pm
@@ -22,9 +23,11 @@ lib/Data/ObjectDriver/Driver/Cache/Memcached.pm
 lib/Data/ObjectDriver/Driver/Cache/RAM.pm
 lib/Data/ObjectDriver/Driver/DBD.pm
 lib/Data/ObjectDriver/Driver/DBD/mysql.pm
+lib/Data/ObjectDriver/Driver/DBD/Oracle.pm
 lib/Data/ObjectDriver/Driver/DBD/Pg.pm
 lib/Data/ObjectDriver/Driver/DBD/SQLite.pm
 lib/Data/ObjectDriver/Driver/DBI.pm
+lib/Data/ObjectDriver/Driver/GearmanDBI.pm
 lib/Data/ObjectDriver/Driver/MultiPartition.pm
 lib/Data/ObjectDriver/Driver/Multiplexer.pm
 lib/Data/ObjectDriver/Driver/Partition.pm
@@ -34,6 +37,7 @@ lib/Data/ObjectDriver/Iterator.pm
 lib/Data/ObjectDriver/Profiler.pm
 lib/Data/ObjectDriver/ResultSet.pm
 lib/Data/ObjectDriver/SQL.pm
+lib/Data/ObjectDriver/SQL/Oracle.pm
 Makefile.PL
 MANIFEST			This list of files
 META.yml
