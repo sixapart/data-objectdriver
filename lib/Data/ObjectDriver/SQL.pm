@@ -71,23 +71,27 @@ sub as_sql {
     $sql .= 'FROM ';
 
     ## Add any explicit JOIN statements before the non-joined tables.
+    my %joined;
+    my @from = @{ $stmt->from || [] };
     if ($stmt->joins && @{ $stmt->joins }) {
         my $initial_table_written = 0;
         for my $j (@{ $stmt->joins }) {
             my($table, $joins) = map { $j->{$_} } qw( table joins );
             $table = $stmt->_add_index_hint($table); ## index hint handling
             $sql .= $table unless $initial_table_written++;
+            $joined{$table}++;
             for my $join (@{ $j->{joins} }) {
                 $sql .= ' ' .
                         uc($join->{type}) . ' JOIN ' . $join->{table} . ' ON ' .
                         $join->{condition};
             }
         }
-        $sql .= ', ' if @{ $stmt->from };
+        @from = grep { ! $joined{ $_ } } @from;
+        $sql .= ', ' if @from;
     }
 
-    if ($stmt->from && @{ $stmt->from }) {
-        $sql .= join ', ', map { $stmt->_add_index_hint($_) } @{ $stmt->from };
+    if (@from) {
+        $sql .= join ', ', map { $stmt->_add_index_hint($_) } @from;
     }
 
     $sql .= "\n";
