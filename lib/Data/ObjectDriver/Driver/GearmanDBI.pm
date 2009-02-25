@@ -8,7 +8,10 @@ use Storable();
 use Digest::MD5;
 use Data::Dumper;
 
-__PACKAGE__->mk_accessors(qw( dbi client func driver_arg enabled_cb uniqify_cb ));
+__PACKAGE__->mk_accessors(qw(
+    dbi client func driver_arg enabled_cb uniqify_cb
+    on_exception_cb retry_count
+));
 
 sub init {
     my $driver = shift;
@@ -66,6 +69,12 @@ sub _gearman_search {
     my $uniq    = $uniqify->($sql, $bind);
     my $client  = $driver->client;
 
+    my %options = ();
+    $options{on_exception} = $driver->on_exception_cb
+        if $driver->on_exception_cb;
+    $options{retry_count}  = $driver->retry_count
+        if $driver->retry_count;
+
     my $res = $client->do_task( $func =>
         \Storable::nfreeze( {
             driver_arg => $driver->driver_arg,
@@ -74,7 +83,8 @@ sub _gearman_search {
             key        => $uniq,
         } ),
         {
-            uniq => $uniq  # coalesce all requests for this data
+            uniq => $uniq, # coalesce all requests for this data
+            %options,
         }
     );
     return $res ? Storable::thaw($$res) : [];
