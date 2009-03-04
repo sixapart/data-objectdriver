@@ -60,6 +60,8 @@ sub iterator {
 sub clone {
     my $self = shift;
 
+    # note that this is a SHALLOW copy--any values that are references
+    # will be shared between the original and the clone
     my $terms = $self->_terms ? { %{$self->_terms} } : {};
     my $args  = $self->_args  ? { %{$self->_args} }  : {};
 
