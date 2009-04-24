@@ -1,8 +1,12 @@
 # $Id$
 
 Revision history for Data::ObjectDriver
+0.07
+    - Fixed a issue in the test suite for newer version of SQLite
+      reported by Emmanuel Seyman
+      http://rt.cpan.org/Ticket/Display.html?id=45186
 
-0.06
+0.06  2009.01.28
     - Added peek_next() method to ResultSet, q.v.
     - Localized creation of D::OD::Iterator object. Thanks to Hirotaka Ogawa
       for the patch.
