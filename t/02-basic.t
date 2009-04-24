@@ -242,7 +242,10 @@ setup_dbs({
         ok $w->save, "Saving bad_wine $name";
     }
     # note sqlite is stupid and doesn't return the number of affected rows
-    is (Wine->remove({}, { nofetch => 1 }), '0E0', 'removing all bad wine');
+    # quick hack because I can't rely on version.pm to be installed everywhere
+    my ($sqlite_version) = $DBD::SQLite::VERSION =~ /(\d+(?:\.\d+))/;
+    my $count = $sqlite_version > 1.22 ? scalar @bad_wines : 0E0;
+    is (Wine->remove({}, { nofetch => 1 }), $count, 'removing all bad wine');
 }
 
 # different utilities
