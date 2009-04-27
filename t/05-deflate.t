@@ -18,7 +18,7 @@ BEGIN {
     }
 }
 
-plan tests => 18;
+plan tests => 19;
 
 use Recipe;
 use Ingredient;
@@ -36,6 +36,7 @@ is $deflated->{columns}{recipe_id}, $recipe->recipe_id;
 is $deflated->{columns}{title}, $recipe->title;
 
 my $r2 = Recipe->inflate($deflated);
+ok ! $r2->is_changed;
 is $r2->recipe_id, $recipe->recipe_id;
 is $r2->title, $recipe->title;
 
