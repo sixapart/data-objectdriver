@@ -243,8 +243,8 @@ setup_dbs({
     }
     # note sqlite is stupid and doesn't return the number of affected rows
     # quick hack because I can't rely on version.pm to be installed everywhere
-    my ($sqlite_version) = $DBD::SQLite::VERSION =~ /(\d+(?:\.\d+))/;
-    my $count = $sqlite_version > 1.22 ? scalar @bad_wines : 0E0;
+    my ($sqlite_version) = Wine->driver->rw_handle->{sqlite_version} =~ /(\d+(?:\.\d+))/;
+    my $count = $sqlite_version > 3.5 ? scalar @bad_wines : "0E0";
     is (Wine->remove({}, { nofetch => 1 }), $count, 'removing all bad wine');
 }
 
