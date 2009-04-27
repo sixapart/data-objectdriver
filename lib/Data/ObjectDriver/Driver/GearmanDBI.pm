@@ -110,6 +110,8 @@ sub fetch_data   { shift->dbi->fetch_data   (@_) }
 sub add_working_driver { shift->dbi->add_working_driver (@_) }
 sub commit             { shift->dbi->commit             (@_) }
 sub rollback           { shift->dbi->rollback           (@_) }
+sub rw_handle          { shift->dbi->rw_handle          (@_) }
+sub r_handle           { shift->dbi->r_handle           (@_) }
 
 ## safety AUTOLOAD for the rest of non-core methods
 sub DESTROY { }
