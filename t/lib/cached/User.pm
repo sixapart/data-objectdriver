@@ -7,6 +7,7 @@ use Data::ObjectDriver::Driver::DBI;
 our $LAST_ID = 0;
 __PACKAGE__->install_properties({
     columns => [ qw/
+        user_id
         first_name
         last_name
         address1
