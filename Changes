@@ -2,6 +2,8 @@
 
 Revision history for Data::ObjectDriver
 0.07
+    - When an object is changed, delete the cache instead of updating it.
+      It is a bit more expensive, but should safer.
     - Fixed a issue in the test suite for newer version of SQLite
       reported by Emmanuel Seyman
       http://rt.cpan.org/Ticket/Display.html?id=45186

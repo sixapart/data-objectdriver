@@ -226,7 +226,7 @@ sub update {
     my $ret = $driver->fallback->update($obj);
     my $key = $driver->cache_key(ref($obj), $obj->primary_key);
     $driver->modify_cache(sub {
-        $driver->update_cache($key, $driver->deflate($obj));
+        $driver->uncache_object($obj);
     });
     return $ret;
 }
