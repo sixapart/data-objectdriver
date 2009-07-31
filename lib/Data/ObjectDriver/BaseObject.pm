@@ -537,6 +537,7 @@ sub refresh {
     my $fields = $obj->fetch_data;
     $obj->set_values_internal($fields);
     $obj->call_trigger('post_load');
+    $obj->driver->cache_object($obj);
     return 1;
 }
 
