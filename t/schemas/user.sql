@@ -1,0 +1,21 @@
+CREATE TABLE user (
+  user_id INTEGER NOT NULL PRIMARY KEY,
+  first_name VARCHAR(50),
+  last_name VARCHAR(50),
+  address1 VARCHAR(50),
+  address2 VARCHAR(50),
+  email VARCHAR(50),
+  hair_color VARCHAR(50),
+  eyes_color VARCHAR(50),
+  timezone VARCHAR(50),
+  language1 VARCHAR(50),
+  language2 VARCHAR(50),
+  language3 VARCHAR(50),
+  language4 VARCHAR(50),
+  language5 VARCHAR(50),
+  language6 VARCHAR(50),
+  SSN VARCHAR(50),
+  TIN VARCHAR(50),
+  PIN VARCHAR(50),
+  city VARCHAR(50)
+)
