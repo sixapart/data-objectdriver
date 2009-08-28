@@ -8,7 +8,7 @@ use base qw(Data::ObjectDriver::SQL);
 
 ## Oracle doesn't have the LIMIT clause.
 sub as_limit {
-    return;
+    return '';
 }
 
 ## Override as_sql to emulate the LIMIT clause.
