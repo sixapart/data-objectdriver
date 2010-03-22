@@ -49,19 +49,16 @@ sub bulk_insert {
 
     return 0e0 if (scalar(@{$rows_ref}) == 0);
 
-    my $sql = "INSERT INTO $table("  . join(',', @{$cols}) . ") VALUES\n";
-    my $statement_length = length($sql);
+    my $sql = "INSERT INTO $table ("  . join(',', @{$cols}) . ") VALUES\n";
 
-    foreach my $row (@{$rows_ref}) {
-	my $line = join(',', map { defined($_) ?  $dbh->quote($_) : 'NULL'} @{$row});
-	$statement_length += length($line);
-	$sql .= $line . "\n";
-    }
+    my $one_data_row = "(" . (join ',', (('?') x @$cols)) . ")";
+    my $ph = join ",", (($one_data_row) x @$rows_ref);
+    $sql .= $ph;
 
     # For now just write all data, at some point we need to lookup the
     # maximum packet size for SQL
 
-    return $dbh->do($sql);
+    return $dbh->do($sql, undef, map { @$_ } @$rows_ref);
 }
 
 1;
