@@ -1,3 +1,0 @@
-# $Id$
-
-require 'Makefile.PL';

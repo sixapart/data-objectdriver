@@ -3,10 +3,10 @@
 \bCVS\b
 ~$
 \.bak$
-^MANIFEST\.SKIP$
+^MANIFEST\.
 ^Makefile$
 \.old$
-^blib
+^blib/
 ^pm_to_blib$
 ^ToDo$
 \.tar\.gz$
@@ -14,3 +14,6 @@
 \.shipit$
 t/9\d.+\.t$
 \.db$
+\.git/
+\.shipit$
+\.gitignore

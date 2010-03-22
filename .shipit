@@ -1,4 +1,5 @@
 steps = FindVersion, ChangeVersion, CheckChangeLog, DistTest, Commit, Tag, MakeDist, UploadCPAN
-svn.tagpattern = release-%v
 UploadCPAN.user = sixapart
+git.tagpattern = %v
+git.push_to    = origin
 CheckChangeLog.files = Changes
