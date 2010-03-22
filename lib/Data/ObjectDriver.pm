@@ -201,11 +201,6 @@ caching and partitioning layers, allowing you to spread data across multiple
 physical databases, without your application code needing to know where the
 data is stored.
 
-It's currently considered ALPHA code. The API is largely fixed, but may seen
-some small changes in the future. For what it's worth, the likeliest area
-for changes are in the syntax for the I<search> method, and would most
-likely not break much in the way of backwards compatibility.
-
 =head1 METHODOLOGY
 
 I<Data::ObjectDriver> provides you with a framework for building
