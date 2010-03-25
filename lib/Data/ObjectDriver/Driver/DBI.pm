@@ -138,6 +138,11 @@ sub fetch {
     my $driver = shift;
     my($rec, $class, $orig_terms, $orig_args) = @_;
 
+    if ($Data::ObjectDriver::RESTRICT_IO) {
+        use Data::Dumper;
+        die "Attempted DBI I/O while in restricted mode: fetch() " . Dumper($orig_terms, $orig_args);
+    }
+
     my ($sql, $bind, $stmt) = $driver->prepare_fetch($class, $orig_terms, $orig_args);
 
     my @bind;
@@ -275,6 +280,10 @@ sub exists {
     my($obj) = @_;
     return unless $obj->has_primary_key;
 
+    if ($Data::ObjectDriver::RESTRICT_IO) {
+        die "Attempted DBI I/O while in restricted mode: exists()";
+    }
+
     ## should call pre_search trigger so we can use enum in the part of PKs
     my $terms = $obj->primary_key_to_terms;
 
@@ -328,6 +337,10 @@ sub insert {
 sub _insert_or_replace {
     my $driver = shift;
     my($orig_obj, $options) = @_;
+
+    if ($Data::ObjectDriver::RESTRICT_IO) {
+        die "Attempted DBI I/O while in restricted mode: _insert_or_replace()";
+    }
 
     ## Syntax switch between INSERT or REPLACE statement based on options
     $options ||= {};
@@ -406,6 +419,11 @@ sub update {
     my $driver = shift;
 
     my($orig_obj, $terms) = @_;
+
+    if ($Data::ObjectDriver::RESTRICT_IO) {
+        use Data::Dumper;
+        die "Attempted DBI I/O while in restricted mode: _update() " . Dumper($terms);
+    }
 
     ## Use a duplicate so the pre_save trigger can modify it.
     my $obj = $orig_obj->clone_all;
@@ -488,6 +506,10 @@ sub remove {
 
     return unless $orig_obj->has_primary_key;
 
+    if ($Data::ObjectDriver::RESTRICT_IO) {
+        die "Attempted DBI I/O while in restricted mode: remove()";
+    }
+
     ## Use a duplicate so the pre_save trigger can modify it.
     my $obj = $orig_obj->clone_all;
     $obj->call_trigger('pre_remove', $orig_obj);
@@ -512,6 +534,10 @@ sub remove {
 sub direct_remove {
     my $driver = shift;
     my($class, $orig_terms, $orig_args) = @_;
+
+    if ($Data::ObjectDriver::RESTRICT_IO) {
+        die "Attempted DBI I/O while in restricted mode: direct_remove() " . Dumper($orig_terms, $orig_args);
+    }
 
     ## Use (shallow) duplicates so the pre_search trigger can modify them.
     my $terms = defined $orig_terms ? { %$orig_terms } : {};
@@ -551,6 +577,10 @@ sub bulk_insert {
 
     Carp::croak("Driver doesn't support bulk_insert")
 	    unless ($dbd->can('bulk_insert'));
+
+    if ($Data::ObjectDriver::RESTRICT_IO) {
+        die "Attempted DBI I/O while in restricted mode: bulk_insert()";
+    }
 
     # check that cols are valid..
     my %valid_cols = map {$_ => 1} @{$class->column_names};

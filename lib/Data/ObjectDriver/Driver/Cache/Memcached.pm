@@ -35,6 +35,10 @@ for my $driver_method (keys %memc_method_for) {
         my $ret = $driver->cache->$memc_method(@_);
         $driver->end_query(undef);
 
+        if ($Data::ObjectDriver::RESTRICT_IO) {
+            die "Attempted MemCached I/O while in restricted mode: $memc_method";
+        }
+
         return if !defined $ret;
         return $ret;
     };
