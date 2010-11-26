@@ -107,6 +107,7 @@ sub debug {
 sub profiler {
     my $driver = shift;
     my ($sql) = @_;
+    local $@;
     $PROFILER ||= eval {
         require Data::ObjectDriver::Profiler;
         Data::ObjectDriver::Profiler->new;

@@ -18,7 +18,7 @@ BEGIN {
     }
 }
 
-plan tests => 18;
+plan tests => 20;
 
 use Recipe;
 use Ingredient;
@@ -34,6 +34,19 @@ $Data::ObjectDriver::PROFILE = 1;
 my $recipe = Recipe->new;
 $recipe->title('Cake');
 $recipe->save;
+
+## test profiling in exception handling blocks: i.e w/ $@ defined
+## see https://github.com/aklaswad/data-objectdriver/commit/39ea4f0c90342f1d196670aac2bc04b9d60acfe3
+{
+    ## Can get instance of D::OD::Profiler via profiler()
+    ok( my $profiler = Data::ObjectDriver->profiler );
+
+    ## But when some error was already set to $@, Can't get instance...
+    $@ = "beep";
+    ok( my $one_more_profiler = Data::ObjectDriver->profiler,
+        "get profiler after exception",
+    );
+}
 
 ## disable caching because it makes the test more complicate
 ## to understand. Indeed inflate and deflate generates additional

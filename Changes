@@ -1,5 +1,8 @@
 # $Id$
 
+    - Fixed issue where a profiler cannot be returned if $@ is set
+      https://github.com/sixapart/data-objectdriver/pull/1 (Akira Sawada)
+
 Revision history for Data::ObjectDriver
 0.07 2010.03.22
     - When an object is changed, delete the cache instead of updating it.
