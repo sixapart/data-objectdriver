@@ -1,7 +1,10 @@
 # $Id$
 
+0.08 To be released
     - Fixed issue where a profiler cannot be returned if $@ is set
       https://github.com/sixapart/data-objectdriver/pull/1 (Akira Sawada)
+    - Adds a new restricted IO operation mode controlled by the
+      $Data::ObjectDriver::RESTRICT_IO flag (Brad Whitaker)
 
 Revision history for Data::ObjectDriver
 0.07 2010.03.22
