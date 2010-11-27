@@ -26,6 +26,10 @@ sub search {
     my $driver = shift;
     my($class, $terms, $args) = @_;
 
+    if ($Data::ObjectDriver::RESTRICT_IO) {
+        die "Attempted GearmanDBI I/O while in restricted mode: search() " . Dumper($terms, $args);
+    }
+
     my $dbi = $driver->dbi;
 
     ## if Gearman shouldn't be used, fallback to the configured dbi driver

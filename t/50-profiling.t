@@ -98,6 +98,24 @@ is $frequent->{"SELECT 1 FROM recipes WHERE (recipes.recipe_id = ?)"}, 2;
 
 is $profiler->total_queries, 5;
 
+# testing $Data::ObjectDriver::RESTRICT_IO
+
+$recipe = Recipe->new;
+$recipe->title('Cookies');
+$recipe->save;
+# this didn't die, great!
+
+{
+        local $Data::ObjectDriver::RESTRICT_IO = 1;
+        dies_ok { 
+                $recipe = Recipe->lookup($recipe->recipe_id);
+        } 'I/O attempt intercepted in restricted mode';
+}
+
+lives_ok { 
+        $recipe = Recipe->lookup($recipe->recipe_id);
+} 'I/O succeeded with restriced mode disabled';
+
 SKIP: {
         my $simpletable = eval { require Text::SimpleTable };
         skip "Text::SimpleTable not installed", 2 unless $simpletable;
