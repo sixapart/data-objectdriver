@@ -1,6 +1,6 @@
 # $Id$
 
-0.08 To be released
+0.08 2010.12.06
     - Fixed issue where a profiler cannot be returned if $@ is set
       https://github.com/sixapart/data-objectdriver/pull/1 (Akira Sawada)
     - Adds a new restricted IO operation mode controlled by the
