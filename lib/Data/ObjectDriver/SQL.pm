@@ -134,16 +134,18 @@ sub as_aggregate {
 
 sub as_sql_where {
     my $stmt = shift;
-    $stmt->where && @{ $stmt->where } ?
+    my $stmt_where = $stmt->where && @{ $stmt->where } ?
         'WHERE ' . join(' AND ', @{ $stmt->where }) . "\n" :
         '';
+    return $stmt_where =~ /^WHERE\s+$/ ? '' : $stmt_where;  # against empty WHERE clause
 }
 
 sub as_sql_having {
     my $stmt = shift;
-    $stmt->having && @{ $stmt->having } ?
+    my $stmt_having =  $stmt->having && @{ $stmt->having } ?
         'HAVING ' . join(' AND ', @{ $stmt->having }) . "\n" :
         '';
+    return $stmt_having =~ /^HAVING\s+$/ ? '' : $stmt_having; # against empty HAVING clause
 }
 
 sub add_where {
@@ -645,4 +647,3 @@ Except where otherwise noted, I<Data::ObjectDriver> is Copyright 2005-2006
 Six Apart, cpan@sixapart.com. All rights reserved.
 
 =cut
-
