@@ -1,5 +1,8 @@
 # $Id$
 
+0.09
+    - Fix reuse_dbh behaviour when ping fails on driver->dbh (RT 65448)
+
 0.08 2010.12.06
     - Fixed issue where a profiler cannot be returned if $@ is set
       https://github.com/sixapart/data-objectdriver/pull/1 (Akira Sawada)
