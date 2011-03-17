@@ -1,6 +1,6 @@
 # $Id$
 
-0.09
+0.09 2011.03.17
     - Fix reuse_dbh behaviour when ping fails on driver->dbh (RT 65448)
 
 0.08 2010.12.06
