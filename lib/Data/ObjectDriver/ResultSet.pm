@@ -483,7 +483,7 @@ Data::ObjectDriver::ResultSet - Manage a DB query
     $result->add_limit(10);
     $result->add_offset(100);
 
-    while (not $result->is_empty) {
+    while (not $result->is_finished) {
         my $widget = $result->next;
 
         # Do stuff with $widget
@@ -865,7 +865,7 @@ Arguments:
 
 =head2 slice
 
-Return a slice of the result set.  This is logically equivalent to setting a limit and offset and then retrieving all the objects via I<->next>.  If you call I<slice> and then call I<next>, you will get I<undef> and additionally I<is_empty> will be true.
+Return a slice of the result set.  This is logically equivalent to setting a limit and offset and then retrieving all the objects via I<->next>.  If you call I<slice> and then call I<next>, you will get I<undef> and additionally I<is_finished> will be true.
 
 Arguments:
 
