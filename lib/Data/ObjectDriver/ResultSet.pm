@@ -483,9 +483,7 @@ Data::ObjectDriver::ResultSet - Manage a DB query
     $result->add_limit(10);
     $result->add_offset(100);
 
-    while (not $result->is_finished) {
-        my $widget = $result->next;
-
+    while (my $widget = $result->next) {
         # Do stuff with $widget
     }
 
