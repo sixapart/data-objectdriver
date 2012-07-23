@@ -298,7 +298,7 @@ sub exists {
     my $stmt = $driver->prepare_statement($class, $terms, { limit => 1 });
     my $sql = "SELECT 1 FROM $tbl\n";
     $sql .= $stmt->as_sql_where;
-    my $dbh = $driver->r_handle($obj->properties->{db});
+    my $dbh = $driver->rw_handle($obj->properties->{db});
     $driver->start_query($sql, $stmt->{bind});
     my $sth = $driver->_prepare_cached($dbh, $sql);
     $sth->execute(@{ $stmt->{bind} });
