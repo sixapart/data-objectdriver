@@ -11,6 +11,9 @@ use Data::ObjectDriver::SQL::Oracle;
 use Data::ObjectDriver::Errors;
 use DBD::Oracle qw(:ora_types);
 
+# Oracle has problems with prepare_cached
+sub can_prepare_cached_statements { 0 }
+
 sub init_dbh {
     my $dbd   = shift;
     my ($dbh) = @_;
