@@ -3,7 +3,7 @@
 use strict;
 
 use Data::ObjectDriver::SQL;
-use Test::More tests => 67;
+use Test::More tests => 68;
 
 my $stmt = ns();
 ok($stmt, 'Created SQL object');
@@ -54,6 +54,13 @@ $stmt->add_join(quux => [
     ]);
 
 is $stmt->as_sql, "FROM foo INNER JOIN baz b1 ON foo.baz_id = b1.baz_id AND b1.quux_id = 1 LEFT JOIN baz b2 ON foo.baz_id = b2.baz_id AND b2.quux_id = 2 INNER JOIN foo f1 ON f1.quux_id = quux.q_id\n";
+
+# test case for bug found where add_join is called for a table included in the "from".
+$stmt->from([ 'foo', 'bar' ]);
+$stmt->joins([]);
+$stmt->add_join(foo => { type => 'inner', table => 'bar',
+                         condition => 'foo.bar_id = bar.bar_id' });
+is($stmt->as_sql, "FROM foo INNER JOIN bar ON foo.bar_id = bar.bar_id\n");
 
 ## Testing GROUP BY
 $stmt = ns();
