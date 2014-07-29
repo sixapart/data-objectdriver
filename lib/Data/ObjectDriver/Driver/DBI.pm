@@ -395,8 +395,6 @@ sub _insert_or_replace {
     }
     eval { $sth->execute };
 	die "Failed to execute $sql with ".join(", ",@$cols).": $@" if $@;
-    _close_sth($sth);
-    $driver->end_query($sth);
 
     ## Now, if we didn't have an object ID, we need to grab the
     ## newly-assigned ID.
@@ -409,6 +407,9 @@ sub _insert_or_replace {
         ## the original object.
         $orig_obj->$id_col($id);
     }
+
+    $driver->end_query($sth);
+    _close_sth($sth);
 
     $obj->call_trigger('post_save', $orig_obj);
     $obj->call_trigger('post_insert', $orig_obj);
