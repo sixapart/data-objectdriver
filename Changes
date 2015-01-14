@@ -1,4 +1,5 @@
-# $Id$
+0.10_1 2015.01.14
+    - Fix test (ambs) #16
 
 0.09 2011.03.17
     - Fix reuse_dbh behaviour when ping fails on driver->dbh (RT 65448)
