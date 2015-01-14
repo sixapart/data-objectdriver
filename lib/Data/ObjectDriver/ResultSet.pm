@@ -311,7 +311,7 @@ sub count {
 sub first {
     my $self = shift;
 
-    # Clear is finished in case they are comming back from the last element
+    # Clear is finished in case they are coming back from the last element
     $self->is_finished(0);
     $self->_cursor(0);
 
@@ -443,7 +443,7 @@ sub _load_results {
         return $self->_results;
     }
 
-    # An iterator only ResultSet doesn't have a class (or any paramaters for
+    # An iterator only ResultSet doesn't have a class (or any parameters for
     # that matter) so don't try to search for anything.
     return unless $self->class;
 
@@ -524,7 +524,7 @@ This method returns a Data::ObjectDriver::ResultSet object
 =head2 $new_result = Data::ObjectDriver::ResultSet->iterator(\@data)
 
 Create a new result set object that takes existing data and operates only as an
-iterator, without any of the query managment.
+iterator, without any of the query management.
 
 Arguments:
 
