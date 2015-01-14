@@ -78,7 +78,7 @@ database through DBI.
 This is experimental.
 
 With the 1.11 version of L<DBD::SQLite> Blobs are handled transparently,
-so C<bind_param_attributes> is optionnal.
+so C<bind_param_attributes> is optional.
 With previous version of L<DBD::SQLite> users have experimented issues
 with binary data in CHAR (partially solved by the DBI::SQL_BINARY binding).
 
