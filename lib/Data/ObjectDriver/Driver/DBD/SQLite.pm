@@ -30,7 +30,8 @@ sub bind_param_attributes {
 sub map_error_code {
     my $dbd = shift;
     my($code, $msg) = @_;
-    if ($msg && $msg =~ /not unique/) {
+
+    if ($msg && $msg =~ /(?:not unique|UNIQUE constraint failed)/) {
         return Data::ObjectDriver::Errors->UNIQUE_CONSTRAINT;
     } else {
         return;

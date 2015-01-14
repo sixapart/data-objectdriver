@@ -29,6 +29,8 @@ $t = ErrorTest->new;
 $t->foo('bar');
 dies_ok { $t->insert } 'Second insert fails';
 
-is(ErrorTest->driver->last_error, Data::ObjectDriver::Errors->UNIQUE_CONSTRAINT, 'Failed because of a unique constraint');
+is(ErrorTest->driver->last_error,
+   Data::ObjectDriver::Errors->UNIQUE_CONSTRAINT,
+   'Failed because of a unique constraint');
 
 sub DESTROY { teardown_dbs(qw( global )); }
