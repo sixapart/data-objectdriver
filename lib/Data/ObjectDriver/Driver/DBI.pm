@@ -663,7 +663,7 @@ sub _end_txn {
 
 sub DESTROY {
     my $driver = shift;
-    ## Don't take the responsability of disconnecting this handler
+    ## Don't take the responsibility of disconnecting this handler
     ## if we haven't created it ourself.
     return unless $driver->{__dbh_init_by_driver};
     if (my $dbh = $driver->dbh) {
