@@ -18,3 +18,4 @@ t/9\d.+\.t$
 \.shipit$
 \.gitignore
 ^Data-ObjectDriver-
+\.travis.yml
