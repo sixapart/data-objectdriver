@@ -1,0 +1,99 @@
+{
+   "abstract" : "Simple, transparent data interface, with caching",
+   "author" : [
+      "-2006"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "Minilla/v2.3.0, CPAN::Meta::Converter version 2.140640",
+   "license" : [
+      "artistic_2"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "Data-ObjectDriver",
+   "no_index" : {
+      "directory" : [
+         "t",
+         "xt",
+         "inc",
+         "share",
+         "eg",
+         "examples",
+         "author",
+         "builder"
+      ]
+   },
+   "prereqs" : {
+      "build" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "6.59",
+            "Test::Exception" : "0"
+         }
+      },
+      "configure" : {
+         "requires" : {
+            "Module::Build" : "0.38"
+         }
+      },
+      "develop" : {
+         "requires" : {
+            "Test::CPAN::Meta" : "0",
+            "Test::MinimumVersion::Fast" : "0.04",
+            "Test::PAUSE::Permissions" : "0.04",
+            "Test::Pod" : "1.41",
+            "Test::Spellunker" : "v0.2.7"
+         }
+      },
+      "runtime" : {
+         "recommends" : {
+            "Text::SimpleTable" : "0"
+         },
+         "requires" : {
+            "Class::Accessor::Fast" : "0",
+            "Class::Data::Inheritable" : "0",
+            "Class::Trigger" : "0",
+            "DBI" : "0",
+            "List::Util" : "0",
+            "perl" : "5.006001"
+         }
+      }
+   },
+   "release_status" : "unstable",
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/sixapart/data-objectdriver/issues"
+      },
+      "homepage" : "https://github.com/sixapart/data-objectdriver",
+      "repository" : {
+         "type" : "git",
+         "url" : "git://github.com/sixapart/data-objectdriver.git",
+         "web" : "https://github.com/sixapart/data-objectdriver"
+      }
+   },
+   "version" : "0.10",
+   "x_authority" : "cpan:SIXAPART",
+   "x_contributors" : [
+      "Mart Atkins <matkins@sixapart.com>",
+      "Jonathan Steinert <jsteinert@sixapart.com>",
+      "Paul Lindner <paul@inuus.com>",
+      "Brad Fitzpatrick <brad@danga.com>",
+      "Mischa <none@sixapart.com>",
+      "Garth Webb <gwebb@sixapart.com>",
+      "Graham Blankenbaker <gblankenbaker@sixapart.com>",
+      "Brad Choate <bchoate@sixapart.com>",
+      "Mark Paschal <mpaschal@sixapart.com>",
+      "Sekimura <sekimura@sixapart.com>",
+      "Simon Wistow <swistow@sixapart.com>",
+      "Tatsuhiko Miyagawa <miyagawa@sixapart.com>",
+      "Ben Trott <ben@sixapart.com>",
+      "Kevin Goess <kgoess@sixapart.com>",
+      "Adam Thomason <athomason@sixapart.com>",
+      "Brad Whitaker <whitaker@sixapart.com>",
+      "Yann Kerherve <yann@cyberion.net>",
+      "ambs <ambs@cpan.org>",
+      "ziguzagu <ziguzagu@gmail.com>",
+      "David Steinbrunner <dsteinbrunner@pobox.com>"
+   ]
+}

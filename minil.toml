@@ -1,0 +1,4 @@
+name = "Data-ObjectDriver"
+authority = "cpan:SIXAPART"
+license = "artistic_2"
+badges = ["travis"]
