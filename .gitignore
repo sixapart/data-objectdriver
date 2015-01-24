@@ -7,3 +7,10 @@
 /Makefile.old
 /blib
 /Data-ObjectDriver-*
+/.build
+/_build_params
+/Build
+/Build.bat
+!Build/
+!META.json
+!LICENSE
