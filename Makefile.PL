@@ -1,6 +1,8 @@
 # $Id$
 
 use inc::Module::Install;
+use Module::Install::GithubMeta;
+use Module::Install::AuthorTests;
 
 name('Data-ObjectDriver');
 abstract('');
@@ -11,6 +13,7 @@ no_index(directory => 't');
 
 include('ExtUtils::AutoInstall');
 
+
 requires('DBI');
 requires('Class::Accessor::Fast');
 requires('Class::Data::Inheritable');
@@ -19,7 +22,7 @@ requires('List::Util');
 recommends('Text::SimpleTable');
 build_requires('Test::Exception');
 
-githubmeta;
+githubmeta();
 
 # Cache::Memory isn't in Debian, and the tests all SKIP if this isn't here anyway,
 # so it's more of a build_recommends than a build_requires, but that doesn't exist,
