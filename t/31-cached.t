@@ -156,7 +156,8 @@ is($ingredient2->remove, 1, 'Ingredient removed successfully');
 my $name_before_update = $ingredient3->name;
 $ingredient3->name( $name_before_update . 'MODIFY' );
 # This must update nothing.
-is( $ingredient3->update( { name => $name_before_update . ' ANOTHER MODIFIER' }), 0 );
+ok( 1 != $ingredient3->update( { name => $name_before_update . ' ANOTHER MODIFIER' }),
+    'update with wrong terms must fail');
 
 ## demonstration that we have a problem with caching and transaction
 {
