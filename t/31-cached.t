@@ -16,7 +16,7 @@ BEGIN {
         plan skip_all => 'Tests require Cache::Memory';
     }
 }
-plan tests => 104;
+plan tests => 105;
 
 setup_dbs({
     global   => [ qw( recipes ingredients ) ],
@@ -151,6 +151,13 @@ is_deeply $data,
 
 is($ingredient->remove, 1, 'Ingredient removed successfully');
 is($ingredient2->remove, 1, 'Ingredient removed successfully');
+
+# Try to update only if the column value was not changed.
+my $name_before_update = $ingredient3->name;
+$ingredient3->name( $name_before_update . 'MODIFY' );
+# This must update nothing.
+ok( 1 != $ingredient3->update( { name => $name_before_update . ' ANOTHER MODIFIER' }),
+    'update with wrong terms must fail');
 
 ## demonstration that we have a problem with caching and transaction
 {
