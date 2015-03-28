@@ -1,3 +1,12 @@
+{{$NEXT}}
+
+0.11 2015-03-28T10:04:24Z
+
+    - Fix test (ambs) #16
+    - Migrate to Minilla (ziguzagu) #17
+    - Pass the whole args to fallback driver. (Akira Sawada) #18
+    - Remove a joined table from the "FROM" phrase for fix error on MySQL. (usualoma) #7
+
 0.10 2015.01.14
     - Document spelling corrections (dsteinbrunner) #8 #9 #10 #11 #12 #13 #14
 
@@ -13,7 +22,6 @@
     - Adds a new restricted IO operation mode controlled by the
       $Data::ObjectDriver::RESTRICT_IO flag (Brad Whitaker)
 
-Revision history for Data::ObjectDriver
 0.07 2010.03.22
     - When an object is changed, delete the cache instead of updating it.
       It is a bit more expensive, but should safer.
