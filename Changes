@@ -1,5 +1,9 @@
 {{$NEXT}}
 
+0.12 2015-05-18T05:33:33Z
+
+    - Fix broken $sth at inserting new records (masiuchi) #19
+
 0.11 2015-03-28T10:04:24Z
 
     - Fix test (ambs) #16

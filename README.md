@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/sixapart/data-objectdriver.svg?branch=master)](https://travis-ci.org/sixapart/data-objectdriver) [![Coverage Status](https://img.shields.io/coveralls/sixapart/data-objectdriver/master.svg)](https://coveralls.io/r/sixapart/data-objectdriver?branch=master)
+[![Build Status](https://travis-ci.org/sixapart/data-objectdriver.svg?branch=master)](https://travis-ci.org/sixapart/data-objectdriver) [![Coverage Status](https://img.shields.io/coveralls/sixapart/data-objectdriver/master.svg?style=flat)](https://coveralls.io/r/sixapart/data-objectdriver?branch=master)
 # NAME
 
 Data::ObjectDriver - Simple, transparent data interface, with caching
