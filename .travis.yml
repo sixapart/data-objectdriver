@@ -12,3 +12,6 @@ script:
   - perl Build.PL && ./Build build && cover -test
 after_success:
   - cover -report coveralls
+notifications:
+  slack:
+    secure: WBMu2+BGkKCbrJJFk4S1qxoFZIq2SKdWF8RTN9c6iX2Yf7GmVRPrCBBXiLUjBOWOvm9VRt7VusJ0gBk8L1UKRP8a3qHOmARvaFc8ZauyKPGoWDmd3TIx3AH1aOEnJoBNFL5xDa2S/A5GM4hCbZfe8NBNKB4bYjTKXa34B5AnK+w=
