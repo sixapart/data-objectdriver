@@ -1,5 +1,9 @@
 {{$NEXT}}
 
+0.14 2016-01-14T03:03:02Z
+
+    - Fix test for SQLite 3.10 compatibility (ziguzagu) #21
+
 0.13 2015-05-20T02:26:46Z
 
     - Fix 0.12 changes with braking inserting new records (masiuchi) #20

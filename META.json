@@ -4,7 +4,7 @@
       "-2006"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Minilla/v2.4.1, CPAN::Meta::Converter version 2.140640",
+   "generated_by" : "Minilla/v3.0.1, CPAN::Meta::Converter version 2.150001",
    "license" : [
       "artistic_2"
    ],
@@ -34,7 +34,7 @@
       },
       "configure" : {
          "requires" : {
-            "Module::Build" : "0.38"
+            "Module::Build::Tiny" : "0.035"
          }
       },
       "develop" : {
@@ -60,6 +60,11 @@
             "List::Util" : "0",
             "perl" : "5.006001"
          }
+      },
+      "test" : {
+         "requires" : {
+            "version" : "0"
+         }
       }
    },
    "release_status" : "unstable",
@@ -74,7 +79,7 @@
          "web" : "https://github.com/sixapart/data-objectdriver"
       }
    },
-   "version" : "0.13",
+   "version" : "0.14",
    "x_authority" : "cpan:SIXAPART",
    "x_contributors" : [
       "Mart Atkins <matkins@sixapart.com>",
@@ -99,6 +104,6 @@
       "David Steinbrunner <dsteinbrunner@pobox.com>",
       "Akira Sawada <akira@peatix.com>",
       "Masahiro Iuchi <miuchi@sixapart.com>",
-      "Hiroshi Sakai <ziguzagu@gmail.com>"
+      "ziguzagu <ziguzagu@gmail.com>"
    ]
 }
