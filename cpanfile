@@ -15,3 +15,7 @@ on develop => sub {
    requires 'DBD::SQLite';
    requires 'Text::SimpleTable';
 };
+
+on test => sub {
+    requires 'version';
+};
