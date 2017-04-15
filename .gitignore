@@ -16,3 +16,4 @@
 !LICENSE
 /cpanfile.snapshot
 /local
+/*.db
