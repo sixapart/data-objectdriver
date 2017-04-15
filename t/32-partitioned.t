@@ -4,7 +4,7 @@ use strict;
 
 use lib 't/lib/partitioned';
 
-require 't/lib/db-common.pl';
+require './t/lib/db-common.pl';
 
 use Test::More;
 unless (eval { require DBD::SQLite }) {
@@ -123,6 +123,6 @@ is $ingredient3->remove, 1, 'Ingredient removed successfully';
 is $recipe->remove, 1, 'Recipe removed successfully';
 is $recipe2->remove, 1, 'Recipe removed successfully';
 
-require 't/txn-common.pl';
+require './t/txn-common.pl';
 
 sub DESTROY { teardown_dbs(qw( global cluster1 cluster2 )); }

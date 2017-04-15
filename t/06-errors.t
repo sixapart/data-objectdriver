@@ -3,7 +3,7 @@
 use strict;
 
 use lib 't/lib';
-require 't/lib/db-common.pl';
+require './t/lib/db-common.pl';
 
 use Test::More;
 use Test::Exception;

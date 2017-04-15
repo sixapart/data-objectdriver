@@ -4,7 +4,7 @@ use strict;
 
 use lib 't/lib/multiplexed';
 
-require 't/lib/db-common.pl';
+require './t/lib/db-common.pl';
 
 use Test::Exception;
 use Test::More;
