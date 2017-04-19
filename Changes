@@ -1,5 +1,7 @@
 {{$NEXT}}
 
+    - Fix failed tests with Perl 5.25.11 (miniuchi) #24
+
 0.14 2016-01-14T03:03:02Z
 
     - Fix test for SQLite 3.10 compatibility (ziguzagu) #21

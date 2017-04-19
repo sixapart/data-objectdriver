@@ -5,7 +5,7 @@ use strict;
 use lib 't/lib';
 use lib 't/lib/both';
 
-require 't/lib/db-common.pl';
+require './t/lib/db-common.pl';
 
 use Test::More;
 use Test::Exception;
@@ -186,6 +186,6 @@ $replaced = Recipe->lookup($rid);
 ok $replaced->{__cached};
 is $replaced->title, 'Cup Cake';
 
-require 't/txn-common.pl';
+require './t/txn-common.pl';
 
 sub DESTROY { teardown_dbs(qw( global cluster1 cluster2 )); }

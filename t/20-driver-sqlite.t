@@ -4,7 +4,7 @@ use strict;
 
 use lib 't/lib';
 
-require 't/lib/db-common.pl';
+require './t/lib/db-common.pl';
 
 $Data::ObjectDriver::DEBUG = 0;
 use Test::More;
