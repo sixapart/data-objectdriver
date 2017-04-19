@@ -4,7 +4,7 @@
       "-2006"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Minilla/v3.0.1, CPAN::Meta::Converter version 2.150001",
+   "generated_by" : "Minilla/v3.0.10, CPAN::Meta::Converter version 2.150005",
    "license" : [
       "artistic_2"
    ],
@@ -79,7 +79,7 @@
          "web" : "https://github.com/sixapart/data-objectdriver"
       }
    },
-   "version" : "0.14",
+   "version" : "0.15",
    "x_authority" : "cpan:SIXAPART",
    "x_contributors" : [
       "Mart Atkins <matkins@sixapart.com>",
@@ -103,7 +103,8 @@
       "ambs <ambs@cpan.org>",
       "David Steinbrunner <dsteinbrunner@pobox.com>",
       "Akira Sawada <akira@peatix.com>",
-      "Masahiro Iuchi <miuchi@sixapart.com>",
-      "ziguzagu <ziguzagu@gmail.com>"
-   ]
+      "ziguzagu <ziguzagu@gmail.com>",
+      "Masahiro Iuchi <miuchi@sixapart.com>"
+   ],
+   "x_serialization_backend" : "JSON::PP version 2.27300_01"
 }
