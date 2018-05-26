@@ -147,4 +147,5 @@ is $result->peek_next->name, 'Stags Leap', 'the next one will be Stags Leap';
 is $result->next->name, 'Stags Leap';
 ok ! $result->peek_next, "Stags Leap was the last one";
 
+$wine->driver->dbh->disconnect;
 teardown_dbs(qw( global ));
