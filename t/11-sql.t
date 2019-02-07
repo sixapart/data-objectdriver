@@ -3,7 +3,7 @@
 use strict;
 
 use Data::ObjectDriver::SQL;
-use Test::More tests => 68;
+use Test::More tests => 70;
 
 my $stmt = ns();
 ok($stmt, 'Created SQL object');
@@ -173,6 +173,12 @@ is(scalar @{ $stmt->bind }, 3);
 is($stmt->bind->[0], 'foo');
 is($stmt->bind->[1], 'bar');
 is($stmt->bind->[2], 'baz');
+
+## avoid syntax error
+$stmt = ns();
+$stmt->add_where(foo => []);
+is($stmt->as_sql_where, "WHERE (0 = 1)\n"); # foo IN ()
+is(scalar @{ $stmt->bind }, 0);
 
 ## regression bug. modified parameters
 my %terms = ( foo => [-and => 'foo', 'bar', 'baz']);

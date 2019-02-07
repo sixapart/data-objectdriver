@@ -245,10 +245,13 @@ sub _mk_term {
                 push @bind, @$bind;
             }
             $term = join " $logic ", @terms;
-        } else {
+        } elsif (@$val) {
             $col = $m->($col) if $m = $stmt->column_mutator;
             $term = "$col IN (".join(',', ('?') x scalar @$val).')';
             @bind = @$val;
+        } else {
+            # TODO: column NOT IN ()
+            $term = "0 = 1"; # column IN ()
         }
     } elsif (ref($val) eq 'HASH') {
         my $c = $val->{column} || $col;
