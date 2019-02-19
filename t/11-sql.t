@@ -3,7 +3,7 @@
 use strict;
 
 use Data::ObjectDriver::SQL;
-use Test::More tests => 90;
+use Test::More tests => 93;
 
 my $stmt = ns();
 ok($stmt, 'Created SQL object');
@@ -143,6 +143,11 @@ is($stmt->as_sql_where, "WHERE (foo BETWEEN ? AND ?)\n");
 is(scalar @{ $stmt->bind }, 2);
 is($stmt->bind->[0], 'bar');
 is($stmt->bind->[1], 'baz');
+
+$stmt = ns(); $stmt->add_where(foo => { op => 'LIKE', value => 'bar%' });
+is($stmt->as_sql_where, "WHERE (foo LIKE ?)\n");
+is(scalar @{ $stmt->bind }, 1);
+is($stmt->bind->[0], 'bar%');
 
 $stmt = ns(); $stmt->add_where(foo => { op => '!=', value => 'bar' });
 is($stmt->as_sql_where, "WHERE (foo != ?)\n");
