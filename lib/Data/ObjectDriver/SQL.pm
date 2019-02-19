@@ -261,6 +261,10 @@ sub _mk_term {
             my @values = @{${$val->{value}}};
             $term = "$c $op (" . (shift @values) . ")";
             push @bind, @values;
+        } elsif ($op eq 'BETWEEN' and ref $val->{value} eq 'ARRAY') {
+            Carp::croak "USAGE: foo => {op => 'BETWEEN', value => [\$a, \$b]}" if @{$val->{value}} != 2;
+            $term = "$c $op ? AND ?";
+            push @bind, @{$val->{value}};
         } else {
             $term = "$c $val->{op} ?";
             push @bind, $val->{value};
