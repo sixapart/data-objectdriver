@@ -245,13 +245,10 @@ sub _mk_term {
                 push @bind, @$bind;
             }
             $term = join " $logic ", @terms;
-        } elsif (@$val) {
-            $col = $m->($col) if $m = $stmt->column_mutator;
-            $term = "$col IN (".join(',', ('?') x scalar @$val).')';
-            @bind = @$val;
         } else {
-            # TODO: column NOT IN ()
-            $term = "0 = 1"; # column IN ()
+            $col = $m->($col) if $m = $stmt->column_mutator;
+            $term = $stmt->_mk_term_arrayref($col, 'IN', $val);
+            @bind = @$val;
         }
     } elsif (ref($val) eq 'HASH') {
         my $c = $val->{column} || $col;
@@ -267,6 +264,19 @@ sub _mk_term {
         push @bind, $val;
     }
     ($term, \@bind, $col);
+}
+
+sub _mk_term_arrayref {
+    my ($stmt, $col, $op, $val) = @_;
+    if (@$val) {
+        return "$col $op (".join(',', ('?') x scalar @$val).')';
+    } else {
+        if ($op eq 'IN') {
+            return '0 = 1';
+        } elsif ($op eq 'NOT IN') {
+            return '1 = 1';
+        }
+    }
 }
 
 sub _add_index_hint {
