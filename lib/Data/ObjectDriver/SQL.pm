@@ -266,8 +266,12 @@ sub _mk_term {
             $term = "$c $op ? AND ?";
             push @bind, @{$val->{value}};
         } else {
-            $term = "$c $val->{op} ?";
-            push @bind, $val->{value};
+            if (ref $val->{value} eq 'SCALAR') {
+                $term = "$c $val->{op} " . ${$val->{value}};
+            } else {
+                $term = "$c $val->{op} ?";
+                push @bind, $val->{value};
+            }
         }
     } elsif (ref($val) eq 'SCALAR') {
         $col = $m->($col) if $m = $stmt->column_mutator;
