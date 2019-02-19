@@ -278,8 +278,12 @@ sub _mk_term {
         push @bind, @values;
     } else {
         $col = $m->($col) if $m = $stmt->column_mutator;
-        $term = "$col = ?";
-        push @bind, $val;
+        if (defined $val) {
+            $term = "$col = ?";
+            push @bind, $val;
+        } else {
+            $term = "$col IS NULL";
+        }
     }
     ($term, \@bind, $col);
 }
