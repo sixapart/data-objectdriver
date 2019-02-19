@@ -3,7 +3,7 @@
 use strict;
 
 use Data::ObjectDriver::SQL;
-use Test::More tests => 79;
+use Test::More tests => 82;
 
 my $stmt = ns();
 ok($stmt, 'Created SQL object');
@@ -183,6 +183,12 @@ is(scalar @{ $stmt->bind }, 3);
 is($stmt->bind->[0], 'foo');
 is($stmt->bind->[1], 'bar');
 is($stmt->bind->[2], 'baz');
+
+$stmt = ns();
+$stmt->add_where(foo => \['IN (SELECT foo FROM bar WHERE t=?)', 'foo']);
+is($stmt->as_sql_where, "WHERE (foo IN (SELECT foo FROM bar WHERE t=?))\n");
+is(scalar @{ $stmt->bind }, 1);
+is($stmt->bind->[0], 'foo');
 
 $stmt = ns();
 $stmt->add_where(foo => { op => 'IN', value => \['(SELECT foo FROM bar WHERE t=?)', 'foo']});

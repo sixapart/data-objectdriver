@@ -268,6 +268,10 @@ sub _mk_term {
     } elsif (ref($val) eq 'SCALAR') {
         $col = $m->($col) if $m = $stmt->column_mutator;
         $term = "$col $$val";
+    } elsif (ref($val) eq 'REF') {
+        my @values = @{$$val};
+        $term = "$col " . (shift @values);
+        push @bind, @values;
     } else {
         $col = $m->($col) if $m = $stmt->column_mutator;
         $term = "$col = ?";
