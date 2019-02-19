@@ -257,6 +257,10 @@ sub _mk_term {
         if (($op eq 'IN' or $op eq 'NOT IN') and ref $val->{value} eq 'ARRAY') {
             $term = $stmt->_mk_term_arrayref($c, $op, $val->{value});
             push @bind, @{$val->{value}};
+        } elsif (($op eq 'IN' or $op eq 'NOT IN') and ref $val->{value} eq 'REF') {
+            my @values = @{${$val->{value}}};
+            $term = "$c $op (" . (shift @values) . ")";
+            push @bind, @values;
         } else {
             $term = "$c $val->{op} ?";
             push @bind, $val->{value};
