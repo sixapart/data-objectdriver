@@ -253,8 +253,14 @@ sub _mk_term {
     } elsif (ref($val) eq 'HASH') {
         my $c = $val->{column} || $col;
         $c = $m->($c) if $m = $stmt->column_mutator;
-        $term = "$c $val->{op} ?";
-        push @bind, $val->{value};
+        my $op = uc $val->{op};
+        if (($op eq 'IN' or $op eq 'NOT IN') and ref $val->{value} eq 'ARRAY') {
+            $term = $stmt->_mk_term_arrayref($c, $op, $val->{value});
+            push @bind, @{$val->{value}};
+        } else {
+            $term = "$c $val->{op} ?";
+            push @bind, $val->{value};
+        }
     } elsif (ref($val) eq 'SCALAR') {
         $col = $m->($col) if $m = $stmt->column_mutator;
         $term = "$col $$val";
