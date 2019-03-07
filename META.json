@@ -4,13 +4,13 @@
       "-2006"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Minilla/v3.0.10, CPAN::Meta::Converter version 2.150005",
+   "generated_by" : "Minilla/v3.1.4, CPAN::Meta::Converter version 2.150010",
    "license" : [
       "artistic_2"
    ],
    "meta-spec" : {
       "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
-      "version" : "2"
+      "version" : 2
    },
    "name" : "Data-ObjectDriver",
    "no_index" : {
@@ -79,32 +79,37 @@
          "web" : "https://github.com/sixapart/data-objectdriver"
       }
    },
-   "version" : "0.15",
+   "version" : "0.16",
    "x_authority" : "cpan:SIXAPART",
    "x_contributors" : [
-      "Mart Atkins <matkins@sixapart.com>",
-      "Jonathan Steinert <jsteinert@sixapart.com>",
-      "Paul Lindner <paul@inuus.com>",
+      "Adam Thomason <athomason@sixapart.com>",
+      "Akira Sawada <akira@peatix.com>",
+      "Ben Trott <ben@sixapart.com>",
+      "Brad Choate <bchoate@sixapart.com>",
       "Brad Fitzpatrick <brad@danga.com>",
-      "Mischa <none@sixapart.com>",
+      "Brad Whitaker <whitaker@sixapart.com>",
+      "David Steinbrunner <dsteinbrunner@pobox.com>",
       "Garth Webb <gwebb@sixapart.com>",
       "Graham Blankenbaker <gblankenbaker@sixapart.com>",
-      "Brad Choate <bchoate@sixapart.com>",
+      "Jonathan Steinert <jsteinert@sixapart.com>",
+      "Kenichi Ishigaki <ishigaki@cpan.org>",
+      "Kevin Goess <kgoess@sixapart.com>",
       "Mark Paschal <mpaschal@sixapart.com>",
+      "Mart Atkins <matkins@sixapart.com>",
+      "Masahiro Iuchi <miuchi@sixapart.com>",
+      "Mischa <none@sixapart.com>",
+      "Paul Lindner <paul@inuus.com>",
       "Sekimura <sekimura@sixapart.com>",
       "Simon Wistow <swistow@sixapart.com>",
-      "Tatsuhiko Miyagawa <miyagawa@sixapart.com>",
-      "Ben Trott <ben@sixapart.com>",
-      "Kevin Goess <kgoess@sixapart.com>",
-      "Adam Thomason <athomason@sixapart.com>",
-      "Brad Whitaker <whitaker@sixapart.com>",
-      "Yann Kerherve <yann@cyberion.net>",
+      "Takatsugu Shigeta <shigeta@cpan.org>",
+      "Takatsugu Shigeta <tshigeta@sixapart.com>",
       "Taku AMANO <taku@toi-planning.net>",
+      "Tatsuhiko Miyagawa <miyagawa@sixapart.com>",
+      "Tsuyoshi Watanabe <twata_1@yahoo.co.jp>",
+      "Yann Kerherve <yann@cyberion.net>",
       "ambs <ambs@cpan.org>",
-      "David Steinbrunner <dsteinbrunner@pobox.com>",
-      "Akira Sawada <akira@peatix.com>",
-      "ziguzagu <ziguzagu@gmail.com>",
-      "Masahiro Iuchi <miuchi@sixapart.com>"
+      "ziguzagu <ziguzagu@gmail.com>"
    ],
-   "x_serialization_backend" : "JSON::PP version 2.27300_01"
+   "x_serialization_backend" : "JSON::PP version 2.97001",
+   "x_static_install" : 1
 }
