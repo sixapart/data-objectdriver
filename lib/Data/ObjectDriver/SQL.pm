@@ -277,6 +277,7 @@ sub _mk_term {
         $col = $m->($col) if $m = $stmt->column_mutator;
         $term = "$col $$val";
     } elsif (ref($val) eq 'REF') {
+        $col = $m->($col) if $m = $stmt->column_mutator;
         my @values = @{$$val};
         $term = "$col " . (shift @values);
         push @bind, @values;
