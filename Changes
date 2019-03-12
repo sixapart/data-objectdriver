@@ -1,5 +1,9 @@
 {{$NEXT}}
 
+0.17 2019-03-12T04:24:20Z
+
+    - Bump version
+
 0.16 2019-03-07T07:07:14Z
 
     - Avoid SQL syntax error: column IN () (charsbar) #26
