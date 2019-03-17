@@ -13,6 +13,14 @@ use Data::ObjectDriver::SQL;
 use Data::ObjectDriver::Driver::DBD;
 use Data::ObjectDriver::Iterator;
 
+our $HasWeaken;
+eval q{ use Scalar::Util qw(weaken) }; ## no critic
+$HasWeaken = !$@;
+
+our $HasAtFork;
+eval q{ use POSIX::AtFork }; ## no critic
+$HasAtFork = !$@;
+
 __PACKAGE__->mk_accessors(qw( dsn username password connect_options dbh get_dbh dbd prefix reuse_dbh force_no_prepared_cache));
 
 
@@ -36,6 +44,21 @@ sub init {
         }
         $driver->dbd(Data::ObjectDriver::Driver::DBD->new($type));
     }
+
+    if ( $HasWeaken && $HasAtFork ) {
+        # Purge Cached dbh, and reset transaction level
+        weaken(my $driver_weaken = $driver);
+        POSIX::AtFork->add_to_child(sub {
+            eval {
+                if ( my $dbh = $driver_weaken->dbh ) {
+                    $dbh->{InactiveDestroy} = 1;
+                    $driver_weaken->dbh(undef);
+                }
+                $driver->txn_active(0);
+            };
+        });
+    }
+
     $driver;
 }
 
@@ -750,6 +773,16 @@ sub prepare_statement {
 sub last_error {
     my $driver = shift;
     return $driver->dbd->map_error_code($DBI::err, $DBI::errstr);
+}
+
+if ( $HasAtFork ) {
+    # Purge all reusable db handles
+    POSIX::AtFork->add_to_child(sub {
+        for my $handle ( values %Handles ) {
+            $handle->{InactiveDestroy} = 1;
+        }
+        %Handles = ();
+    });
 }
 
 1;
