@@ -54,7 +54,7 @@ sub init {
                     $dbh->{InactiveDestroy} = 1;
                     $driver_weaken->dbh(undef);
                 }
-                $driver->txn_active(0);
+                $driver_weaken->txn_active(0);
             };
         });
     }
