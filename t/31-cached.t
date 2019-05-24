@@ -5,7 +5,7 @@ use strict;
 use lib 't/lib';  # for Cache::Memory substitute.
 use lib 't/lib/cached';
 
-require 't/lib/db-common.pl';
+require './t/lib/db-common.pl';
 
 use Test::More;
 BEGIN {
@@ -187,6 +187,6 @@ ok(! Ingredient->lookup(1), "really deleted");
 is($recipe->remove, 1, 'Recipe removed successfully');
 is($recipe2->remove, 1, 'Recipe removed successfully');
 
-require 't/txn-common.pl';
+require './t/txn-common.pl';
 
 sub DESTROY { teardown_dbs(qw( global )); }

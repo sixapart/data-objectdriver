@@ -3,7 +3,7 @@
 use strict;
 
 use Data::ObjectDriver::SQL;
-use Test::More tests => 68;
+use Test::More tests => 93;
 
 my $stmt = ns();
 ok($stmt, 'Created SQL object');
@@ -128,6 +128,27 @@ is(scalar @{ $stmt->bind }, 2);
 is($stmt->bind->[0], 'bar');
 is($stmt->bind->[1], 'baz');
 
+$stmt = ns(); $stmt->add_where(foo => { op => 'IN', value => ['bar'] });
+is($stmt->as_sql_where, "WHERE (foo IN (?))\n");
+is(scalar @{ $stmt->bind }, 1);
+is($stmt->bind->[0], 'bar');
+
+$stmt = ns(); $stmt->add_where(foo => { op => 'NOT IN', value => ['bar'] });
+is($stmt->as_sql_where, "WHERE (foo NOT IN (?))\n");
+is(scalar @{ $stmt->bind }, 1);
+is($stmt->bind->[0], 'bar');
+
+$stmt = ns(); $stmt->add_where(foo => { op => 'BETWEEN', value => ['bar', 'baz'] });
+is($stmt->as_sql_where, "WHERE (foo BETWEEN ? AND ?)\n");
+is(scalar @{ $stmt->bind }, 2);
+is($stmt->bind->[0], 'bar');
+is($stmt->bind->[1], 'baz');
+
+$stmt = ns(); $stmt->add_where(foo => { op => 'LIKE', value => 'bar%' });
+is($stmt->as_sql_where, "WHERE (foo LIKE ?)\n");
+is(scalar @{ $stmt->bind }, 1);
+is($stmt->bind->[0], 'bar%');
+
 $stmt = ns(); $stmt->add_where(foo => { op => '!=', value => 'bar' });
 is($stmt->as_sql_where, "WHERE (foo != ?)\n");
 is(scalar @{ $stmt->bind }, 1);
@@ -173,6 +194,34 @@ is(scalar @{ $stmt->bind }, 3);
 is($stmt->bind->[0], 'foo');
 is($stmt->bind->[1], 'bar');
 is($stmt->bind->[2], 'baz');
+
+$stmt = ns();
+$stmt->add_where(foo => \['IN (SELECT foo FROM bar WHERE t=?)', 'foo']);
+is($stmt->as_sql_where, "WHERE (foo IN (SELECT foo FROM bar WHERE t=?))\n");
+is(scalar @{ $stmt->bind }, 1);
+is($stmt->bind->[0], 'foo');
+
+$stmt = ns();
+$stmt->add_where(foo => { op => 'IN', value => \['(SELECT foo FROM bar WHERE t=?)', 'foo']});
+is($stmt->as_sql_where, "WHERE (foo IN ((SELECT foo FROM bar WHERE t=?)))\n");
+is(scalar @{ $stmt->bind }, 1);
+is($stmt->bind->[0], 'foo');
+
+$stmt = ns();
+$stmt->add_where(foo => { op => 'IN', value => \'(SELECT foo FROM bar)'});
+is($stmt->as_sql_where, "WHERE (foo IN (SELECT foo FROM bar))\n");
+is(scalar @{ $stmt->bind }, 0);
+
+$stmt = ns();
+$stmt->add_where(foo => undef);
+is($stmt->as_sql_where, "WHERE (foo IS NULL)\n");
+is(scalar @{ $stmt->bind }, 0);
+
+## avoid syntax error
+$stmt = ns();
+$stmt->add_where(foo => []);
+is($stmt->as_sql_where, "WHERE (0 = 1)\n"); # foo IN ()
+is(scalar @{ $stmt->bind }, 0);
 
 ## regression bug. modified parameters
 my %terms = ( foo => [-and => 'foo', 'bar', 'baz']);

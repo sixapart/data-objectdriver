@@ -1,5 +1,18 @@
 {{$NEXT}}
 
+0.17 2019-03-12T04:24:20Z
+
+    - Bump version
+
+0.16 2019-03-07T07:07:14Z
+
+    - Avoid SQL syntax error: column IN () (charsbar) #26
+    - Add disconnect method explicitly to pass tests for windows (twata1) #25
+
+0.15 2017-04-19T01:41:02Z
+
+    - Fix failed tests with Perl 5.25.11 (miniuchi) #24
+
 0.14 2016-01-14T03:03:02Z
 
     - Fix test for SQLite 3.10 compatibility (ziguzagu) #21
