@@ -3,7 +3,7 @@
 use strict;
 
 use Data::ObjectDriver::SQL;
-use Test::More tests => 96;
+use Test::More tests => 95;
 
 my $stmt = ns();
 ok($stmt, 'Created SQL object');
