@@ -3,7 +3,7 @@
 use strict;
 
 use Data::ObjectDriver::SQL;
-use Test::More tests => 93;
+use Test::More tests => 95;
 
 my $stmt = ns();
 ok($stmt, 'Created SQL object');
@@ -311,5 +311,32 @@ is($stmt->as_sql, "SELECT foo\nFROM baz\n-- bad", "correctly untainted");
 
 $stmt->comment("G\\G");
 is($stmt->as_sql, "SELECT foo\nFROM baz\n-- G", "correctly untainted");
+
+## Testing complex WHERE
+$stmt = ns();
+$stmt->add_complex_where([
+    { foo => 'foo_value' },
+    { bar => 'bar_value' },
+]);
+is($stmt->as_sql_where, "WHERE ((foo = ?)) AND ((bar = ?))\n");
+
+$stmt = ns();
+my @terms = (
+    { foo => 'foo_value' },
+    {
+        bar => [
+            { op => 'LIKE', value => 'bar1%' },
+            { op => 'LIKE', value => 'bar2%' },
+        ],
+        baz => 'baz_value',
+    }
+);
+$stmt->add_complex_where(\@terms);
+is(
+    $stmt->as_sql_where,
+    (keys(%{$terms[1]}))[0] eq 'bar'
+        ?  "WHERE ((foo = ?)) AND (((bar LIKE ?) OR (bar LIKE ?)) AND (baz = ?))\n"
+        :  "WHERE ((foo = ?)) AND ((baz = ?) AND ((bar LIKE ?) OR (bar LIKE ?)))\n"
+);
 
 sub ns { Data::ObjectDriver::SQL->new }
