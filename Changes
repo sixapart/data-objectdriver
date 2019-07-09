@@ -1,5 +1,9 @@
 {{$NEXT}}
 
+0.18 2019-07-09T07:57:37Z
+
+    - add_complex_where can not handle some case of nested group (usualoma) #30
+
 0.17 2019-03-12T04:24:20Z
 
     - Bump version

@@ -79,7 +79,7 @@
          "web" : "https://github.com/sixapart/data-objectdriver"
       }
    },
-   "version" : "0.17",
+   "version" : "0.18",
    "x_authority" : "cpan:SIXAPART",
    "x_contributors" : [
       "Adam Thomason <athomason@sixapart.com>",
@@ -103,7 +103,9 @@
       "Simon Wistow <swistow@sixapart.com>",
       "Takatsugu Shigeta <shigeta@cpan.org>",
       "Takatsugu Shigeta <tshigeta@sixapart.com>",
+      "Taku AMANO <taku@taaas.jp>",
       "Taku AMANO <taku@toi-planning.net>",
+      "Taku AMANO <tamano@sixapart.com>",
       "Tatsuhiko Miyagawa <miyagawa@sixapart.com>",
       "Tsuyoshi Watanabe <twata_1@yahoo.co.jp>",
       "Yann Kerherve <yann@cyberion.net>",
