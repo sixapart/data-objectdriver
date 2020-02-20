@@ -105,11 +105,12 @@ sub create_sql {
     close $fh;
     if ( $driver ne 'SQLite' ) {
         $sql .= ';';
+        my $drop_table = (grep /^DOD_TEST_DSN/, keys %ENV) ? 1 : 0;
         my $sqlt = SQL::Translator->new(
             parser         => 'SQLite',
             producer       => $driver,
             no_comments    => 1,
-            add_drop_table => 1,
+            add_drop_table => $drop_table,
         );
         $sql = $sqlt->translate(\$sql) or die $sqlt->error;
         return split /;\s*/s, $sql;
