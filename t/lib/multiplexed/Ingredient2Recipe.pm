@@ -3,16 +3,17 @@
 package Ingredient2Recipe;
 use strict;
 use base qw( Data::ObjectDriver::BaseObject );
+use DodTestUtil;
 
 use Data::ObjectDriver::Driver::DBI;
 use Data::ObjectDriver::Driver::Multiplexer;
 
 my $global1_driver = Data::ObjectDriver::Driver::DBI->new(
-    dsn => 'dbi:SQLite:dbname=global1.db',
+    dsn => DodTestUtil::dsn('global1'),
 );
 
 my $global2_driver = Data::ObjectDriver::Driver::DBI->new(
-    dsn => 'dbi:SQLite:dbname=global2.db',
+    dsn => DodTestUtil::dsn('global2'),
 );
 
 __PACKAGE__->install_properties({

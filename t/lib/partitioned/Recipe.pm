@@ -3,6 +3,7 @@
 package Recipe;
 use strict;
 use base qw( Data::ObjectDriver::BaseObject );
+use DodTestUtil;
 
 use Data::ObjectDriver::Driver::DBI;
 
@@ -11,7 +12,7 @@ __PACKAGE__->install_properties({
     datasource => 'recipes',
     primary_key => 'recipe_id',
     driver => Data::ObjectDriver::Driver::DBI->new(
-        dsn      => 'dbi:SQLite:dbname=global.db',
+        dsn      => DodTestUtil::dsn('global'),
         reuse_dbh => 1,
     ),
 });
@@ -23,7 +24,7 @@ __PACKAGE__->has_partitions(
         my $cluster = shift;
         my $driver = $drivers{$cluster} ||= 
             Data::ObjectDriver::Driver::DBI->new(
-                dsn => 'dbi:SQLite:dbname=cluster' . $cluster . '.db',
+                dsn => DodTestUtil::dsn('cluster' . $cluster),
                 reuse_dbh => 1,
                 @_,
             );

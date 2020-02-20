@@ -1,6 +1,7 @@
 # $Id$
 
 use strict;
+use DodTestUtil;
 
 package My::BaseObject;
 use base qw/Data::ObjectDriver::BaseObject/;
@@ -24,7 +25,7 @@ __PACKAGE__->install_properties({
     primary_key => 'id',
     column_defs => { content => 'blob', binchar => 'binchar' },
     driver => Data::ObjectDriver::Driver::DBI->new(
-        dsn      => 'dbi:SQLite:dbname=global.db',
+        dsn      => DodTestUtil::dsn('global'),
     ),
 });
 

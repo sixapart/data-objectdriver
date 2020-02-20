@@ -3,6 +3,7 @@
 package IngredientsWeighted;
 use strict;
 use base qw( Data::ObjectDriver::BaseView );
+use DodTestUtil;
 
 use Data::ObjectDriver::Driver::DBI;
 use Data::ObjectDriver::SQL;
@@ -10,7 +11,7 @@ use Data::ObjectDriver::SQL;
 __PACKAGE__->install_properties({
     columns => [ 'ingredient_name', 'c' ],
     driver  => Data::ObjectDriver::Driver::DBI->new(
-            dsn      => 'dbi:SQLite:dbname=global.db',
+            dsn      => DodTestUtil::dsn('global'),
             pk_generator => \&generate_pk,
         ),
 });

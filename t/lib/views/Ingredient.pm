@@ -3,6 +3,7 @@
 package Ingredient;
 use strict;
 use base qw( Data::ObjectDriver::BaseObject );
+use DodTestUtil;
 
 use Data::ObjectDriver::Driver::DBI;
 
@@ -13,7 +14,7 @@ __PACKAGE__->install_properties({
     datasource => 'ingredients',
     primary_key => 'id',
     driver      => Data::ObjectDriver::Driver::DBI->new(
-            dsn      => 'dbi:SQLite:dbname=global.db',
+            dsn      => DodTestUtil::dsn('global'),
             pk_generator => \&generate_pk,
     ),
 });

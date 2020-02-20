@@ -3,6 +3,7 @@
 package Recipe;
 use strict;
 use base qw( Data::ObjectDriver::BaseObject );
+use DodTestUtil;
 
 use Cache::Memory;
 use Data::ObjectDriver::Driver::Cache::Cache;
@@ -15,7 +16,7 @@ __PACKAGE__->install_properties({
     driver => Data::ObjectDriver::Driver::Cache::Cache->new(
         cache => Cache::Memory->new,
         fallback => Data::ObjectDriver::Driver::DBI->new(
-            dsn      => 'dbi:SQLite:dbname=global.db',
+            dsn      => DodTestUtil::dsn('global'),
             reuse_dbh => 1,
         ),
     ),
@@ -28,7 +29,7 @@ __PACKAGE__->has_partitions(
         my $cluster = shift;
         my $driver = $drivers{$cluster} ||= 
             Data::ObjectDriver::Driver::DBI->new(
-                dsn => 'dbi:SQLite:dbname=cluster' . $cluster . '.db',
+                dsn => DodTestUtil::dsn('cluster' . $cluster),
                 reuse_dbh => 1,
                 @_,
             );

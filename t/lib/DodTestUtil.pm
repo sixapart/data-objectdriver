@@ -11,6 +11,11 @@ sub db_filename {
     $dbname . $$ . '.db';
 }
 
+sub dsn {
+    my($dbname) = @_;
+    return 'dbi:SQLite:' . db_filename($dbname);
+}
+
 sub setup_dbs {
     my($info) = @_;
     teardown_dbs(keys %$info);
