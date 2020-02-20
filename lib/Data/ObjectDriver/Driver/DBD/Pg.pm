@@ -62,4 +62,15 @@ sub bulk_insert {
     return $dbh->pg_endcopy();
 }
 
+sub map_error_code {
+    my $dbd = shift;
+    my($code, $msg) = @_;
+
+    if ($msg && $msg =~ /(?:violates unique constraint)/) {
+        return Data::ObjectDriver::Errors->UNIQUE_CONSTRAINT;
+    } else {
+        return;
+    }
+}
+
 1;
