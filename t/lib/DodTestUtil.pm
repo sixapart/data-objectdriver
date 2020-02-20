@@ -5,7 +5,7 @@ use File::Spec;
 
 sub db_filename {
     my($dbname) = @_;
-    $dbname . '.db';
+    $dbname . $$ . '.db';
 }
 
 sub setup_dbs {
