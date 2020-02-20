@@ -19,7 +19,7 @@ __PACKAGE__->install_properties({
 sub base_statement {
     my $class = shift;
     my $stmt = Data::ObjectDriver::SQL->new;
-    $stmt->add_select('ingredients.name' => 'ingredient_name');
+    $stmt->add_select('MAX(ingredients.name)' => 'ingredient_name');
     $stmt->add_select('COUNT(*)' => 'c');
     $stmt->from([ 'ingredient2recipe', 'ingredients' ]);
     $stmt->add_where('ingredients.id' => \'= ingredient2recipe.ingredient_id');
