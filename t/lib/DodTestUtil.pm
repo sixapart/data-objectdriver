@@ -20,7 +20,7 @@ sub setup_dbs {
     my($info) = @_;
     teardown_dbs(keys %$info);
     for my $dbname (keys %$info) {
-        my $dbh = DBI->connect('dbi:SQLite:dbname=' . db_filename($dbname),
+        my $dbh = DBI->connect(dsn($dbname),
             '', '', { RaiseError => 1, PrintError => 0 });
         for my $table (@{ $info->{$dbname} }) {
             $dbh->do( create_sql($table) );
