@@ -10,9 +10,9 @@ use Ingredient;
 use Ingredient2Recipe;
 
 __PACKAGE__->install_properties({
-    columns => [ 'id', 'title' ],
+    columns => [ 'recipe_id', 'title' ],
     datasource => 'recipes',
-    primary_key => 'id',
+    primary_key => 'recipe_id',
     driver => Data::ObjectDriver::Driver::DBI->new(
         dsn      => DodTestUtil::dsn('global'),
     ),
@@ -37,7 +37,7 @@ sub add_ingredient {
     my($ingredient) = @_;
     my $map = Ingredient2Recipe->new;
     $map->ingredient_id($ingredient->id);
-    $map->recipe_id($recipe->id);
+    $map->recipe_id($recipe->recipe_id);
     $map->save;
 }
 
