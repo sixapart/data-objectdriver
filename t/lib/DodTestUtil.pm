@@ -77,7 +77,7 @@ sub setup_dbs {
             dsn($dbname),
             env('DOD_TEST_USER', $dbname),
             env('DOD_TEST_PASS', $dbname),
-            { RaiseError => 1, PrintError => 0 });
+            { RaiseError => 1, PrintError => 0, ShowErrorStatement => 1 });
         for my $table (@{ $info->{$dbname} }) {
             $dbh->do($_) for create_sql($table);
         }
