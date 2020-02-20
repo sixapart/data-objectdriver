@@ -1,7 +1,10 @@
 package DodTestUtil;
 
 use strict;
+use Exporter qw/import/;
 use File::Spec;
+
+our @EXPORT = qw/setup_dbs teardown_dbs/;
 
 sub db_filename {
     my($dbname) = @_;
