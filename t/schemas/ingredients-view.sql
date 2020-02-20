@@ -1,6 +1,5 @@
 CREATE TABLE ingredients (
-  id INTEGER NOT NULL,
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   name VARCHAR(50),
-  quantity SMALLINT,
-  PRIMARY KEY (id)
+  quantity SMALLINT
 )

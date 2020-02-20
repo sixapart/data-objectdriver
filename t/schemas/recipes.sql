@@ -1,5 +1,5 @@
 CREATE TABLE recipes (
-  recipe_id INTEGER NOT NULL PRIMARY KEY,
+  recipe_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   partition_id SMALLINT,
   title VARCHAR(50)
 )
