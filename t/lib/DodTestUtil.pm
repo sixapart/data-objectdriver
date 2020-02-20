@@ -43,8 +43,8 @@ sub db_filename {
 sub dsn {
     my($dbname) = @_;
     my $driver = driver();
-    if ( my $dsn = env('DOD_TEST_DSN', $name) ) {
-        return "$dsn;dbname=$name";
+    if ( my $dsn = env('DOD_TEST_DSN', $dbname) ) {
+        return "$dsn;dbname=$dbname";
     }
     if ( $driver eq 'MySQL' ) {
         $TestDB{$dbname} ||= Test::mysqld->new(
