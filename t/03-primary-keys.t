@@ -90,7 +90,8 @@ setup_dbs({
 }
 
 # 0 might be a valid pk
-{ 
+SKIP: {
+    skip "primary key 0 has a special meaning for MySQL", 4 if DodTestUtil::driver eq 'MySQL';
     my $rv = Wine->remove({});
     # make sure that remove returns the number of records deleted (1)
     is($rv, 1, 'correct number of rows deleted');
