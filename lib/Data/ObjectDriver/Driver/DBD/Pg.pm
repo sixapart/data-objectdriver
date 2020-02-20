@@ -57,7 +57,7 @@ sub bulk_insert {
     $dbh->do($sql);
     foreach my $row (@{$rows_ref}) {
         my $line = join("\t", map {$_ || '\N'} @{$row});
-        $dbh->pg_putline($line);
+        $dbh->pg_putline("$line\n");
     }
     return $dbh->pg_endcopy();
 }
