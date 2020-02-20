@@ -87,7 +87,9 @@ sub setup_dbs {
 
 sub teardown_dbs {
     my(@dbs) = @_;
+    my $driver = driver();
     for my $db (@dbs) {
+        next unless $driver eq 'SQLite';
         my $file = db_filename($db);
         next unless -e $file;
         unlink $file or die "Can't teardown $db: $!";
