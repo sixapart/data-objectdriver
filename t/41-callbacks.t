@@ -6,9 +6,8 @@ use lib 't/lib';
 
 use Test::More;
 use DodTestUtil;
-unless (eval { require DBD::SQLite }) {
-    plan skip_all => 'Tests require DBD::SQLite';
-}
+
+BEGIN { DodTestUtil->check_driver }
 
 plan tests => 25;
 

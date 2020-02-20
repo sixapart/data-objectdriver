@@ -7,9 +7,9 @@ use lib 't/lib';
 $Data::ObjectDriver::DEBUG = 0;
 use Test::More;
 use DodTestUtil;
-unless (eval { require DBD::SQLite }) {
-    plan skip_all => 'Tests require DBD::SQLite';
-}
+
+BEGIN { DodTestUtil->check_driver }
+
 plan tests => 50;
 
 setup_dbs({
