@@ -2,12 +2,12 @@
 
 use strict;
 
+use lib 't/lib';
 use lib 't/lib/multiplexed';
-
-require './t/lib/db-common.pl';
 
 use Test::Exception;
 use Test::More;
+use DodTestUtil;
 unless (eval { require DBD::SQLite }) {
     plan skip_all => 'Tests require DBD::SQLite';
 }

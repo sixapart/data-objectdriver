@@ -3,10 +3,10 @@
 use strict;
 
 use lib 't/lib';
-require './t/lib/db-common.pl';
 
 use Test::More;
 use Test::Exception;
+use DodTestUtil;
 BEGIN {
     unless (eval { require DBD::SQLite }) {
         plan skip_all => 'Tests require DBD::SQLite';

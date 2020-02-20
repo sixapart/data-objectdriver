@@ -7,10 +7,9 @@ use strict;
 
 use lib 't/lib';
 
-require './t/lib/db-common.pl';
-
 $Data::ObjectDriver::DEBUG = 0;
 use Test::More;
+use DodTestUtil;
 unless (eval { require DBD::SQLite }) {
     plan skip_all => 'Tests require DBD::SQLite';
 }
