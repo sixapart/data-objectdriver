@@ -1,4 +1,4 @@
-# $Id$
+package DodTestUtil;
 
 use strict;
 use File::Spec;
