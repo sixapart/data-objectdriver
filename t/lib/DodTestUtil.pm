@@ -15,6 +15,8 @@ my %Requires = (
     SQLServer  => 'DBD::ODBC',
 );
 
+my %TestDB;
+
 sub driver { $ENV{DOD_TEST_DRIVER} || 'SQLite' }
 
 sub check_driver {
@@ -32,7 +34,27 @@ sub db_filename {
 
 sub dsn {
     my($dbname) = @_;
-    return 'dbi:SQLite:' . db_filename($dbname);
+    if ( $driver eq 'MySQL' ) {
+        $TestDB{$dbname} ||= Test::mysqld->new(
+            my_cnf => {
+                'skip-networking' => '', # no TCP socket
+                'sql-mode' => 'TRADITIONAL,NO_AUTO_VALUE_ON_ZERO,ONLY_FULL_GROUP_BY',
+            }
+        ) or die $Test::mysqld::errstr;
+        return $TestDB{$dbname}->dsn;
+    }
+    if ( $driver eq 'PostgreSQL' ) {
+        $TestDB{$dbname} ||= Test::PostgreSQL->new(
+            extra_initdb_args => '--locale=C --encoding=UTF-8',
+            pg_config => <<'CONF',
+lc_messages = 'C'
+CONF
+        ) or die $Test::PostgreSQL::errstr;
+        return $TestDB{$dbname}->dsn;
+    }
+    if ( $driver eq 'SQLite' ) {
+        return 'dbi:SQLite:' . db_filename($dbname);
+    }
 }
 
 sub setup_dbs {
