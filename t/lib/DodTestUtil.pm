@@ -30,6 +30,11 @@ sub check_driver {
     }
 }
 
+sub env {
+    my ($key, $dbname) = @_;
+    $ENV{$key} || $ENV{$key . "_" . uc $dbname} || '';
+}
+
 sub db_filename {
     my($dbname) = @_;
     $dbname . $$ . '.db';
@@ -37,6 +42,10 @@ sub db_filename {
 
 sub dsn {
     my($dbname) = @_;
+    my $driver = driver();
+    if ( my $dsn = env('DOD_TEST_DSN', $name) ) {
+        return "$dsn;dbname=$name";
+    }
     if ( $driver eq 'MySQL' ) {
         $TestDB{$dbname} ||= Test::mysqld->new(
             my_cnf => {
@@ -64,8 +73,11 @@ sub setup_dbs {
     my($info) = @_;
     teardown_dbs(keys %$info);
     for my $dbname (keys %$info) {
-        my $dbh = DBI->connect(dsn($dbname),
-            '', '', { RaiseError => 1, PrintError => 0 });
+        my $dbh = DBI->connect(
+            dsn($dbname),
+            env('DOD_TEST_USER', $dbname),
+            env('DOD_TEST_PASS', $dbname),
+            { RaiseError => 1, PrintError => 0 });
         for my $table (@{ $info->{$dbname} }) {
             $dbh->do($_) for create_sql($table);
         }
