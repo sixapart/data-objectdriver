@@ -25,6 +25,9 @@ sub check_driver {
     unless ( eval "require $module; 1" ) {
         plan skip_all => "Test requires $module";
     }
+    if ( $driver ne 'SQLite' and !eval { require SQL::Translator; 1 } ) {
+        plan skip_all => "Test requires SQL::Translator";
+    }
 }
 
 sub db_filename {
@@ -64,7 +67,7 @@ sub setup_dbs {
         my $dbh = DBI->connect(dsn($dbname),
             '', '', { RaiseError => 1, PrintError => 0 });
         for my $table (@{ $info->{$dbname} }) {
-            $dbh->do( create_sql($table) );
+            $dbh->do($_) for create_sql($table);
         }
         $dbh->disconnect;
     }
@@ -81,10 +84,22 @@ sub teardown_dbs {
 
 sub create_sql {
     my($table) = @_;
+    my $driver = driver();
     my $file = File::Spec->catfile('t', 'schemas', $table . '.sql');
     open my $fh, $file or die "Can't open $file: $!";
     my $sql = do { local $/; <$fh> };
     close $fh;
+    if ( $driver ne 'SQLite' ) {
+        $sql .= ';';
+        my $sqlt = SQL::Translator->new(
+            parser         => 'SQLite',
+            producer       => $driver,
+            no_comments    => 1,
+            add_drop_table => 1,
+        );
+        $sql = $sqlt->translate(\$sql) or die $sqlt->error;
+        return split /;\s*/s, $sql;
+    }
     $sql;
 }
 
