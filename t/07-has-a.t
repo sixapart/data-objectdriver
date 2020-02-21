@@ -64,4 +64,4 @@ while (my $i = $iter->()) {
 my $r = $ingredient->recipe;
 is $r->recipe_id, $recipe->recipe_id, "recipe id back using 'parent_method'";
 
-sub DESTROY { teardown_dbs(qw( global )); }
+END { teardown_dbs(qw( global )); }

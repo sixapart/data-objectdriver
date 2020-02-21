@@ -29,4 +29,4 @@ is(ErrorTest->driver->last_error,
    Data::ObjectDriver::Errors->UNIQUE_CONSTRAINT,
    'Failed because of a unique constraint');
 
-sub DESTROY { teardown_dbs(qw( global )); }
+END { teardown_dbs(qw( global )); }

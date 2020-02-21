@@ -105,5 +105,5 @@ SKIP: {
     is $wine->name, "zero";
 }
 
-sub DESTROY { teardown_dbs(qw( global )); }
+END { teardown_dbs(qw( global )); }
 

@@ -62,4 +62,4 @@ is $result->rating, 1, 'Thunderbird is a 1';
 ok $result, 'Found Stags Leap';
 is $result->rating, 3, 'Stags Leap is a 3';
 
-sub DESTROY { teardown_dbs(qw( global )); }
+END { teardown_dbs(qw( global )); }

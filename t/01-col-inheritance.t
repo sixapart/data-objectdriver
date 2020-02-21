@@ -35,4 +35,4 @@ ok($wine->save, 'Object saved successfully');
 ok ($wine->has_column("id")) ;
 ok ($wine->has_column("rating")) ;
 
-sub DESTROY { teardown_dbs(qw( global )); }
+END { teardown_dbs(qw( global )); }

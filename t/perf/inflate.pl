@@ -34,4 +34,4 @@ timethis( $how_many, sub {
     push @users, User->inflate({ columns => $data });
 });
 
-sub DESTROY { teardown_dbs(qw( global )); }
+END { teardown_dbs(qw( global )); }

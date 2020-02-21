@@ -76,6 +76,6 @@ use Ingredient;
     ok($ingredient->recipe_id, 'Ingredient assigned to a recipe');
 };
 
-sub DESTROY { teardown_dbs(qw( global )); }
+END { teardown_dbs(qw( global cluster1 cluster2 )); }
 
 1;

@@ -280,5 +280,5 @@ setup_dbs({
     ok $w2->object_is_stored, "an object fetched from the database is by definition NOT ephemeral";
 }
 
-sub DESTROY { teardown_dbs(qw( global )); }
+END { teardown_dbs(qw( global )); }
 

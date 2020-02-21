@@ -117,7 +117,7 @@ sub clear_triggers {
 };
 
 
-sub DESTROY { teardown_dbs(qw( global )); }
+END { teardown_dbs(qw( global )); }
 
 1;
 

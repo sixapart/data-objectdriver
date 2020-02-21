@@ -65,4 +65,4 @@ $i3->save;
 
 is $ingredient->{__cache_recipe}, undef, "cache has effectively been destroyed";
 
-sub DESTROY { teardown_dbs(qw( global )); }
+END { teardown_dbs(qw( global )); }
