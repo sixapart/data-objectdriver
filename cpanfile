@@ -8,7 +8,7 @@ recommends 'Text::SimpleTable';
 
 on configure => sub {
     requires 'Module::Build::Tiny', '0.035';
-}
+};
 
 on build => sub {
     requires 'ExtUtils::MakeMaker', '6.59';
