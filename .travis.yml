@@ -9,7 +9,7 @@ perl:
   - "5.22"
   - "5.24"
 before_install:
-  - cpanm -n DBD::SQLite Devel::Cover::Report::Coveralls
+  - cpanm -n DBD::SQLite Devel::Cover::Report::Coveralls Module::Build::Tiny
 script:
   - perl Build.PL && ./Build build && cover -test
 after_success:
