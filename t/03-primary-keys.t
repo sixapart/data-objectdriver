@@ -105,5 +105,10 @@ SKIP: {
     is $wine->name, "zero";
 }
 
-END { teardown_dbs(qw( global )); }
+END {
+    for (qw/Wine Recipe Ingredient PkLess/) {
+        $_->driver->rw_handle->disconnect;
+    }
+    teardown_dbs(qw( global ));
+}
 

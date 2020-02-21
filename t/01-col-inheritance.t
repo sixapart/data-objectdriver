@@ -35,4 +35,7 @@ ok($wine->save, 'Object saved successfully');
 ok ($wine->has_column("id")) ;
 ok ($wine->has_column("rating")) ;
 
-END { teardown_dbs(qw( global )); }
+END {
+    Wine->driver->dbh->disconnect;
+    teardown_dbs(qw( global ));
+}

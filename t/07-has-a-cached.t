@@ -65,4 +65,9 @@ $i3->save;
 
 is $ingredient->{__cache_recipe}, undef, "cache has effectively been destroyed";
 
-END { teardown_dbs(qw( global )); }
+END {
+    for (qw/Recipe Ingredient/) {
+        $_->driver->rw_handle->disconnect;
+    }
+    teardown_dbs(qw( global ));
+}

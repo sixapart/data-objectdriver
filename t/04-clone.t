@@ -87,5 +87,10 @@ test_basic_cloning('clone_all');
     is $w->id, $clone->id, q(Full clone's id matches original's id);
 }
 
-END { teardown_dbs(qw( global )); }
+END {
+    for (qw/Wine Recipe Ingredient/) {
+        $_->driver->rw_handle->disconnect;
+    }
+    teardown_dbs(qw( global ));
+}
 

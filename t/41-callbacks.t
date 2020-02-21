@@ -117,7 +117,10 @@ sub clear_triggers {
 };
 
 
-END { teardown_dbs(qw( global )); }
+END {
+    Wine->driver->rw_handle->disconnect;
+    teardown_dbs(qw( global ));
+}
 
 1;
 

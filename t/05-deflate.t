@@ -92,4 +92,9 @@ ok $is->[0]->{__cached};
 is $is->[1]->name, 'Milk';
 ok $is->[1]->{__cached};
 
-END { teardown_dbs(qw( global )); }
+END {
+    for (qw/Recipe Ingredient/) {
+        $_->driver->rw_handle->disconnect;
+    }
+    teardown_dbs(qw( global ));
+}

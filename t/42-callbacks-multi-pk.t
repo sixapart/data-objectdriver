@@ -76,6 +76,10 @@ use Ingredient;
     ok($ingredient->recipe_id, 'Ingredient assigned to a recipe');
 };
 
-END { teardown_dbs(qw( global cluster1 cluster2 )); }
+END {
+    Recipe->driver->rw_handle->disconnect;
+    $_->rw_handle->disconnect for @{ Ingredient->driver->get_driver->(undef, {multi_partition => 1})->partitions };
+    teardown_dbs(qw( global cluster1 cluster2 ));
+}
 
 1;

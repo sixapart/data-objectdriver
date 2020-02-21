@@ -280,5 +280,10 @@ setup_dbs({
     ok $w2->object_is_stored, "an object fetched from the database is by definition NOT ephemeral";
 }
 
-END { teardown_dbs(qw( global )); }
+END {
+    for (qw/Wine Recipe/) {
+        $_->driver->rw_handle->disconnect;
+    }
+    teardown_dbs(qw( global ));
+}
 

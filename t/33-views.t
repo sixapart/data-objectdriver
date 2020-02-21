@@ -53,4 +53,9 @@ SKIP: {
     is $ingredients[0]->name, 'Vanilla Ice Cream';
 }
 
-END { teardown_dbs(qw( global )); }
+END {
+    for (qw/Recipe Ingredient Ingredient2Recipe IngredientsWeighted/) {
+        $_->driver->rw_handle->disconnect;
+    }
+    teardown_dbs(qw( global ));
+}
