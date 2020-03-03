@@ -134,7 +134,7 @@ same object will come from the cache.
 # HOW IS IT DIFFERENT?
 
 _Data::ObjectDriver_ differs from other similar frameworks
-(e.g. [Class::DBI](https://metacpan.org/pod/Class::DBI)) in a couple of ways:
+(e.g. [Class::DBI](https://metacpan.org/pod/Class%3A%3ADBI)) in a couple of ways:
 
 - It has built-in support for caching.
 - It has built-in support for data partitioning.
@@ -206,7 +206,7 @@ a subroutine that acts as an iterator object, like so:
         ...
     }
 
-`$iter` is blessed in [Data::ObjectDriver::Iterator](https://metacpan.org/pod/Data::ObjectDriver::Iterator) package, so the above
+`$iter` is blessed in [Data::ObjectDriver::Iterator](https://metacpan.org/pod/Data%3A%3AObjectDriver%3A%3AIterator) package, so the above
 could also be written:
 
     my $iter = Ingredient->search({ recipe_id => 5 });
