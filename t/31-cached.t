@@ -5,13 +5,11 @@ use strict;
 use lib 't/lib';  # for Cache::Memory substitute.
 use lib 't/lib/cached';
 
-require './t/lib/db-common.pl';
-
 use Test::More;
+use DodTestUtil;
 BEGIN {
-    unless (eval { require DBD::SQLite }) {
-        plan skip_all => 'Tests require DBD::SQLite';
-    }
+    DodTestUtil->check_driver;
+
     unless (eval { require Cache::Memory }) {
         plan skip_all => 'Tests require Cache::Memory';
     }
@@ -189,4 +187,9 @@ is($recipe2->remove, 1, 'Recipe removed successfully');
 
 require './t/txn-common.pl';
 
-sub DESTROY { teardown_dbs(qw( global )); }
+END {
+    for (qw/Recipe Ingredient/) {
+        $_->driver->rw_handle->disconnect;
+    }
+    teardown_dbs(qw( global ));
+}

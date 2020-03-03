@@ -3,15 +3,11 @@
 use strict;
 
 use lib 't/lib';
-require './t/lib/db-common.pl';
 
 use Test::More;
 use Test::Exception;
-BEGIN {
-    unless (eval { require DBD::SQLite }) {
-        plan skip_all => 'Tests require DBD::SQLite';
-    }
-}
+use DodTestUtil;
+BEGIN { DodTestUtil->check_driver }
 
 plan tests => 3;
 
@@ -33,4 +29,7 @@ is(ErrorTest->driver->last_error,
    Data::ObjectDriver::Errors->UNIQUE_CONSTRAINT,
    'Failed because of a unique constraint');
 
-sub DESTROY { teardown_dbs(qw( global )); }
+END {
+    ErrorTest->driver->rw_handle->disconnect;
+    teardown_dbs(qw( global ));
+}

@@ -5,14 +5,12 @@ use strict;
 use lib 't/lib';
 use lib 't/lib/both';
 
-require './t/lib/db-common.pl';
-
 use Test::More;
 use Test::Exception;
+use DodTestUtil;
 BEGIN {
-    unless (eval { require DBD::SQLite }) {
-        plan skip_all => 'Tests require DBD::SQLite';
-    }
+    DodTestUtil->check_driver;
+
     unless (eval { require Cache::Memory }) {
         plan skip_all => 'Tests require Cache::Memory';
     }
@@ -124,4 +122,8 @@ SKIP: {
         like $profiler->report_queries_by_type, qr/SELECT/;
 };
 
-sub DESTROY { teardown_dbs(qw( global cluster1 cluster2 )); }
+END {
+    Recipe->driver->rw_handle->disconnect;
+    $_->rw_handle->disconnect for @{ Ingredient->driver->get_driver->(undef, {multi_partition => 1})->partitions };
+    teardown_dbs(qw( global cluster1 cluster2 ));
+}

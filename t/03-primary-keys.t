@@ -5,14 +5,12 @@ use strict;
 use lib 't/lib';
 use lib 't/lib/cached';
 
-require './t/lib/db-common.pl';
-
 use Test::More;
 use Test::Exception;
+use DodTestUtil;
 BEGIN {
-    unless (eval { require DBD::SQLite }) {
-        plan skip_all => 'Tests require DBD::SQLite';
-    }
+    DodTestUtil->check_driver;
+
     unless (eval { require Cache::Memory }) {
         plan skip_all => 'Tests require Cache::Memory';
     }
@@ -92,7 +90,8 @@ setup_dbs({
 }
 
 # 0 might be a valid pk
-{ 
+SKIP: {
+    skip "primary key 0 has a special meaning for MySQL", 4 if DodTestUtil::driver eq 'MySQL';
     my $rv = Wine->remove({});
     # make sure that remove returns the number of records deleted (1)
     is($rv, 1, 'correct number of rows deleted');
@@ -106,5 +105,10 @@ setup_dbs({
     is $wine->name, "zero";
 }
 
-sub DESTROY { teardown_dbs(qw( global )); }
+END {
+    for (qw/Wine Recipe Ingredient PkLess/) {
+        $_->driver->rw_handle->disconnect;
+    }
+    teardown_dbs(qw( global ));
+}
 

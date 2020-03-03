@@ -4,12 +4,11 @@ use strict;
 
 use lib 't/lib';
 
-require './t/lib/db-common.pl';
-
 use Test::More;
-unless (eval { require DBD::SQLite }) {
-    plan skip_all => 'Tests require DBD::SQLite';
-}
+use DodTestUtil;
+
+BEGIN { DodTestUtil->check_driver }
+
 plan tests => 15;
 
 setup_dbs({
@@ -36,4 +35,7 @@ ok($wine->save, 'Object saved successfully');
 ok ($wine->has_column("id")) ;
 ok ($wine->has_column("rating")) ;
 
-sub DESTROY { teardown_dbs(qw( global )); }
+END {
+    Wine->driver->dbh->disconnect;
+    teardown_dbs(qw( global ));
+}

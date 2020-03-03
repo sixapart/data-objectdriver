@@ -5,15 +5,13 @@ use strict;
 use lib 't/lib';
 use lib 't/lib/cached';
 
-require './t/lib/db-common.pl';
-
 use Test::More;
 use Test::Exception;
 use Scalar::Util;
+use DodTestUtil;
 BEGIN {
-    unless (eval { require DBD::SQLite }) {
-        plan skip_all => 'Tests require DBD::SQLite';
-    }
+    DodTestUtil->check_driver;
+
     unless (eval { require Cache::Memory }) {
         plan skip_all => 'Tests require Cache::Memory';
     }
@@ -67,4 +65,9 @@ $i3->save;
 
 is $ingredient->{__cache_recipe}, undef, "cache has effectively been destroyed";
 
-sub DESTROY { teardown_dbs(qw( global )); }
+END {
+    for (qw/Recipe Ingredient/) {
+        $_->driver->rw_handle->disconnect;
+    }
+    teardown_dbs(qw( global ));
+}

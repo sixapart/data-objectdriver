@@ -2,14 +2,14 @@
 
 use strict;
 
+use lib 't/lib';
 use lib 't/lib/partitioned';
 
-require './t/lib/db-common.pl';
-
 use Test::More;
-unless (eval { require DBD::SQLite }) {
-    plan skip_all => 'Tests require DBD::SQLite';
-}
+use DodTestUtil;
+
+BEGIN { DodTestUtil->check_driver }
+
 plan tests => 13;
 
 setup_dbs({
@@ -76,6 +76,10 @@ use Ingredient;
     ok($ingredient->recipe_id, 'Ingredient assigned to a recipe');
 };
 
-sub DESTROY { teardown_dbs(qw( global )); }
+END {
+    Recipe->driver->rw_handle->disconnect;
+    $_->rw_handle->disconnect for @{ Ingredient->driver->get_driver->(undef, {multi_partition => 1})->partitions };
+    teardown_dbs(qw( global cluster1 cluster2 ));
+}
 
 1;

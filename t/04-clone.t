@@ -5,14 +5,12 @@ use strict;
 use lib 't/lib';
 use lib 't/lib/cached';
 
-require './t/lib/db-common.pl';
-
 use Test::More;
 use Test::Exception;
+use DodTestUtil;
 BEGIN {
-    unless (eval { require DBD::SQLite }) {
-        plan skip_all => 'Tests require DBD::SQLite';
-    }
+    DodTestUtil->check_driver;
+
     unless (eval { require Cache::Memory }) {
         plan skip_all => 'Tests require Cache::Memory';
     }
@@ -89,5 +87,10 @@ test_basic_cloning('clone_all');
     is $w->id, $clone->id, q(Full clone's id matches original's id);
 }
 
-sub DESTROY { teardown_dbs(qw( global )); }
+END {
+    for (qw/Wine Recipe Ingredient/) {
+        $_->driver->rw_handle->disconnect;
+    }
+    teardown_dbs(qw( global ));
+}
 

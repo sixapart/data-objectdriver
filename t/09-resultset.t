@@ -4,13 +4,12 @@ use strict;
 
 use lib 't/lib';
 
-require './t/lib/db-common.pl';
-
 $Data::ObjectDriver::DEBUG = 0;
 use Test::More;
-unless (eval { require DBD::SQLite }) {
-    plan skip_all => 'Tests require DBD::SQLite';
-}
+use DodTestUtil;
+
+BEGIN { DodTestUtil->check_driver }
+
 plan tests => 50;
 
 setup_dbs({

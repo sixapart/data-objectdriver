@@ -1,6 +1,7 @@
 package User;
 use strict;
 use base qw( Data::ObjectDriver::BaseObject );
+use DodTestUtil;
 
 use Data::ObjectDriver::Driver::DBI;
 
@@ -30,7 +31,7 @@ __PACKAGE__->install_properties({
     datasource => 'user',
     primary_key => 'user_id',
     driver => Data::ObjectDriver::Driver::DBI->new(
-        dsn      => 'dbi:SQLite:dbname=global.db',
+        dsn      => DodTestUtil::dsn('global'),
         reuse_dbh => 1,
     ),
     genereate_pk => sub { ++$LAST_ID },

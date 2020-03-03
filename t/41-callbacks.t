@@ -4,12 +4,10 @@ use strict;
 
 use lib 't/lib';
 
-require './t/lib/db-common.pl';
-
 use Test::More;
-unless (eval { require DBD::SQLite }) {
-    plan skip_all => 'Tests require DBD::SQLite';
-}
+use DodTestUtil;
+
+BEGIN { DodTestUtil->check_driver }
 
 plan tests => 25;
 
@@ -119,7 +117,10 @@ sub clear_triggers {
 };
 
 
-sub DESTROY { teardown_dbs(qw( global )); }
+END {
+    Wine->driver->rw_handle->disconnect;
+    teardown_dbs(qw( global ));
+}
 
 1;
 

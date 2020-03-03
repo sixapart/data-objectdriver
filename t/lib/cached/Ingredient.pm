@@ -3,6 +3,7 @@
 package Ingredient;
 use strict;
 use base qw( Data::ObjectDriver::BaseObject );
+use DodTestUtil;
 
 use Carp ();
 use Data::ObjectDriver::Driver::DBI;
@@ -16,7 +17,7 @@ __PACKAGE__->install_properties({
     primary_key => [ 'recipe_id', 'id' ],
     driver      => Data::ObjectDriver::Driver::Cache::RAM->new(
         fallback => Data::ObjectDriver::Driver::DBI->new(
-            dsn      => 'dbi:SQLite:dbname=global.db',
+            dsn      => DodTestUtil::dsn('global'),
             pk_generator => \&generate_pk,
             reuse_dbh => 1,
         ),

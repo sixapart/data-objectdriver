@@ -2,15 +2,15 @@
 
 use strict;
 
+use lib 't/lib';
 use lib 't/lib/multiplexed';
-
-require './t/lib/db-common.pl';
 
 use Test::Exception;
 use Test::More;
-unless (eval { require DBD::SQLite }) {
-    plan skip_all => 'Tests require DBD::SQLite';
-}
+use DodTestUtil;
+
+BEGIN { DodTestUtil->check_driver }
+
 plan tests => 42;
 
 setup_dbs({

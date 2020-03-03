@@ -2,16 +2,13 @@
 
 use strict;
 
+use lib 't/lib';
 use lib 't/lib/views';
 
-require './t/lib/db-common.pl';
-
 use Test::More;
-BEGIN {
-    unless (eval { require DBD::SQLite }) {
-        plan skip_all => 'Tests require DBD::SQLite';
-    }
-}
+use DodTestUtil;
+BEGIN { DodTestUtil->check_driver }
+
 plan tests => 6;
 
 setup_dbs({
@@ -56,4 +53,9 @@ SKIP: {
     is $ingredients[0]->name, 'Vanilla Ice Cream';
 }
 
-sub DESTROY { teardown_dbs(qw( global )); }
+END {
+    for (qw/Recipe Ingredient Ingredient2Recipe IngredientsWeighted/) {
+        $_->driver->rw_handle->disconnect;
+    }
+    teardown_dbs(qw( global ));
+}

@@ -4,13 +4,12 @@ use strict;
 
 use lib 't/lib';
 
-require './t/lib/db-common.pl';
-
 $Data::ObjectDriver::DEBUG = 0;
 use Test::More;
-unless (eval { require DBD::SQLite }) {
-    plan skip_all => 'Tests require DBD::SQLite';
-}
+use DodTestUtil;
+
+BEGIN { DodTestUtil->check_driver }
+
 plan tests => 13;
 
 setup_dbs({
@@ -63,4 +62,7 @@ is $result->rating, 1, 'Thunderbird is a 1';
 ok $result, 'Found Stags Leap';
 is $result->rating, 3, 'Stags Leap is a 3';
 
-sub DESTROY { teardown_dbs(qw( global )); }
+END {
+    Wine->driver->rw_handle->disconnect;
+    teardown_dbs(qw( global ));
+}

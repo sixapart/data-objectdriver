@@ -3,6 +3,7 @@
 package Recipe;
 use strict;
 use base qw( Data::ObjectDriver::BaseObject );
+use DodTestUtil;
 
 use Data::ObjectDriver::Driver::DBI;
 
@@ -11,7 +12,7 @@ __PACKAGE__->install_properties({
     datasource => 'recipes',
     primary_key => 'recipe_id',
     driver => Data::ObjectDriver::Driver::DBI->new(
-        dsn      => 'dbi:SQLite:dbname=global.db',
+        dsn      => DodTestUtil::dsn('global'),
         reuse_dbh => 1,
     ),
 });

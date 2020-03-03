@@ -5,16 +5,14 @@ use strict;
 use lib 't/lib';
 use lib 't/lib/cached';
 
-require './t/lib/db-common.pl';
-
 use Test::More;
 use Test::Exception;
 use version;
+use DodTestUtil;
 
 BEGIN {
-    unless (eval { require DBD::SQLite }) {
-        plan skip_all => 'Tests require DBD::SQLite';
-    }
+    DodTestUtil->check_driver;
+
     unless (eval { require Cache::Memory }) {
         plan skip_all => 'Tests require Cache::Memory';
     }
@@ -244,9 +242,12 @@ setup_dbs({
     }
     # note sqlite is stupid and doesn't return the number of affected rows
     # quick hack because I can't rely on version.pm to be installed everywhere
-    my ($sqlite_version) = Wine->driver->rw_handle->{sqlite_version} =~ /(\d+(?:\.\d+))/;
-    my $count = version->parse("v$sqlite_version") > version->parse("v3.5") ? scalar @bad_wines : "0E0";
-    is (Wine->remove({}, { nofetch => 1 }), $count, 'removing all bad wine');
+    SKIP: {
+        skip "SQLite only", 1 if DodTestUtil::driver ne 'SQLite';
+        my ($sqlite_version) = Wine->driver->rw_handle->{sqlite_version} =~ /(\d+(?:\.\d+))/;
+        my $count = version->parse("v$sqlite_version") > version->parse("v3.5") ? scalar @bad_wines : "0E0";
+        is (Wine->remove({}, { nofetch => 1 }), $count, 'removing all bad wine');
+    }
 }
 
 # different utilities
@@ -279,5 +280,10 @@ setup_dbs({
     ok $w2->object_is_stored, "an object fetched from the database is by definition NOT ephemeral";
 }
 
-sub DESTROY { teardown_dbs(qw( global )); }
+END {
+    for (qw/Wine Recipe/) {
+        $_->driver->rw_handle->disconnect;
+    }
+    teardown_dbs(qw( global ));
+}
 

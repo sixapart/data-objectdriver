@@ -6,15 +6,13 @@ use Data::Dumper;
 use lib 't/lib';
 use lib 't/lib/cached';
 
-require './t/lib/db-common.pl';
-
 use Test::More;
 use Test::Exception;
 use Scalar::Util;
+use DodTestUtil;
 BEGIN {
-    unless (eval { require DBD::SQLite }) {
-        plan skip_all => 'Tests require DBD::SQLite';
-    }
+    DodTestUtil->check_driver;
+
     unless (eval { require Cache::Memory }) {
         plan skip_all => 'Tests require Cache::Memory';
     }
