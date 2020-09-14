@@ -1,7 +1,7 @@
 {
    "abstract" : "Simple, transparent data interface, with caching",
    "author" : [
-      "-2006"
+      "Six Apart Ltd."
    ],
    "dynamic_config" : 0,
    "generated_by" : "Minilla/v3.1.9, CPAN::Meta::Converter version 2.150010",

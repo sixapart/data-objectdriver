@@ -1,4 +1,4 @@
 name = "Data-ObjectDriver"
 authority = "cpan:SIXAPART"
-license = "artistic_2"
+license = "perl_5"
 badges = ["travis", "coveralls"]
