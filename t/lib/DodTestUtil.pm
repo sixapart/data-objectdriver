@@ -16,12 +16,23 @@ my %Requires = (
 );
 
 my %TestDB;
+my $Driver;
 
-sub driver { $ENV{DOD_TEST_DRIVER} || 'SQLite' }
+sub driver { $Driver ||= _driver() }
+
+sub _driver {
+    my $driver = $ENV{DOD_TEST_DRIVER} || 'SQLite';
+    return $driver if exists $Requires{$driver};
+    return 'PostgreSQL' if lc $driver eq 'pg';
+    for my $key (keys %Requires) {
+        return $key if lc $key eq lc $driver;
+    }
+    plan skip_all => "Unknown driver: $driver";
+}
 
 sub check_driver {
     my $driver = driver();
-    my $module = $Requires{$driver} or plan skip_all => "Uknonwn driver: $driver";
+    my $module = $Requires{$driver};
     unless ( eval "require $module; 1" ) {
         plan skip_all => "Test requires $module";
     }
