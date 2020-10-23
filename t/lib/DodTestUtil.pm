@@ -5,7 +5,7 @@ use Exporter qw/import/;
 use File::Spec;
 use Test::More;
 
-our @EXPORT = qw/setup_dbs teardown_dbs/;
+our @EXPORT = qw/setup_dbs teardown_dbs disconnect_all/;
 
 my %Requires = (
     SQLite     => 'DBD::SQLite',
@@ -93,6 +93,34 @@ sub teardown_dbs {
         my $file = db_filename($db);
         next unless -e $file;
         unlink $file or die "Can't teardown $db: $!";
+    }
+}
+
+sub disconnect_all {
+    my @tables = @_;
+    return unless driver() eq 'SQLite';
+    for my $table (@tables) {
+        my $driver = $table->driver;
+        if ($driver->can('fallback')) {
+            $driver = $driver->fallback;
+        }
+        if ($driver->can('dbh')) {
+            my $dbh = $driver->dbh or next;
+            $dbh->disconnect;
+        }
+        elsif ($driver->can('drivers')) {
+            for my $d (@{ $driver->drivers }) {
+                my $dbh = $d->dbh or next;
+                $dbh->disconnect;
+            }
+        }
+        else {
+            my @drivers = @{ $driver->get_driver->(undef, {multi_partition => 1})->partitions };
+            for my $d (@drivers) {
+                my $dbh = $d->dbh or next;
+                $dbh->disconnect;
+            }
+        }
     }
 }
 

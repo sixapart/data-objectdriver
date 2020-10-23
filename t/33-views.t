@@ -54,8 +54,6 @@ SKIP: {
 }
 
 END {
-    for (qw/Recipe Ingredient Ingredient2Recipe IngredientsWeighted/) {
-        $_->driver->rw_handle->disconnect;
-    }
+    disconnect_all(qw/Recipe Ingredient Ingredient2Recipe IngredientsWeighted/);
     teardown_dbs(qw( global ));
 }

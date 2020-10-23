@@ -172,5 +172,5 @@ $result->rewind;
     diag "calling next() after add_term() with 'op'" . $result->next; ## this should return the object which has "rating == 3".
 }
 
-$wine->driver->dbh->disconnect;
+disconnect_all($wine);
 teardown_dbs(qw( global ));

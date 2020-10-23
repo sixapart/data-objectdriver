@@ -139,7 +139,5 @@ sub _check_object {
     is $obj2->recipe_id, $obj->recipe_id;
 }
 
-for my $driver (@{ Ingredient2Recipe->driver->drivers }) {
-    $driver->dbh->disconnect;
-}
+disconnect_all(qw( Ingredient2Recipe ));
 teardown_dbs(qw( global1 global2 ));
