@@ -169,7 +169,7 @@ $result->rewind;
     my $result = Wine->result({rating => { op => '<=', 'value' => 4}}, { sort => 'rating', direction => 'descend' });
     $result->_load_results;
     $result->add_term({rating => { op => '<=', 'value' => 3}});
-    diag "calling next() after add_term() with 'op'" . $result->next; ## this should return the object which has "rating == 3".
+    note "calling next() after add_term() with 'op'" . $result->next; ## this should return the object which has "rating == 3".
 }
 
 disconnect_all($wine);
