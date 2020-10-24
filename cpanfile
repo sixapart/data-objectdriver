@@ -34,6 +34,12 @@ feature 'test_mysql', 'Test MySQL' => sub {
     requires 'SQL::Translator';
 };
 
+feature 'test_mariadb', 'Test MariaDB' => sub {
+    requires 'DBD::MariaDB';
+    requires 'Test::mysqld';
+    requires 'SQL::Translator';
+};
+
 feature 'test_postgresql', 'Test PostgreSQL' => sub {
     requires 'DBD::Pg';
     requires 'Test::PostgreSQL';
