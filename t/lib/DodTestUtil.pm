@@ -95,7 +95,8 @@ CONF
         return $TestDB{$dbname}->dsn;
     }
     if ( $driver eq 'SQLite' ) {
-        return 'dbi:SQLite:' . db_filename($dbname);
+        $TestDB{$dbname} ||= db_filename($dbname);
+        return 'dbi:SQLite:' . $TestDB{$dbname};
     }
 }
 
@@ -118,11 +119,11 @@ sub setup_dbs {
 sub teardown_dbs {
     my(@dbs) = @_;
     my $driver = driver();
+    return unless $driver eq 'SQLite';
     for my $db (@dbs) {
-        next unless $driver eq 'SQLite';
-        my $file = db_filename($db);
+        my $file = $TestDB{$db};
         next unless -e $file;
-        unlink $file or die "Can't teardown $db: $!";
+        unlink $file or die "Can't teardown $file: $!";
     }
 }
 

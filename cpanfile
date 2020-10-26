@@ -45,3 +45,11 @@ feature 'test_postgresql', 'Test PostgreSQL' => sub {
     requires 'Test::PostgreSQL';
     requires 'SQL::Translator';
 };
+
+feature 'test_fork', 'Test Fork' => sub {
+    requires 'DBI', '1.614';
+    requires 'Parallel::ForkManager';
+    requires 'POSIX::AtFork';
+    requires 'Scalar::Util';
+    requires 'Test::SharedFork';
+};
