@@ -10,6 +10,7 @@ our @EXPORT = qw/setup_dbs teardown_dbs disconnect_all/;
 my %Requires = (
     SQLite     => 'DBD::SQLite',
     MySQL      => 'Test::mysqld',
+    MariaDB    => 'Test::mysqld',
     PostgreSQL => 'Test::PostgreSQL',
     Oracle     => 'DBD::Oracle',
     SQLServer  => 'DBD::ODBC',
@@ -51,20 +52,38 @@ sub db_filename {
     $dbname . $$ . '.db';
 }
 
+my $test_mysqld_dsn;
 sub dsn {
     my($dbname) = @_;
     my $driver = driver();
     if ( my $dsn = env('DOD_TEST_DSN', $dbname) ) {
         return "$dsn;dbname=$dbname";
     }
-    if ( $driver eq 'MySQL' ) {
+    if ( $driver =~ /MySQL|MariaDB/ ) {
+        if ( $driver eq 'MariaDB' && !$test_mysqld_dsn ) {
+            my $help = `mysql --help`;
+            my ($mariadb_version) = $help =~ /\A.*?([0-9]+\.[0-9]+)\.[0-9]+\-MariaDB/;
+            no warnings 'redefine';
+            $test_mysqld_dsn = \&Test::mysqld::dsn;
+            *Test::mysqld::dsn = sub {
+                my $dsn = $test_mysqld_dsn->(@_);
+                # cf. https://github.com/kazuho/p5-test-mysqld/issues/32
+                $dsn =~ s/;user=root// if $mariadb_version && $mariadb_version > 10.3;
+                $dsn;
+            };
+        }
         $TestDB{$dbname} ||= Test::mysqld->new(
             my_cnf => {
                 'skip-networking' => '', # no TCP socket
                 'sql-mode' => 'TRADITIONAL,NO_AUTO_VALUE_ON_ZERO,ONLY_FULL_GROUP_BY',
             }
         ) or die $Test::mysqld::errstr;
-        return $TestDB{$dbname}->dsn;
+        my $dsn = $TestDB{$dbname}->dsn;
+        if ( $driver eq 'MariaDB' ) {
+            $dsn =~ s/^dbi:mysql/dbi:MariaDB/i;
+            $dsn =~ s/mysql_/mariadb_/ig;
+        }
+        return $dsn;
     }
     if ( $driver eq 'PostgreSQL' ) {
         $TestDB{$dbname} ||= Test::PostgreSQL->new(
@@ -86,8 +105,8 @@ sub setup_dbs {
     for my $dbname (keys %$info) {
         my $dbh = DBI->connect(
             dsn($dbname),
-            env('DOD_TEST_USER', $dbname),
-            env('DOD_TEST_PASS', $dbname),
+            env('DOD_TEST_USER', $dbname) || undef,
+            env('DOD_TEST_PASS', $dbname) || undef,
             { RaiseError => 1, PrintError => 0, ShowErrorStatement => 1 });
         for my $table (@{ $info->{$dbname} }) {
             $dbh->do($_) for create_sql($table);
@@ -138,6 +157,7 @@ sub disconnect_all {
 sub create_sql {
     my($table) = @_;
     my $driver = driver();
+    $driver = 'MySQL' if $driver eq 'MariaDB';
     my $file = File::Spec->catfile('t', 'schemas', $table . '.sql');
     open my $fh, $file or die "Can't open $file: $!";
     my $sql = do { local $/; <$fh> };
