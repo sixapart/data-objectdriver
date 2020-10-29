@@ -97,8 +97,7 @@ ok( !$iter->(), "No third row; limit argument respected" );
 is( $load_count, 2, "2 objects loaded; limit argument respected");
 $iter->end;
 
-$r->driver->dbh->disconnect;
-$i->driver->dbh->disconnect;
+disconnect_all($r, $i);
 teardown_dbs(qw( global ));
 
 print Dumper( Data::ObjectDriver->profiler->query_log ) if $ENV{DOD_PROFILE};

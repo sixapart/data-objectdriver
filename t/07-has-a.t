@@ -65,8 +65,6 @@ my $r = $ingredient->recipe;
 is $r->recipe_id, $recipe->recipe_id, "recipe id back using 'parent_method'";
 
 END {
-    for (qw/Recipe Ingredient/) {
-        $_->driver->rw_handle->disconnect;
-    }
+    disconnect_all(qw/Recipe Ingredient/);
     teardown_dbs(qw( global ));
 }

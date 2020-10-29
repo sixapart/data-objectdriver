@@ -281,9 +281,7 @@ setup_dbs({
 }
 
 END {
-    for (qw/Wine Recipe/) {
-        $_->driver->rw_handle->disconnect;
-    }
+    disconnect_all(qw/Wine Recipe/);
     teardown_dbs(qw( global ));
 }
 

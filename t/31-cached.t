@@ -188,8 +188,6 @@ is($recipe2->remove, 1, 'Recipe removed successfully');
 require './t/txn-common.pl';
 
 END {
-    for (qw/Recipe Ingredient/) {
-        $_->driver->rw_handle->disconnect;
-    }
+    disconnect_all(qw/Recipe Ingredient/);
     teardown_dbs(qw( global ));
 }

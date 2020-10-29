@@ -187,7 +187,6 @@ is $replaced->title, 'Cup Cake';
 require './t/txn-common.pl';
 
 END {
-    Recipe->driver->rw_handle->disconnect;
-    $_->rw_handle->disconnect for @{ Ingredient->driver->get_driver->(undef, {multi_partition => 1})->partitions };
+    disconnect_all(qw( Recipe Ingredient ));
     teardown_dbs(qw( global cluster1 cluster2 ));
 }

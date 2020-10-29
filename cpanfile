@@ -23,3 +23,19 @@ on develop => sub {
 on test => sub {
     requires 'version';
 };
+
+feature 'test_sqlite', 'Test SQLite' => sub {
+    requires 'DBD::SQLite';
+};
+
+feature 'test_mysql', 'Test MySQL' => sub {
+    requires 'DBD::mysql';
+    requires 'Test::mysqld';
+    requires 'SQL::Translator';
+};
+
+feature 'test_postgresql', 'Test PostgreSQL' => sub {
+    requires 'DBD::Pg';
+    requires 'Test::PostgreSQL';
+    requires 'SQL::Translator';
+};

@@ -106,9 +106,7 @@ SKIP: {
 }
 
 END {
-    for (qw/Wine Recipe Ingredient PkLess/) {
-        $_->driver->rw_handle->disconnect;
-    }
+    disconnect_all(qw/Wine Recipe Ingredient PkLess/);
     teardown_dbs(qw( global ));
 }
 

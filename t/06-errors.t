@@ -30,6 +30,6 @@ is(ErrorTest->driver->last_error,
    'Failed because of a unique constraint');
 
 END {
-    ErrorTest->driver->rw_handle->disconnect;
+    disconnect_all(qw( ErrorTest ));
     teardown_dbs(qw( global ));
 }

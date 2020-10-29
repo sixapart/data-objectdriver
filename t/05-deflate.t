@@ -93,8 +93,6 @@ is $is->[1]->name, 'Milk';
 ok $is->[1]->{__cached};
 
 END {
-    for (qw/Recipe Ingredient/) {
-        $_->driver->rw_handle->disconnect;
-    }
+    disconnect_all(qw( Recipe Ingredient ));
     teardown_dbs(qw( global ));
 }

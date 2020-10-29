@@ -36,6 +36,6 @@ ok ($wine->has_column("id")) ;
 ok ($wine->has_column("rating")) ;
 
 END {
-    Wine->driver->dbh->disconnect;
+    disconnect_all(qw( Wine ));
     teardown_dbs(qw( global ));
 }

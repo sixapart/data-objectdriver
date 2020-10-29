@@ -88,9 +88,7 @@ test_basic_cloning('clone_all');
 }
 
 END {
-    for (qw/Wine Recipe Ingredient/) {
-        $_->driver->rw_handle->disconnect;
-    }
+    disconnect_all(qw/Wine Recipe Ingredient/);
     teardown_dbs(qw( global ));
 }
 
