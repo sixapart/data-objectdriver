@@ -1,5 +1,10 @@
 {{$NEXT}}
 
+0.21 2020-10-29T05:54:05Z
+    - Add GitHub Actions #38
+    - Support DBD::MariaDB #39
+    - Fork safety #40
+
 0.20 2020-09-14T12:15:54Z
     - Fix tests (Thanks to eseyman) #36
     - Change license (Thanks to kentfredric) #34

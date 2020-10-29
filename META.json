@@ -4,7 +4,7 @@
       "-2006"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Minilla/v3.1.10, CPAN::Meta::Converter version 2.150010",
+   "generated_by" : "Minilla/v3.1.11, CPAN::Meta::Converter version 2.150010",
    "license" : [
       "perl_5"
    ],
@@ -24,6 +24,68 @@
          "author",
          "builder"
       ]
+   },
+   "optional_features" : {
+      "test_fork" : {
+         "description" : "Test Fork",
+         "prereqs" : {
+            "runtime" : {
+               "requires" : {
+                  "DBI" : "1.614",
+                  "POSIX::AtFork" : "0",
+                  "Parallel::ForkManager" : "0",
+                  "Scalar::Util" : "0",
+                  "Test::SharedFork" : "0"
+               }
+            }
+         }
+      },
+      "test_mariadb" : {
+         "description" : "Test MariaDB",
+         "prereqs" : {
+            "runtime" : {
+               "requires" : {
+                  "DBD::MariaDB" : "0",
+                  "SQL::Translator" : "0",
+                  "Test::mysqld" : "0"
+               }
+            }
+         }
+      },
+      "test_mysql" : {
+         "description" : "Test MySQL",
+         "prereqs" : {
+            "runtime" : {
+               "requires" : {
+                  "DBD::mysql" : "0",
+                  "SQL::Translator" : "0",
+                  "Test::mysqld" : "0"
+               }
+            }
+         }
+      },
+      "test_postgresql" : {
+         "description" : "Test PostgreSQL",
+         "prereqs" : {
+            "runtime" : {
+               "requires" : {
+                  "DBD::Pg" : "0",
+                  "SQL::Translator" : "0",
+                  "Test::PostgreSQL" : "0"
+               }
+            }
+         }
+      },
+      "test_sqlite" : {
+         "description" : "Test SQLite",
+         "prereqs" : {
+            "runtime" : {
+               "requires" : {
+                  "DBD::SQLite" : "0"
+               }
+            }
+         }
+      }
    },
    "prereqs" : {
       "build" : {
@@ -79,7 +141,7 @@
          "web" : "https://github.com/sixapart/data-objectdriver"
       }
    },
-   "version" : "0.20",
+   "version" : "0.21",
    "x_authority" : "cpan:SIXAPART",
    "x_contributors" : [
       "Adam Thomason <athomason@sixapart.com>",

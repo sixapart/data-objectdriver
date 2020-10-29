@@ -578,6 +578,12 @@ has been added specifically for this purpose: `reuse_dbh`.
 
     1;
 
+# FORK SAFETY
+
+As of version 0.21, _Data::ObjectDriver_ resets internal database handles
+after _fork(2)_ is called, but only if [POSIX::AtFork](https://metacpan.org/pod/POSIX%3A%3AAtFork) module is installed.
+Otherwise, _Data::ObjectDriver_ is not fork-safe.
+
 # SUPPORTED DATABASES
 
 _Data::ObjectDriver_ is very modular and it's not very difficult to add new drivers.
