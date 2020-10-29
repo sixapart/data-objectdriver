@@ -17,7 +17,7 @@ jobs:
       - name: perl -V
         run: perl -V
       - name: Install dependencies
-        run: curl -sL https://git.io/cpm | sudo perl - install -g --with-recommends --with-test --with-configure --show-build-log-on-failure --feature=test_sqlite
+        run: curl -sL https://git.io/cpm | sudo perl - install -g --with-recommends --with-test --with-configure --show-build-log-on-failure --feature=test_sqlite --feature=test_fork
       - name: Run tests
         run: prove -lr -j4 t
 
@@ -31,7 +31,7 @@ jobs:
       - name: apt-get
         run: sudo apt-get update && sudo apt-get install -y libdbd-mysql-perl mysql-server
       - name: Install dependencies
-        run: curl -sL https://git.io/cpm | sudo perl - install -g --with-recommends --with-test --with-configure --show-build-log-on-failure --feature=test_mysql
+        run: curl -sL https://git.io/cpm | sudo perl - install -g --with-recommends --with-test --with-configure --show-build-log-on-failure --feature=test_mysql --feature=test_fork
       - name: Run tests
         run: DOD_TEST_DRIVER=MySQL prove -lr -j4 t
 
@@ -47,7 +47,7 @@ jobs:
       - name: apt-get
         run: sudo apt-get update && sudo apt-get install -y libmariadb-dev mariadb-server
       - name: Install dependencies
-        run: curl -sL https://git.io/cpm | sudo perl - install -g --with-recommends --with-test --with-configure --show-build-log-on-failure --feature=test_mariadb
+        run: curl -sL https://git.io/cpm | sudo perl - install -g --with-recommends --with-test --with-configure --show-build-log-on-failure --feature=test_mariadb --feature=test_fork
       - name: Run tests
         run: DOD_TEST_DRIVER=MariaDB prove -lr -j4 t
 
@@ -61,6 +61,6 @@ jobs:
       - name: apt-get
         run: sudo apt-get update && sudo apt-get install -y libdbd-pg-perl postgresql
       - name: Install dependencies
-        run: curl -sL https://git.io/cpm | sudo perl - install -g --with-recommends --with-test --with-configure --show-build-log-on-failure --feature=test_postgresql
+        run: curl -sL https://git.io/cpm | sudo perl - install -g --with-recommends --with-test --with-configure --show-build-log-on-failure --feature=test_postgresql --feature=test_fork
       - name: Run tests
         run: DOD_TEST_DRIVER=PostgreSQL prove -lr -j4 t

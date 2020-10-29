@@ -758,6 +758,12 @@ has been added specifically for this purpose: C<reuse_dbh>.
 
     1;
 
+=head1 FORK SAFETY
+
+As of version 0.21, I<Data::ObjectDriver> resets internal database handles
+after I<fork(2)> is called, but only if L<POSIX::AtFork> module is installed.
+Otherwise, I<Data::ObjectDriver> is not fork-safe.
+
 =head1 SUPPORTED DATABASES
 
 I<Data::ObjectDriver> is very modular and it's not very difficult to add new drivers.
