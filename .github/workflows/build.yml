@@ -21,6 +21,18 @@ jobs:
       - name: Run tests
         run: prove -lr -j4 t
 
+  sqlite-win:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: perl -V
+        run: perl -V
+      - name: Install dependencies
+        run: curl -sL https://git.io/cpm | perl - install -g --with-recommends --with-test --with-configure --show-build-log-on-failure --feature=test_sqlite --feature=test_fork
+      - name: Run tests
+        run: prove -lr -j4 t
+
   mysql:
     runs-on: ubuntu-latest
 
