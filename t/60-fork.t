@@ -7,6 +7,8 @@ use Test::More;
 use DodTestUtil;
 
 BEGIN {
+    plan skip_all => 'Not for Win32' if $^O eq 'MSWin32';
+
     my @requires = qw(
         Parallel::ForkManager
         Test::SharedFork
