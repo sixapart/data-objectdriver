@@ -23,7 +23,7 @@ sub _is_fork_safe {
     return 1;
 }
 
-__PACKAGE__->mk_accessors(qw( dsn username password connect_options dbh get_dbh dbd prefix reuse_dbh force_no_prepared_cache));
+__PACKAGE__->mk_accessors(qw( dsn username password connect_options get_dbh dbd prefix reuse_dbh force_no_prepared_cache));
 
 
 sub init {
@@ -106,6 +106,18 @@ sub init_db {
     $driver->dbd->init_dbh($dbh);
     $driver->{__dbh_init_by_driver} = 1;
     return $dbh;
+}
+
+sub dbh {
+    my $driver = shift;
+    if (@_) {
+        my $dbh = $driver->{dbh} = shift;
+        if (!$dbh && $driver->reuse_dbh) {
+            $dbh = delete $Handles{$driver->dsn};
+            $dbh->disconnect if $dbh;
+        }
+    }
+    $driver->{dbh};
 }
 
 sub rw_handle {
