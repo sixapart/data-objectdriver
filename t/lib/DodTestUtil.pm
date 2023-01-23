@@ -92,7 +92,12 @@ sub dsn {
         $TestDB{$dbname} ||= Test::mysqld->new(
             my_cnf => {
                 'skip-networking' => '', # no TCP socket
+                'skip-name-resolve' => '',
+                'default_authentication_plugin' => 'mysql_native_password',
                 'sql-mode' => 'TRADITIONAL,NO_AUTO_VALUE_ON_ZERO,ONLY_FULL_GROUP_BY',
+                'bind-address' => '127.0.0.1',
+                'disable-log-bin' => '',
+                'performance_schema' => 'OFF',
             }
         ) or die $Test::mysqld::errstr;
         my $dsn = $TestDB{$dbname}->dsn;
