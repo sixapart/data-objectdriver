@@ -52,7 +52,7 @@ sub init {
         weaken(my $driver_weaken = $driver);
         POSIX::AtFork->add_to_child(sub {
             return unless $driver_weaken;
-            $driver_weaken->dbh(undef);
+            $driver_weaken->{dbh} = undef;
             %Handles = ();
         });
     }
