@@ -33,7 +33,7 @@ jobs:
       - name: Install dependencies
         run: curl -sL https://git.io/cpm | sudo perl - install -g --with-recommends --with-test --with-configure --show-build-log-on-failure --feature=test_mysql --feature=test_fork
       - name: Run tests
-        run: DOD_TEST_DRIVER=MySQL prove -lr -j4 t
+        run: DOD_TEST_DRIVER=MySQL prove -lr t
 
   mariadb:
     runs-on: ubuntu-latest
