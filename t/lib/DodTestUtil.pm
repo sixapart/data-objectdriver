@@ -62,13 +62,13 @@ sub dsn {
     if ( $driver =~ /MySQL|MariaDB/ ) {
         if ( $driver eq 'MariaDB' && !$test_mysqld_dsn ) {
             my $help = `mysql --help`;
-            my ($mariadb_version) = $help =~ /\A.*?([0-9]+\.[0-9]+)\.[0-9]+\-MariaDB/;
+            my ($mariadb_major_version, $mariadb_minor_version) = $help =~ /\A.*?([0-9]+)\.([0-9]+)\.[0-9]+\-MariaDB/;
             no warnings 'redefine';
             $test_mysqld_dsn = \&Test::mysqld::dsn;
             *Test::mysqld::dsn = sub {
                 my $dsn = $test_mysqld_dsn->(@_);
                 # cf. https://github.com/kazuho/p5-test-mysqld/issues/32
-                $dsn =~ s/;user=root// if $mariadb_version && $mariadb_version > 10.3;
+                $dsn =~ s/;user=root// if $mariadb_major_version && $mariadb_major_version >= 10 && $mariadb_minor_version > 3;
                 $dsn;
             };
         }
