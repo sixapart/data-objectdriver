@@ -62,20 +62,42 @@ sub dsn {
     if ( $driver =~ /MySQL|MariaDB/ ) {
         if ( $driver eq 'MariaDB' && !$test_mysqld_dsn ) {
             my $help = `mysql --help`;
-            my ($mariadb_version) = $help =~ /\A.*?([0-9]+\.[0-9]+)\.[0-9]+\-MariaDB/;
+            my ($mariadb_major_version, $mariadb_minor_version) = $help =~ /\A.*?([0-9]+)\.([0-9]+)\.[0-9]+\-MariaDB/;
             no warnings 'redefine';
             $test_mysqld_dsn = \&Test::mysqld::dsn;
             *Test::mysqld::dsn = sub {
                 my $dsn = $test_mysqld_dsn->(@_);
                 # cf. https://github.com/kazuho/p5-test-mysqld/issues/32
-                $dsn =~ s/;user=root// if $mariadb_version && $mariadb_version > 10.3;
+                $dsn =~ s/;user=root// if $mariadb_major_version && $mariadb_major_version >= 10 && $mariadb_minor_version > 3;
                 $dsn;
+            };
+        }
+        if ($driver eq 'MySQL') {
+            *Test::mysqld::wait_for_stop = sub {
+                my $self = shift;
+                local $?;    # waitpid may change this value :/
+                my $ct = 0;
+                # XXX: modified
+                while (waitpid($self->pid, POSIX::WNOHANG()) <= 0) {
+                    sleep 1;
+                    if ($ct++ > 10) {
+                        kill 9, $self->pid;
+                    }
+                }
+                $self->pid(undef);
+                # might remain for example when sending SIGKILL
+                unlink $self->my_cnf->{'pid-file'};
             };
         }
         $TestDB{$dbname} ||= Test::mysqld->new(
             my_cnf => {
                 'skip-networking' => '', # no TCP socket
+                'skip-name-resolve' => '',
+                'default_authentication_plugin' => 'mysql_native_password',
                 'sql-mode' => 'TRADITIONAL,NO_AUTO_VALUE_ON_ZERO,ONLY_FULL_GROUP_BY',
+                'bind-address' => '127.0.0.1',
+                'disable-log-bin' => '',
+                'performance_schema' => 'OFF',
             }
         ) or die $Test::mysqld::errstr;
         my $dsn = $TestDB{$dbname}->dsn;
