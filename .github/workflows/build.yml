@@ -29,7 +29,7 @@ jobs:
       - name: perl -V
         run: perl -V
       - name: Install dependencies
-        run: curl -sL https://git.io/cpm | perl - install -g --with-recommends --with-test --with-configure --show-build-log-on-failure --feature=test_sqlite --feature=test_fork
+        run: curl -sL https://git.io/cpm | perl - install -g --with-recommends --with-test --with-configure --show-build-log-on-failure --feature=test_sqlite
       - name: Run tests
         run: prove -lr -j4 t
 
