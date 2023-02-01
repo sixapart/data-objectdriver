@@ -1,10 +1,10 @@
 {
    "abstract" : "Simple, transparent data interface, with caching",
    "author" : [
-      "-2006"
+      "& COPYRIGHT"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Minilla/v3.1.11, CPAN::Meta::Converter version 2.150010",
+   "generated_by" : "Minilla/v3.1.20, CPAN::Meta::Converter version 2.150010",
    "license" : [
       "perl_5"
    ],
@@ -137,11 +137,11 @@
       "homepage" : "https://github.com/sixapart/data-objectdriver",
       "repository" : {
          "type" : "git",
-         "url" : "git://github.com/sixapart/data-objectdriver.git",
+         "url" : "https://github.com/sixapart/data-objectdriver.git",
          "web" : "https://github.com/sixapart/data-objectdriver"
       }
    },
-   "version" : "0.21",
+   "version" : "0.22",
    "x_authority" : "cpan:SIXAPART",
    "x_contributors" : [
       "Adam Thomason <athomason@sixapart.com>",
@@ -174,6 +174,6 @@
       "ambs <ambs@cpan.org>",
       "ziguzagu <ziguzagu@gmail.com>"
    ],
-   "x_serialization_backend" : "JSON::PP version 2.97001",
+   "x_serialization_backend" : "JSON::PP version 4.06",
    "x_static_install" : 1
 }

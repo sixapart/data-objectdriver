@@ -1,5 +1,9 @@
 {{$NEXT}}
 
+0.22 2023-02-01T05:14:13Z
+    - Clear %Handle cache if dbh is set to undef #42
+    - Skip fork test on win32 #41
+
 0.21 2020-10-29T05:54:05Z
     - Add GitHub Actions #38
     - Support DBD::MariaDB #39
