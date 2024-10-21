@@ -3,7 +3,7 @@
 use strict;
 
 use Data::ObjectDriver::SQL;
-use Test::More tests => 95;
+use Test::More tests => 103;
 
 my $stmt = ns();
 ok($stmt, 'Created SQL object');
@@ -230,6 +230,28 @@ $stmt->add_where(%terms);
 is($stmt->as_sql_where, "WHERE ((foo = ?) AND (foo = ?) AND (foo = ?))\n");
 $stmt->add_where(%terms);
 is($stmt->as_sql_where, "WHERE ((foo = ?) AND (foo = ?) AND (foo = ?)) AND ((foo = ?) AND (foo = ?) AND (foo = ?))\n");
+
+## as_escape
+$stmt = ns();
+$stmt->add_where(foo => {op => 'LIKE', value => '100%', escape => '\\'});
+is($stmt->as_sql_where, "WHERE (foo LIKE ? ESCAPE '\\')\n");
+is($stmt->bind->[0], '100%'); # escape doesn't automatically escape the value
+$stmt = ns();
+$stmt->add_where(foo => {op => 'LIKE', value => '100\\%', escape => '\\'});
+is($stmt->as_sql_where, "WHERE (foo LIKE ? ESCAPE '\\')\n");
+is($stmt->bind->[0], '100\\%');
+$stmt = ns();
+$stmt->add_where(foo => {op => 'LIKE', value => '100%', escape => '!'});
+is($stmt->as_sql_where, "WHERE (foo LIKE ? ESCAPE '!')\n");
+$stmt = ns();
+$stmt->add_where(foo => {op => 'LIKE', value => '100%', escape => "''"});
+is($stmt->as_sql_where, "WHERE (foo LIKE ? ESCAPE '''')\n");
+$stmt = ns();
+$stmt->add_where(foo => {op => 'LIKE', value => '100%', escape => "\\'"});
+is($stmt->as_sql_where, "WHERE (foo LIKE ? ESCAPE '\\'')\n");
+$stmt = ns();
+eval { $stmt->add_where(foo => {op => 'LIKE', value => '_', escape => "!!!"}); };
+like($@, qr/length/, 'right error');
 
 $stmt = ns();
 $stmt->add_select(foo => 'foo');
