@@ -34,52 +34,52 @@ $exclamation->save;
 
 subtest 'escape_char 1' => sub {
     my @got = Foo->search({ text => { op => 'LIKE', value => '100!%', escape => '!' } });
-    is scalar(@got),  1,     'right number';
+    is scalar(@got),  1,         'right number';
     is $got[0]->name, 'percent', 'right name';
 };
 
 subtest 'escape_char 2' => sub {
     my @got = Foo->search({ text => { op => 'LIKE', value => '100#_', escape => '#' } });
-    is scalar(@got),  1,     'right number';
+    is scalar(@got),  1,            'right number';
     is $got[0]->name, 'underscore', 'right name';
 };
 
 subtest 'self escape' => sub {
     my @got = Foo->search({ text => { op => 'LIKE', value => '100!!', escape => '!' } });
-    is scalar(@got),  1,     'right number';
+    is scalar(@got),  1,             'right number';
     is $got[0]->name, 'exclamation', 'right name';
 };
 
 subtest 'use wildcard charactor as escapr_char' => sub {
     plan skip_all => 'MariaDB does not support it' if Foo->driver->dbh->{Driver}->{Name} eq 'MariaDB';
     my @got = Foo->search({ text => { op => 'LIKE', value => '100_%', escape => '_' } });
-    is scalar(@got),  1,     'right number';
+    is scalar(@got),  1,         'right number';
     is $got[0]->name, 'percent', 'right name';
 };
 
 subtest 'use of special characters' => sub {
     subtest 'escape_char single quote' => sub {
         my @got = Foo->search({ text => { op => 'LIKE', value => "100'_", escape => "''" } });
-        is scalar(@got),  1,     'right number';
+        is scalar(@got),  1,            'right number';
         is $got[0]->name, 'underscore', 'right name';
     };
 
     if (Foo->driver->dbh->{Driver}->{Name} =~ /mysql|mariadb/i) {
         subtest 'escape_char single quote' => sub {
             my @got = Foo->search({ text => { op => 'LIKE', value => "100'_", escape => "\\'" } });
-            is scalar(@got),  1,     'right number';
+            is scalar(@got),  1,            'right number';
             is $got[0]->name, 'underscore', 'right name';
         };
 
         subtest 'escape_char backslash' => sub {
             my @got = Foo->search({ text => { op => 'LIKE', value => '100\\_', escape => '\\\\' } });
-            is scalar(@got),  1,     'right number';
+            is scalar(@got),  1,            'right number';
             is $got[0]->name, 'underscore', 'right name';
         };
     } else {
         subtest 'escape_char backslash' => sub {
             my @got = Foo->search({ text => { op => 'LIKE', value => '100\\_', escape => '\\' } });
-            is scalar(@got),  1,     'right number';
+            is scalar(@got),  1,            'right number';
             is $got[0]->name, 'underscore', 'right name';
         };
     }

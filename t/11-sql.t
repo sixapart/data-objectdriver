@@ -233,24 +233,24 @@ is($stmt->as_sql_where, "WHERE ((foo = ?) AND (foo = ?) AND (foo = ?)) AND ((foo
 
 ## as_escape
 $stmt = ns();
-$stmt->add_where(foo => {op => 'LIKE', value => '100%', escape => '\\'});
+$stmt->add_where(foo => { op => 'LIKE', value => '100%', escape => '\\' });
 is($stmt->as_sql_where, "WHERE (foo LIKE ? ESCAPE '\\')\n");
-is($stmt->bind->[0], '100%'); # escape doesn't automatically escape the value
+is($stmt->bind->[0],    '100%');                               # escape doesn't automatically escape the value
 $stmt = ns();
-$stmt->add_where(foo => {op => 'LIKE', value => '100\\%', escape => '\\'});
+$stmt->add_where(foo => { op => 'LIKE', value => '100\\%', escape => '\\' });
 is($stmt->as_sql_where, "WHERE (foo LIKE ? ESCAPE '\\')\n");
-is($stmt->bind->[0], '100\\%');
+is($stmt->bind->[0],    '100\\%');
 $stmt = ns();
-$stmt->add_where(foo => {op => 'LIKE', value => '100%', escape => '!'});
+$stmt->add_where(foo => { op => 'LIKE', value => '100%', escape => '!' });
 is($stmt->as_sql_where, "WHERE (foo LIKE ? ESCAPE '!')\n");
 $stmt = ns();
-$stmt->add_where(foo => {op => 'LIKE', value => '100%', escape => "''"});
+$stmt->add_where(foo => { op => 'LIKE', value => '100%', escape => "''" });
 is($stmt->as_sql_where, "WHERE (foo LIKE ? ESCAPE '''')\n");
 $stmt = ns();
-$stmt->add_where(foo => {op => 'LIKE', value => '100%', escape => "\\'"});
+$stmt->add_where(foo => { op => 'LIKE', value => '100%', escape => "\\'" });
 is($stmt->as_sql_where, "WHERE (foo LIKE ? ESCAPE '\\'')\n");
 $stmt = ns();
-eval { $stmt->add_where(foo => {op => 'LIKE', value => '_', escape => "!!!"}); };
+eval { $stmt->add_where(foo => { op => 'LIKE', value => '_', escape => "!!!" }); };
 like($@, qr/length/, 'right error');
 
 $stmt = ns();
