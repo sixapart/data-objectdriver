@@ -1,5 +1,8 @@
 {{$NEXT}}
 
+0.23 2024-10-23T04:39:20Z
+    - Introduce as_escape method to D::OD::SQL to allow specifying escape clause #45
+
 0.22 2023-02-01T05:14:13Z
     - Clear %Handle cache if dbh is set to undef #42
     - Skip fork test on win32 #41
