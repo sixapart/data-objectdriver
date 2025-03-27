@@ -3,7 +3,7 @@
 use strict;
 
 use Data::ObjectDriver::SQL;
-use Test::More tests => 103;
+use Test::More tests => 113;
 
 my $stmt = ns();
 ok($stmt, 'Created SQL object');
@@ -222,6 +222,31 @@ $stmt = ns();
 $stmt->add_where(foo => []);
 is($stmt->as_sql_where, "WHERE (0 = 1)\n"); # foo IN ()
 is(scalar @{ $stmt->bind }, 0);
+
+$stmt = ns();
+$stmt->add_complex_where([]);
+is($stmt->as_sql_where, "");  # no WHERE without expression
+is(scalar @{ $stmt->bind }, 0);
+
+$stmt = ns();
+$stmt->add_complex_where([[]]);
+is($stmt->as_sql_where, "");  # no WHERE without expression
+is(scalar @{ $stmt->bind }, 0);
+
+$stmt = ns();
+$stmt->add_complex_where([{}]);
+is($stmt->as_sql_where, "");  # no WHERE without expression
+is(scalar @{ $stmt->bind }, 0);
+
+$stmt = ns();
+$stmt->add_complex_where([{id => 1}, {}]);
+is($stmt->as_sql_where, "WHERE ((id = ?))\n");  # no empty expression
+is(scalar @{ $stmt->bind }, 1);
+
+$stmt = ns();
+$stmt->add_complex_where([{id => 1}, []]);
+is($stmt->as_sql_where, "WHERE ((id = ?))\n");  # no empty expression
+is(scalar @{ $stmt->bind }, 1);
 
 ## regression bug. modified parameters
 my %terms = ( foo => [-and => 'foo', 'bar', 'baz']);
