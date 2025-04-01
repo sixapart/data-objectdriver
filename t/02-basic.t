@@ -18,7 +18,7 @@ BEGIN {
     }
 }
 
-plan tests => 67;
+plan tests => 68;
 
 use Wine;
 use Recipe;
@@ -275,9 +275,11 @@ setup_dbs({
     my $w = Wine->new(name => 'flag test', rating=> 4);
     ok !$w->object_is_stored, "this object needs to be saved!";
     $w->save;
-    ok $w->object_is_stored, "this object is no saved";
+    ok $w->object_is_stored, "this object is now saved";
     my $w2 = Wine->lookup( $w->id );
     ok $w2->object_is_stored, "an object fetched from the database is by definition NOT ephemeral";
+    $w2->remove;
+    ok !$w2->object_is_stored, "unmarked saved";
 }
 
 END {
