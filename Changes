@@ -1,5 +1,13 @@
 {{$NEXT}}
 
+0.24 2025-04-11T04:04:40Z
+    - Do not add empty where expressions #47
+    - Remove __is_stored flag if the object is removed from the database #43
+    - Correct the pod for object_is_stored, which was called is_ephemeral and
+      had the opposite meaning #44 
+    - Do not skip cache repair  based solely on the number of cache keys
+      (Thanks to sewi-cpan) #29
+
 0.24 2025-04-11T03:58:56Z
     - Do not add empty where expressions #47
     - Remove __is_stored flag if the object is removed from the database #43
