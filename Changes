@@ -1,6 +1,6 @@
 {{$NEXT}}
 
-0.24 2025-04-11T03:58:56Z
+0.25 2025-04-15T04:37:59Z
     - Do not add empty where expressions #47
     - Remove __is_stored flag if the object is removed from the database #43
     - Correct the pod for object_is_stored, which was called is_ephemeral and
