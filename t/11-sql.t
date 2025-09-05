@@ -415,7 +415,7 @@ FROM
 WHERE
     ((title = ?))
     AND
-    ((recipe_id IN SELECT ingredients.id FROM ingredients WHERE (ingredients.col1 LIKE ? ESCAPE '!') LIMIT 2))
+    ((recipe_id IN (SELECT ingredients.id FROM ingredients WHERE (ingredients.col1 LIKE ? ESCAPE '!') LIMIT 2)))
 LIMIT 4
 EOF
         is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
@@ -454,12 +454,12 @@ WHERE
     (
         ((title = ?))
         OR
-        ((recipe_id IN
+        ((recipe_id IN (
             SELECT ingredients.id
             FROM ingredients
             WHERE ((col1 LIKE ? ESCAPE '!')) AND ((col2 LIKE ? ESCAPE '!'))
             LIMIT 2
-        ))
+        )))
         OR
         ((title = ?))
     ) AND (

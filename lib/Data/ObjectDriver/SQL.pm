@@ -284,7 +284,7 @@ sub _mk_term {
             if (ref $val->{value} eq 'SCALAR') {
                 $term = "$c $val->{op} " . ${$val->{value}};
             } elsif (UNIVERSAL::isa( $val->{value}, "Data::ObjectDriver::SQL" )) {
-                $term = "$c $val->{op} ". $val->{value}->as_sql;
+                $term = "$c $val->{op} (". $val->{value}->as_sql. ')';
                 push @bind, @{$val->{value}->{bind}};
             } else {
                 $term = "$c $val->{op} ?";
