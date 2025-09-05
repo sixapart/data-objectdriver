@@ -4,6 +4,7 @@ use strict;
 
 use Data::ObjectDriver::SQL;
 use Test::More tests => 114;
+use lib 't/lib';
 use lib 't/lib/cached';
 
 my $stmt = ns();
