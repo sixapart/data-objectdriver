@@ -286,9 +286,10 @@ is($stmt->as_sql, "SELECT foo, bar\nFROM baz\n");
 
 $stmt = ns();
 $stmt->add_select('f.foo' => 'foo');
+$stmt->add_select('f.bar');
 $stmt->add_select('COUNT(*)' => 'count');
 $stmt->from([ qw( baz ) ]);
-is($stmt->as_sql, "SELECT f.foo, COUNT(*) count\nFROM baz\n");
+is($stmt->as_sql, "SELECT f.foo, f.bar, COUNT(*) count\nFROM baz\n");
 my $map = $stmt->select_map;
 is(scalar(keys %$map), 2);
 is($map->{'f.foo'}, 'foo');

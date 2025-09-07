@@ -33,10 +33,11 @@ sub new {
 sub add_select {
     my $stmt = shift;
     my($term, $col) = @_;
-    $col ||= $term;
     push @{ $stmt->select }, $term;
-    $stmt->select_map->{$term} = $col;
-    $stmt->select_map_reverse->{$col} = $term;
+    if ($col) {
+        $stmt->select_map->{$term} = $col;
+        $stmt->select_map_reverse->{$col} = $term;
+    }
 }
 
 sub add_join {
@@ -64,8 +65,12 @@ sub as_sql {
         $sql .= 'SELECT ';
         $sql .= 'DISTINCT ' if $stmt->distinct;
         $sql .= join(', ',  map {
-            my $alias = $stmt->select_map->{$_};
-            $alias && /(?:^|\.)\Q$alias\E$/ ? $_ : "$_ $alias";
+            my $col = $_;
+            if (my $alias = $stmt->select_map->{$col}) {
+                /(?:^|\.)\Q$alias\E$/ ? $col : "$col $alias";
+            } else {
+                $col;
+            }
         } @{ $stmt->select }) . "\n";
     }
     $sql .= 'FROM ';
