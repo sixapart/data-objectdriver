@@ -65,7 +65,7 @@ sub as_sql {
         $sql .= 'DISTINCT ' if $stmt->distinct;
         $sql .= join(', ',  map {
             my $alias = $stmt->select_map->{$_};
-            $alias && /(?:^|\.)\Q$alias\E$/ ? $_ : "$_ $alias";
+            $alias && /(?:^|\.)\Q$alias\E$/ ? $_ : qq!$_ "$alias"!;
         } @{ $stmt->select }) . "\n";
     }
     $sql .= 'FROM ';
