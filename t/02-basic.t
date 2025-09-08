@@ -1,6 +1,7 @@
 # $Id: 01-col-inheritance.t 989 2005-09-23 19:58:01Z btrott $
 
 use strict;
+use warnings;
 
 use lib 't/lib';
 use lib 't/lib/cached';

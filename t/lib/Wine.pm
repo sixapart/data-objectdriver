@@ -1,6 +1,7 @@
 # $Id$
 
 use strict;
+use warnings;
 use DodTestUtil;
 
 package My::BaseObject;

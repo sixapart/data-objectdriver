@@ -1,6 +1,7 @@
 # $Id$
 
 use strict;
+use warnings;
 
 use lib 't/lib';  # for Cache::Memory substitute.
 use lib 't/lib/cached';

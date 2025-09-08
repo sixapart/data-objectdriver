@@ -1,6 +1,7 @@
 # $Id: Wine.pm 1050 2005-12-08 13:46:22Z ykerherve $
 
 use strict;
+use warnings;
 use DodTestUtil;
 
 package PkLess;

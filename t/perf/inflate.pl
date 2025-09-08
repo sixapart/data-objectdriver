@@ -1,6 +1,7 @@
 # $Id$
 
 use strict;
+use warnings;
 
 use lib 't/lib';
 use lib 't/lib/cached';

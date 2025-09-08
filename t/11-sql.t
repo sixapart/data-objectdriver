@@ -1,6 +1,7 @@
 # $Id$
 
 use strict;
+use warnings;
 
 use Data::ObjectDriver::SQL;
 use Test::More tests => 113;
