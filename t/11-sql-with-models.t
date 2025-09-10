@@ -8,10 +8,11 @@ use lib 't/lib/cached';
 use Data::ObjectDriver::SQL;
 use Test::More tests => 3;
 use DodTestUtil;
-use Recipe;
-use Ingredient;
 
 BEGIN { DodTestUtil->check_driver }
+
+use Recipe;
+use Ingredient;
 
 subtest 'as_subquery' => sub {
     my $stmt = Ingredient->driver->prepare_statement('Ingredient', { col1 => 'sub1' }, { fetchonly => ['id'] });
