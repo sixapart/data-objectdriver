@@ -3,6 +3,7 @@
 package Data::ObjectDriver::SQL;
 use strict;
 use warnings;
+use Scalar::Util 'blessed';
 
 use base qw( Class::Accessor::Fast );
 
@@ -10,7 +11,7 @@ __PACKAGE__->mk_accessors(qw(
     select distinct select_map select_map_reverse
     from joins where bind limit offset group order
     having where_values column_mutator index_hint
-    comment
+    comment as
 ));
 
 sub new {
@@ -35,8 +36,10 @@ sub add_select {
     my($term, $col) = @_;
     $col ||= $term;
     push @{ $stmt->select }, $term;
-    $stmt->select_map->{$term} = $col;
-    $stmt->select_map_reverse->{$col} = $term;
+    if (!blessed($term)) {
+        $stmt->select_map->{$term} = $col;
+        $stmt->select_map_reverse->{$col} = $term;
+    }
 }
 
 sub add_join {
@@ -64,8 +67,15 @@ sub as_sql {
         $sql .= 'SELECT ';
         $sql .= 'DISTINCT ' if $stmt->distinct;
         $sql .= join(', ',  map {
-            my $alias = $stmt->select_map->{$_};
-            $alias && /(?:^|\.)\Q$alias\E$/ ? $_ : "$_ $alias";
+            my $col = $_;
+            if (blessed($col) && $col->isa('Data::ObjectDriver::SQL')) {
+                my $sub_sql = $col->as_subquery;
+                push @{$stmt->{bind}}, @{$col->{bind}};
+                $sub_sql;
+            } else {
+                my $alias = $stmt->select_map->{$_};
+                $alias && /(?:^|\.)\Q$alias\E$/ ? $_ : "$_ $alias";
+            }
         } @{ $stmt->select }) . "\n";
     }
     $sql .= 'FROM ';
@@ -108,6 +118,15 @@ sub as_sql {
         $sql .= "-- $1" if $1;
     }
     return $sql;
+}
+
+sub as_subquery {
+    my $stmt     = shift;
+    my $subquery = '('. $stmt->as_sql. ')';
+    if ($stmt->as) {
+        $subquery .= ' AS ' . $stmt->as;
+    }
+    $subquery;
 }
 
 sub as_limit {
@@ -281,15 +300,16 @@ sub _mk_term {
             $term = "$c $op ? AND ?";
             push @bind, @{$val->{value}};
         } else {
-            if (ref $val->{value} eq 'SCALAR') {
-                $term = "$c $val->{op} " . ${$val->{value}};
-            } elsif (UNIVERSAL::isa( $val->{value}, "Data::ObjectDriver::SQL" )) {
-                $term = "$c $val->{op} (". $val->{value}->as_sql. ')';
-                push @bind, @{$val->{value}->{bind}};
+            my $value = $val->{value};
+            if (ref $value eq 'SCALAR') {
+                $term = "$c $val->{op} " . $$value;
+            } elsif (blessed($value) && $value->isa('Data::ObjectDriver::SQL')) {
+                $term = "$c $val->{op} ". $value->as_subquery;
+                push @bind, @{$value->{bind}};
             } else {
                 $term = "$c $val->{op} ?";
                 $term .= $stmt->as_escape($val->{escape}) if $val->{escape} && $op =~ /^(?:NOT\s+)?I?LIKE$/;
-                push @bind, $val->{value};
+                push @bind, $value;
             }
         }
     } elsif (ref($val) eq 'SCALAR') {

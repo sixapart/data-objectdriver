@@ -6,14 +6,79 @@ use warnings;
 use lib 't/lib';
 use lib 't/lib/cached';
 use Data::ObjectDriver::SQL;
-use Test::More tests => 1;
+use Test::More tests => 3;
 use DodTestUtil;
+use Recipe;
+use Ingredient;
 
 BEGIN { DodTestUtil->check_driver }
 
-subtest 'reuse prepared statement(complex)' => sub {
-    require Recipe;
-    require Ingredient;
+subtest 'as_subquery' => sub {
+    my $stmt = Ingredient->driver->prepare_statement('Ingredient', { col1 => 'sub1' }, { fetchonly => ['id'] });
+
+    is(sql_normalize($stmt->as_subquery), sql_normalize(<<'EOF'), 'right sql');
+(SELECT ingredients.id FROM ingredients WHERE (ingredients.col1 = ?))
+EOF
+    is_deeply($stmt->{bind}, ['sub1'], 'right bind values');
+
+    $stmt->as('mysubquery');
+
+    is(sql_normalize($stmt->as_subquery), sql_normalize(<<'EOF'), 'right sql');
+(SELECT ingredients.id FROM ingredients WHERE (ingredients.col1 = ?)) AS mysubquery
+EOF
+};
+
+subtest 'subquery in select clause' => sub {
+
+    subtest 'case1' => sub {
+        my $stmt = Recipe->driver->prepare_statement('Recipe', [{ title => 'title1' }, {}], {});
+        $stmt->add_select(Ingredient->driver->prepare_statement(
+            'Ingredient',
+            [{ recipe_id => \'= recipes.recipe_id' }, { col1 => 'sub1' }], { fetchonly => ['id'] }));
+
+        my $expected = sql_normalize(<<'EOF');
+SELECT
+    recipes.recipe_id,
+    recipes.title,
+    (
+        SELECT ingredients.id
+        FROM ingredients
+        WHERE ((recipe_id = recipes.recipe_id)) AND ((col1 = ?))
+    )
+FROM recipes
+WHERE ((title = ?))
+EOF
+
+        is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
+        is_deeply($stmt->{bind}, ['title1', 'sub1'], 'right bind values');
+    };
+
+    subtest 'with alias' => sub {
+        my $stmt = Recipe->driver->prepare_statement('Recipe', [{}, {}], {});
+        my $subquery = Ingredient->driver->prepare_statement(
+            'Ingredient',
+            [{ recipe_id => \'= recipes.recipe_id' }], { fetchonly => ['id'] });
+        $subquery->as('sub_alias');
+        $stmt->add_select($subquery);
+
+        my $expected = sql_normalize(<<'EOF');
+SELECT
+    recipes.recipe_id,
+    recipes.title,
+    (
+        SELECT ingredients.id
+        FROM ingredients
+        WHERE ((recipe_id = recipes.recipe_id))
+    ) AS sub_alias
+FROM recipes
+EOF
+
+        is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
+        is_deeply($stmt->{bind}, [], 'right bind values');
+    };
+};
+
+subtest 'subquery in where clause' => sub {
 
     subtest 'case1' => sub {
         my $stmt = Recipe->driver->prepare_statement(
@@ -98,6 +163,7 @@ EOF
 sub sql_normalize {
     my $sql = shift;
     $sql =~ s{\s+}{ }g;
+    $sql =~ s{ $}{}g;
     $sql =~ s{\( }{(}g;
     $sql =~ s{ \)}{)}g;
     $sql =~ s{([\(\)]) ([\(\)])}{$1$2}g;
