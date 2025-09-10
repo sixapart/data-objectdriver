@@ -61,7 +61,7 @@ jobs:
       - name: Install dependencies
         run: curl -sL https://git.io/cpm | sudo perl - install -g --with-recommends --with-test --with-configure --show-build-log-on-failure --feature=test_mariadb --feature=test_fork
       - name: Run tests
-        run: DOD_TEST_DRIVER=MariaDB prove -lr -j4 t
+        run: DOD_TEST_DRIVER=MariaDB prove -lr t
 
   postgresql:
     runs-on: ubuntu-latest
