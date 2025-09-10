@@ -6,7 +6,7 @@ use warnings;
 use lib 't/lib';
 use lib 't/lib/cached';
 use Data::ObjectDriver::SQL;
-use Test::More tests => 3;
+use Test::More tests => 5;
 use DodTestUtil;
 
 BEGIN { DodTestUtil->check_driver }
@@ -51,11 +51,11 @@ WHERE ((title = ?))
 EOF
 
         is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
-        is_deeply($stmt->{bind}, ['title1', 'sub1'], 'right bind values');
+        is_deeply($stmt->{bind}, ['sub1', 'title1'], 'right bind values');
     };
 
     subtest 'with alias' => sub {
-        my $stmt = Recipe->driver->prepare_statement('Recipe', [{}, {}], {});
+        my $stmt     = Recipe->driver->prepare_statement('Recipe', [{}, {}], {});
         my $subquery = Ingredient->driver->prepare_statement(
             'Ingredient',
             [{ recipe_id => \'= recipes.recipe_id' }], { fetchonly => ['id'] });
@@ -79,6 +79,57 @@ EOF
     };
 };
 
+subtest 'subquery in from clause' => sub {
+
+    subtest 'case1' => sub {
+        my $stmt     = Recipe->driver->prepare_statement('Recipe', [{ title => 'title1' }, {}], {});
+        my $subquery = Ingredient->driver->prepare_statement(
+            'Ingredient',
+            [{ recipe_id => \'= recipes.recipe_id' }, { col1 => 'sub1' }], { fetchonly => ['id'] });
+        push @{ $stmt->from }, $subquery;
+
+        my $expected = sql_normalize(<<'EOF');
+SELECT
+    recipes.recipe_id,
+    recipes.title
+FROM recipes,
+    (
+        SELECT ingredients.id
+        FROM ingredients
+        WHERE ((recipe_id = recipes.recipe_id)) AND ((col1 = ?))
+    )
+WHERE ((title = ?))
+EOF
+
+        is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
+        is_deeply($stmt->{bind}, ['sub1', 'title1'], 'right bind values');
+    };
+
+    subtest 'with alias' => sub {
+        my $stmt     = Recipe->driver->prepare_statement('Recipe', [{}, {}], {});
+        my $subquery = Ingredient->driver->prepare_statement(
+            'Ingredient',
+            [{ recipe_id => \'= recipes.recipe_id' }], { fetchonly => ['id'] });
+        $subquery->as('sub_alias');
+        push @{ $stmt->from }, $subquery;
+
+        my $expected = sql_normalize(<<'EOF');
+SELECT
+    recipes.recipe_id,
+    recipes.title
+FROM recipes,
+    (
+        SELECT ingredients.id
+        FROM ingredients
+        WHERE ((recipe_id = recipes.recipe_id))
+    ) AS sub_alias
+EOF
+
+        is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
+        is_deeply($stmt->{bind}, [], 'right bind values');
+    };
+};
+
 subtest 'subquery in where clause' => sub {
 
     subtest 'case1' => sub {
@@ -89,8 +140,8 @@ subtest 'subquery in where clause' => sub {
                     recipe_id => {
                         op    => 'IN',
                         value => Ingredient->driver->prepare_statement(
-                            'Ingredient', 
-                            { col1 => { op => 'LIKE', value => 'sub1', escape => '!' } },
+                            'Ingredient',
+                            { col1      => { op => 'LIKE', value => 'sub1', escape => '!' } },
                             { fetchonly => ['id'], limit => 2 }) }
                 },
             ],
@@ -159,6 +210,32 @@ EOF
         is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
         is_deeply($stmt->{bind}, ['title1', 'sub1', 'sub2', 'title2', 'title3'], 'right bind values');
     };
+};
+
+subtest 'subquery in multiple clauses' => sub {
+    my $sub1 = Ingredient->driver->prepare_statement('Ingredient', { id => 1 }, { fetchonly => ['id'] });
+    my $sub2 = Ingredient->driver->prepare_statement('Ingredient', { id => 2 }, { fetchonly => ['id'] });
+    my $sub3 = Ingredient->driver->prepare_statement('Ingredient', { id => 3 }, { fetchonly => ['id'] });
+    $sub1->as('sub1');
+    $sub2->as('sub2');
+    $sub3->as('sub3');
+    my $stmt = Recipe->driver->prepare_statement('Recipe', { recipe_id => { op => '=', value => $sub3 } }, {});
+    $stmt->add_select($sub1);
+    push @{ $stmt->from }, $sub2;
+
+    my $expected = sql_normalize(<<'EOF');
+SELECT
+    recipes.recipe_id,
+    recipes.title,
+    (SELECT ingredients.id FROM ingredients WHERE (ingredients.id = ?)) AS sub1
+FROM 
+    recipes,
+    (SELECT  ingredients.id FROM ingredients WHERE (ingredients.id = ?)) AS sub2
+WHERE
+    (recipes.recipe_id = (SELECT  ingredients.id FROM ingredients WHERE (ingredients.id = ?)) AS sub3)
+EOF
+    is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
+    is_deeply($stmt->{bind}, ['1', '2', '3'], 'right bind values');
 };
 
 sub sql_normalize {

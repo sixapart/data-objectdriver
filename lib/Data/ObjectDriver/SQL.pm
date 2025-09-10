@@ -63,15 +63,16 @@ sub add_index_hint {
 sub as_sql {
     my $stmt = shift;
     my $sql = '';
+    my @bind_for_select;
+
     if (@{ $stmt->select }) {
         $sql .= 'SELECT ';
         $sql .= 'DISTINCT ' if $stmt->distinct;
         $sql .= join(', ',  map {
             my $col = $_;
             if (blessed($col) && $col->isa('Data::ObjectDriver::SQL')) {
-                my $sub_sql = $col->as_subquery;
-                push @{$stmt->{bind}}, @{$col->{bind}};
-                $sub_sql;
+                push @bind_for_select, @{ $col->{bind} };
+                $col->as_subquery;
             } else {
                 my $alias = $stmt->select_map->{$_};
                 $alias && /(?:^|\.)\Q$alias\E$/ ? $_ : "$_ $alias";
@@ -101,8 +102,18 @@ sub as_sql {
         $sql .= ', ' if @from;
     }
 
+    my @bind_for_from;
+
     if (@from) {
-        $sql .= join ', ', map { $stmt->_add_index_hint($_) } @from;
+        $sql .= join ', ', map {
+            my $from = $_;
+            if (blessed($from) && $from->isa('Data::ObjectDriver::SQL')) {
+                push @bind_for_from, @{$from->{bind}};
+                $from->as_subquery;
+            } else {
+                $stmt->_add_index_hint($from);
+            }
+        } @from;
     }
 
     $sql .= "\n";
@@ -117,6 +128,9 @@ sub as_sql {
     if ($comment && $comment =~ /([ 0-9a-zA-Z.:;()_#&,]+)/) {
         $sql .= "-- $1" if $1;
     }
+
+    @{ $stmt->{bind} } = (@bind_for_select, @bind_for_from, @{ $stmt->{bind} });
+
     return $sql;
 }
 
