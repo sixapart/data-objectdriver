@@ -39,7 +39,6 @@ sub add_select {
     if (blessed($term) && $col->isa('Data::ObjectDriver::SQL')) {
         if (my $alias = $term->as) {
             $stmt->select_map->{$term} = $alias;
-            $stmt->select_map_reverse->{$col} = $term;
         }
     } else {
         $stmt->select_map->{$term} = $col;
