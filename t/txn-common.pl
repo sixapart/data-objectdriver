@@ -1,6 +1,7 @@
 # $Id: db-common.pl 58 2006-05-04 00:04:10Z sky $
 
 use strict;
+use warnings;
 use Test::More;
 
 #diag "executing common transaction tests";

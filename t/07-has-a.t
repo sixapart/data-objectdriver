@@ -1,6 +1,7 @@
 # $Id: 05-deflate.t 1170 2006-03-24 05:29:48Z btrott $
 
 use strict;
+use warnings;
 
 use lib 't/lib';
 use lib 't/lib/cached';

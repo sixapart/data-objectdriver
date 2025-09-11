@@ -4,6 +4,7 @@
 # going on, to test that new method
 
 use strict;
+use warnings;
 
 use lib 't/lib';
 

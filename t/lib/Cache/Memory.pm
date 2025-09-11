@@ -3,6 +3,7 @@
 
 package Cache::Memory;
 use strict;
+use warnings;
 use Storable;
 
 sub new {

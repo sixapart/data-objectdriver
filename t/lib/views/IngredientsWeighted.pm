@@ -2,6 +2,7 @@
 
 package IngredientsWeighted;
 use strict;
+use warnings;
 use base qw( Data::ObjectDriver::BaseView );
 use DodTestUtil;
 

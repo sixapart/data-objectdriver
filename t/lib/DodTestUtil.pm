@@ -1,6 +1,7 @@
 package DodTestUtil;
 
 use strict;
+use warnings;
 use Exporter qw/import/;
 use File::Spec;
 use Test::More;

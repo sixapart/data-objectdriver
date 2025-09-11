@@ -2,6 +2,7 @@
 
 package ErrorTest;
 use strict;
+use warnings;
 use base qw( Data::ObjectDriver::BaseObject );
 use DodTestUtil;
 

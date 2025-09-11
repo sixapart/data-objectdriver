@@ -1,6 +1,7 @@
 # $Id: 41-callbacks.t 1037 2005-11-25 14:51:09Z ykerherve $
 
 use strict;
+use warnings;
 
 use lib 't/lib';
 use lib 't/lib/partitioned';

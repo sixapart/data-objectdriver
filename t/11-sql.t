@@ -1,9 +1,10 @@
 # $Id$
 
 use strict;
+use warnings;
 
 use Data::ObjectDriver::SQL;
-use Test::More tests => 113;
+use Test::More tests => 112;
 
 my $stmt = ns();
 ok($stmt, 'Created SQL object');
@@ -158,10 +159,6 @@ $stmt = ns(); $stmt->add_where(foo => { column => 'bar', op => '!=', value => 'b
 is($stmt->as_sql_where, "WHERE (bar != ?)\n");
 is(scalar @{ $stmt->bind }, 1);
 is($stmt->bind->[0], 'bar');
-
-$stmt = ns(); $stmt->add_where(foo => \'IS NOT NULL');
-is($stmt->as_sql_where, "WHERE (foo IS NOT NULL)\n");
-is(scalar @{ $stmt->bind }, 0);
 
 $stmt = ns();
 $stmt->add_where(foo => 'bar');
@@ -385,5 +382,28 @@ is(
         ?  "WHERE ((foo = ?)) AND (((bar LIKE ?) OR (bar LIKE ?)) AND (baz = ?))\n"
         :  "WHERE ((foo = ?)) AND ((baz = ?) AND ((bar LIKE ?) OR (bar LIKE ?)))\n"
 );
+
+subtest 'scalar reference' => sub {
+    $stmt = ns();
+    $stmt->add_where(foo => \'IS NOT NULL');
+    is($stmt->as_sql_where, "WHERE (foo IS NOT NULL)\n");
+    is(scalar @{ $stmt->bind }, 0);
+    $stmt = ns();
+    $stmt->add_where(foo => [ -and => \'= bar', \'= baz' ]);
+    is($stmt->as_sql_where, "WHERE ((foo = bar) AND (foo = baz))\n");
+    is(scalar @{ $stmt->bind }, 0);
+    $stmt = ns();
+    $stmt->add_where(foo => [\'= bar', \'= baz']);
+    is($stmt->as_sql_where, "WHERE ((foo = bar) OR (foo = baz))\n");
+    is(scalar @{ $stmt->bind }, 0);
+    $stmt = ns();
+    $stmt->add_complex_where([ {foo => \'= bar'}, {foo => \'= baz'} ]);
+    is($stmt->as_sql_where, "WHERE ((foo = bar)) AND ((foo = baz))\n");
+    is(scalar @{ $stmt->bind }, 0);
+    $stmt = ns();
+    $stmt->add_complex_where([ {foo => [\'= bar', \'= baz']} ]);
+    is($stmt->as_sql_where, "WHERE (((foo = bar) OR (foo = baz)))\n");
+    is(scalar @{ $stmt->bind }, 0);
+};
 
 sub ns { Data::ObjectDriver::SQL->new }
