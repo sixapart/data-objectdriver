@@ -399,9 +399,9 @@ subtest 'quote can be used based on given dbh' => sub {
     $stmt = ns({dbh => Wine->driver->rw_handle});
     $stmt->add_select(foo => 'bar');
     @{$stmt->from} = ('bar');
-    my $quoted = Wine->driver->dbh->quote_identifier('bar');
+    my $quoted = Wine->driver->dbh->quote_identifier('baz');
     is sql_normalize($stmt->as_sql), sql_normalize(<<"EOF"), 'right sql';
-SELECT foo $quoted FROM bar
+SELECT foo $quoted FROM baz
 EOF
 };
 
