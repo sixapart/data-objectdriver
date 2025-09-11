@@ -2,8 +2,16 @@
 
 use strict;
 
+use lib 't/lib';
 use Data::ObjectDriver::SQL;
-use Test::More tests => 113;
+use Test::More tests => 114;
+use DodTestUtil;
+
+BEGIN { DodTestUtil->check_driver }
+
+setup_dbs({
+    global => [ qw( wines ) ],
+});
 
 my $stmt = ns();
 ok($stmt, 'Created SQL object');
@@ -288,7 +296,7 @@ $stmt = ns();
 $stmt->add_select('f.foo' => 'foo');
 $stmt->add_select('COUNT(*)' => 'count');
 $stmt->from([ qw( baz ) ]);
-is($stmt->as_sql, "SELECT f.foo, COUNT(*) count\nFROM baz\n");
+is($stmt->as_sql, qq!SELECT f.foo, COUNT(*) count\nFROM baz\n!);
 my $map = $stmt->select_map;
 is(scalar(keys %$map), 2);
 is($map->{'f.foo'}, 'foo');
@@ -386,4 +394,29 @@ is(
         :  "WHERE ((foo = ?)) AND ((baz = ?) AND ((bar LIKE ?) OR (bar LIKE ?)))\n"
 );
 
-sub ns { Data::ObjectDriver::SQL->new }
+subtest 'quote can be used based on given dbh' => sub {
+    use Wine;
+    $stmt = ns({dbh => Wine->driver->rw_handle});
+    $stmt->add_select(foo => 'bar');
+    @{$stmt->from} = ('baz');
+    my $quoted = Wine->driver->dbh->quote_identifier('bar');
+    is sql_normalize($stmt->as_sql), sql_normalize(<<"EOF"), 'right sql';
+SELECT foo $quoted FROM baz
+EOF
+};
+
+sub ns { Data::ObjectDriver::SQL->new(@_) }
+
+sub sql_normalize {
+    my $sql = shift;
+    $sql =~ s{\s+}{ }g;
+    $sql =~ s{\( }{(}g;
+    $sql =~ s{ \)}{)}g;
+    $sql =~ s{([\(\)]) ([\(\)])}{$1$2}g;
+    $sql;
+}
+
+END {
+    disconnect_all(qw/Wine/);
+    teardown_dbs(qw( global ));
+}

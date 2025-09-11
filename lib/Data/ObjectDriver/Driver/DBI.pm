@@ -711,7 +711,7 @@ sub prepare_statement {
     my($class, $terms, $args) = @_;
 
     my $dbd = $driver->dbd;
-    my $stmt = $args->{sql_statement} || $dbd->sql_class->new;
+    my $stmt = $args->{sql_statement} || $dbd->sql_class->new({dbh => $driver->rw_handle});
 
     if (my $tbl = $driver->table_for($class)) {
         my $cols = $class->column_names;
