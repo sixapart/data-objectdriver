@@ -334,8 +334,8 @@ EOF
             'right select map'
         );
         ok(!$@, 'no error') || note $@;
-        is scalar(@recipes),               1,      'right number of results';
-        is $recipes[0]{column_values}{''}, 'salt', 'right ingredient_name';     # XXX is it expected?
+        is scalar(@recipes),                        1,      'right number of results';
+        is $recipes[0]{column_values}{"$sub_stmt"}, 'salt', 'right ingredient_name';     # XXX is it expected?
     };
 };
 
