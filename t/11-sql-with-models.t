@@ -6,13 +6,17 @@ use warnings;
 use lib 't/lib';
 use lib 't/lib/cached';
 use Data::ObjectDriver::SQL;
-use Test::More tests => 5;
+use Test::More tests => 6;
 use DodTestUtil;
 
 BEGIN { DodTestUtil->check_driver }
 
 use Recipe;
 use Ingredient;
+
+setup_dbs({
+    global => [ qw( recipes ingredients ) ],
+});
 
 subtest 'as_subquery' => sub {
     my $stmt = Ingredient->driver->prepare_statement('Ingredient', { col1 => 'sub1' }, { fetchonly => ['id'] });
@@ -238,6 +242,61 @@ EOF
     is_deeply($stmt->{bind}, ['1', '2', '3'], 'right bind values');
 };
 
+subtest 'subquery in select list actually works' => sub {
+
+    require Data::ObjectDriver::Driver::DBI;
+    my $stmt;
+    my $sub_stmt;
+    my $prepare_statement_org = \&Data::ObjectDriver::Driver::DBI::prepare_statement;
+    local *Data::ObjectDriver::Driver::DBI::prepare_statement = sub {
+        $stmt     = $prepare_statement_org->(@_);
+        $sub_stmt = $prepare_statement_org->(
+            Ingredient->driver,
+            'Ingredient',
+            [{ 'ingredients.recipe_id' => \'= recipes.recipe_id' }], { fetchonly => ['name'] });
+        $sub_stmt->as('ingredient_name');
+        $stmt->add_select($sub_stmt);
+        return $stmt;
+    };
+
+    {
+        my $r = Recipe->new;
+        $r->title('MyRecipe1');
+        $r->save;
+        my $i = Ingredient->new;
+        $i->recipe_id($r->recipe_id);
+        $i->name('salt');
+        $i->save;
+    }
+
+    my @recipes = eval { Recipe->search({}, {}) };
+    note explain(@recipes);
+
+    is sql_normalize($stmt->as_sql), sql_normalize(<<'EOF'), 'right sql';
+SELECT 
+    recipes.recipe_id,
+    recipes.title,
+    (
+        SELECT ingredients.name
+        FROM ingredients
+        WHERE ((ingredients.recipe_id = recipes.recipe_id))
+    ) AS ingredient_name
+FROM recipes
+EOF
+
+    is_deeply(
+        $stmt->select_map, {
+            'recipes.recipe_id' => 'recipe_id',
+            'recipes.title'     => 'title',
+            "$sub_stmt"         => 'ingredient_name',
+        },
+        'right select map'
+    );
+    ok(!$@, 'no error') || warn $@;
+    is scalar(@recipes),                            1,      'right number of results';
+    is $recipes[0]{column_values}{ingredient_name}, 'salt', 'right ingredient_name';     # XXX is it expected?
+};
+
 sub sql_normalize {
     my $sql = shift;
     $sql =~ s{\s+}{ }g;
@@ -248,4 +307,7 @@ sub sql_normalize {
     $sql;
 }
 
-sub ns { Data::ObjectDriver::SQL->new }
+END {
+    disconnect_all(qw/Recipe Ingredient/);
+    teardown_dbs(qw( global ));
+}
