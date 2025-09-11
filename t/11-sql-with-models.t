@@ -245,19 +245,7 @@ EOF
 subtest 'subquery in select list actually works' => sub {
 
     require Data::ObjectDriver::Driver::DBI;
-    my $stmt;
-    my $sub_stmt;
     my $prepare_statement_org = \&Data::ObjectDriver::Driver::DBI::prepare_statement;
-    local *Data::ObjectDriver::Driver::DBI::prepare_statement = sub {
-        $stmt     = $prepare_statement_org->(@_);
-        $sub_stmt = $prepare_statement_org->(
-            Ingredient->driver,
-            'Ingredient',
-            [{ 'ingredients.recipe_id' => \'= recipes.recipe_id' }], { fetchonly => ['name'] });
-        $sub_stmt->as('ingredient_name');
-        $stmt->add_select($sub_stmt);
-        return $stmt;
-    };
 
     {
         my $r = Recipe->new;
@@ -269,10 +257,23 @@ subtest 'subquery in select list actually works' => sub {
         $i->save;
     }
 
-    my @recipes = eval { Recipe->search({}, {}) };
-    note explain(@recipes);
+    subtest 'case1' => sub {
+        my $stmt;
+        my $sub_stmt;
+        local *Data::ObjectDriver::Driver::DBI::prepare_statement = sub {
+            $stmt     = $prepare_statement_org->(@_);
+            $sub_stmt = $prepare_statement_org->(
+                Ingredient->driver,
+                'Ingredient',
+                [{ 'ingredients.recipe_id' => \'= recipes.recipe_id' }], { fetchonly => ['name'] });
+            $sub_stmt->as('ingredient_name');
+            $stmt->add_select($sub_stmt);
+            return $stmt;
+        };
 
-    is sql_normalize($stmt->as_sql), sql_normalize(<<'EOF'), 'right sql';
+        my @recipes = eval { Recipe->search({}, {}) };
+
+        is sql_normalize($stmt->as_sql), sql_normalize(<<'EOF'), 'right sql';
 SELECT 
     recipes.recipe_id,
     recipes.title,
@@ -284,17 +285,58 @@ SELECT
 FROM recipes
 EOF
 
-    is_deeply(
-        $stmt->select_map, {
-            'recipes.recipe_id' => 'recipe_id',
-            'recipes.title'     => 'title',
-            "$sub_stmt"         => 'ingredient_name',
-        },
-        'right select map'
-    );
-    ok(!$@, 'no error') || warn $@;
-    is scalar(@recipes),                            1,      'right number of results';
-    is $recipes[0]{column_values}{ingredient_name}, 'salt', 'right ingredient_name';     # XXX is it expected?
+        is_deeply(
+            $stmt->select_map, {
+                'recipes.recipe_id' => 'recipe_id',
+                'recipes.title'     => 'title',
+                "$sub_stmt"         => 'ingredient_name',
+            },
+            'right select map'
+        );
+        ok(!$@, 'no error') || note $@;
+        is scalar(@recipes),                            1,      'right number of results';
+        is $recipes[0]{column_values}{ingredient_name}, 'salt', 'right ingredient_name';     # XXX is it expected?
+    };
+
+    subtest 'without alias' => sub {
+        my $stmt;
+        my $sub_stmt;
+        local *Data::ObjectDriver::Driver::DBI::prepare_statement = sub {
+            $stmt     = $prepare_statement_org->(@_);
+            $sub_stmt = $prepare_statement_org->(
+                Ingredient->driver,
+                'Ingredient',
+                [{ 'ingredients.recipe_id' => \'= recipes.recipe_id' }], { fetchonly => ['name'] });
+            $stmt->add_select($sub_stmt);
+            return $stmt;
+        };
+
+        my @recipes = eval { Recipe->search({}, {}) };
+
+        is sql_normalize($stmt->as_sql), sql_normalize(<<'EOF'), 'right sql';
+SELECT 
+    recipes.recipe_id,
+    recipes.title,
+    (
+        SELECT ingredients.name
+        FROM ingredients
+        WHERE ((ingredients.recipe_id = recipes.recipe_id))
+    )
+FROM recipes
+EOF
+
+        is_deeply(
+            $stmt->select_map, {
+                'recipes.recipe_id' => 'recipe_id',
+                'recipes.title'     => 'title',
+                "$sub_stmt"         => undef,
+            },
+            'right select map'
+        );
+        ok(!$@, 'no error') || note $@;
+        is scalar(@recipes),               1,      'right number of results';
+        is $recipes[0]{column_values}{''}, 'salt', 'right ingredient_name';     # XXX is it expected?
+    };
 };
 
 sub sql_normalize {
