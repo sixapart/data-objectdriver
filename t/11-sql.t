@@ -415,16 +415,16 @@ is(
 
 subtest 'quote can be used based on given dbh' => sub {
     use Wine;
-    $stmt = ns({dbh => Wine->driver->rw_handle});
+    $stmt = ns();
     $stmt->add_select(foo => 'bar');
     @{$stmt->from} = ('baz');
-    my $quoted = Wine->driver->dbh->quote_identifier('bar');
-    is sql_normalize($stmt->as_sql), sql_normalize(<<"EOF"), 'right sql';
+    my $quoted = Wine->driver->rw_handle->quote_identifier('bar');
+    is sql_normalize($stmt->as_sql(Wine->driver->rw_handle)), sql_normalize(<<"EOF"), 'right sql';
 SELECT foo $quoted FROM baz
 EOF
 };
 
-sub ns { Data::ObjectDriver::SQL->new(@_) }
+sub ns { Data::ObjectDriver::SQL->new }
 
 sub sql_normalize {
     my $sql = shift;

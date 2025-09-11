@@ -165,7 +165,7 @@ sub prepare_fetch {
 
     my $stmt = $driver->prepare_statement($class, $terms, $args);
 
-    my $sql = $stmt->as_sql;
+    my $sql = $stmt->as_sql($driver->rw_handle);
     $sql .= "\nFOR UPDATE" if $orig_args->{for_update};
     return ($sql, $stmt->{bind}, $stmt)
 }
@@ -711,7 +711,7 @@ sub prepare_statement {
     my($class, $terms, $args) = @_;
 
     my $dbd = $driver->dbd;
-    my $stmt = $args->{sql_statement} || $dbd->sql_class->new({dbh => $driver->rw_handle});
+    my $stmt = $args->{sql_statement} || $dbd->sql_class->new;
 
     if (my $tbl = $driver->table_for($class)) {
         my $cols = $class->column_names;

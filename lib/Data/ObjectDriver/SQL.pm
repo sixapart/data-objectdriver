@@ -10,7 +10,7 @@ __PACKAGE__->mk_accessors(qw(
     select distinct select_map select_map_reverse
     from joins where bind limit offset group order
     having where_values column_mutator index_hint
-    comment dbh
+    comment
 ));
 
 sub new {
@@ -58,7 +58,7 @@ sub add_index_hint {
 }
 
 sub as_sql {
-    my $stmt = shift;
+    my ($stmt, $dbh) = @_;
     my $sql = '';
     if (@{ $stmt->select }) {
         $sql .= 'SELECT ';
@@ -66,7 +66,6 @@ sub as_sql {
         $sql .= join(', ',  map {
             my $alias = $stmt->select_map->{$_};
             if ($alias && !/(?:^|\.)\Q$alias\E$/) {
-                my $dbh = $stmt->dbh;
                 $alias = $dbh->quote_identifier($alias) if $dbh;
                 qq!$_ $alias!
             } else {
