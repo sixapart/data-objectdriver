@@ -3,6 +3,7 @@
 package Data::ObjectDriver::SQL;
 use strict;
 use warnings;
+use Scalar::Util 'blessed';
 
 use base qw( Class::Accessor::Fast );
 
@@ -10,7 +11,7 @@ __PACKAGE__->mk_accessors(qw(
     select distinct select_map select_map_reverse
     from joins where bind limit offset group order
     having where_values column_mutator index_hint
-    comment
+    comment as
 ));
 
 sub new {
@@ -35,8 +36,10 @@ sub add_select {
     my($term, $col) = @_;
     $col ||= $term;
     push @{ $stmt->select }, $term;
-    $stmt->select_map->{$term} = $col;
-    $stmt->select_map_reverse->{$col} = $term;
+    if (!blessed($term)) {
+        $stmt->select_map->{$term} = $col;
+        $stmt->select_map_reverse->{$col} = $term;
+    }
 }
 
 sub add_join {
@@ -60,12 +63,20 @@ sub add_index_hint {
 sub as_sql {
     my $stmt = shift;
     my $sql = '';
+    my @bind_for_select;
+
     if (@{ $stmt->select }) {
         $sql .= 'SELECT ';
         $sql .= 'DISTINCT ' if $stmt->distinct;
         $sql .= join(', ',  map {
-            my $alias = $stmt->select_map->{$_};
-            $alias && /(?:^|\.)\Q$alias\E$/ ? $_ : "$_ $alias";
+            my $col = $_;
+            if (blessed($col) && $col->isa('Data::ObjectDriver::SQL')) {
+                push @bind_for_select, @{ $col->{bind} };
+                $col->as_subquery;
+            } else {
+                my $alias = $stmt->select_map->{$_};
+                $alias && /(?:^|\.)\Q$alias\E$/ ? $_ : "$_ $alias";
+            }
         } @{ $stmt->select }) . "\n";
     }
     $sql .= 'FROM ';
@@ -91,8 +102,18 @@ sub as_sql {
         $sql .= ', ' if @from;
     }
 
+    my @bind_for_from;
+
     if (@from) {
-        $sql .= join ', ', map { $stmt->_add_index_hint($_) } @from;
+        $sql .= join ', ', map {
+            my $from = $_;
+            if (blessed($from) && $from->isa('Data::ObjectDriver::SQL')) {
+                push @bind_for_from, @{$from->{bind}};
+                $from->as_subquery;
+            } else {
+                $stmt->_add_index_hint($from);
+            }
+        } @from;
     }
 
     $sql .= "\n";
@@ -107,7 +128,19 @@ sub as_sql {
     if ($comment && $comment =~ /([ 0-9a-zA-Z.:;()_#&,]+)/) {
         $sql .= "-- $1" if $1;
     }
+
+    @{ $stmt->{bind} } = (@bind_for_select, @bind_for_from, @{ $stmt->{bind} });
+
     return $sql;
+}
+
+sub as_subquery {
+    my $stmt     = shift;
+    my $subquery = '('. $stmt->as_sql. ')';
+    if ($stmt->as) {
+        $subquery .= ' AS ' . $stmt->as;
+    }
+    $subquery;
 }
 
 sub as_limit {
@@ -281,12 +314,16 @@ sub _mk_term {
             $term = "$c $op ? AND ?";
             push @bind, @{$val->{value}};
         } else {
-            if (ref $val->{value} eq 'SCALAR') {
-                $term = "$c $val->{op} " . ${$val->{value}};
+            my $value = $val->{value};
+            if (ref $value eq 'SCALAR') {
+                $term = "$c $val->{op} " . $$value;
+            } elsif (blessed($value) && $value->isa('Data::ObjectDriver::SQL')) {
+                $term = "$c $val->{op} ". $value->as_subquery;
+                push @bind, @{$value->{bind}};
             } else {
                 $term = "$c $val->{op} ?";
                 $term .= $stmt->as_escape($val->{escape}) if $val->{escape} && $op =~ /^(?:NOT\s+)?I?LIKE$/;
-                push @bind, $val->{value};
+                push @bind, $value;
             }
         }
     } elsif (ref($val) eq 'SCALAR') {
