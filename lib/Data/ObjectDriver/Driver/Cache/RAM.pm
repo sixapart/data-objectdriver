@@ -30,7 +30,7 @@ sub add_to_cache {
     my $driver = shift;
 
     $driver->start_query('RAMCACHE_ADD ?', \@_);
-    my $ret = $Cache{$_[0]} = $_[1];
+    my $ret = $Cache{$_[0]} = $_[1]->clone;
     $driver->end_query(undef);
 
     return if !defined $ret;
@@ -41,7 +41,7 @@ sub update_cache {
     my $driver = shift;
 
     $driver->start_query('RAMCACHE_SET ?', \@_);
-    my $ret = $Cache{$_[0]} = $_[1];
+    my $ret = $Cache{$_[0]} = $_[1]->clone;
     $driver->end_query(undef);
 
     return if !defined $ret;
