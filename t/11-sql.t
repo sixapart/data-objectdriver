@@ -3,7 +3,7 @@
 use strict;
 
 use Data::ObjectDriver::SQL;
-use Test::More tests => 113;
+use Test::More tests => 110;
 
 my $stmt = ns();
 ok($stmt, 'Created SQL object');
@@ -284,16 +284,37 @@ $stmt->add_select('bar');
 $stmt->from([ qw( baz ) ]);
 is($stmt->as_sql, "SELECT foo, bar\nFROM baz\n");
 
-$stmt = ns();
-$stmt->add_select('f.foo' => 'foo');
-$stmt->add_select('f.bar');
-$stmt->add_select('COUNT(*)' => 'count');
-$stmt->from([ qw( baz ) ]);
-is($stmt->as_sql, "SELECT f.foo, f.bar, COUNT(*) count\nFROM baz\n");
-my $map = $stmt->select_map;
-is(scalar(keys %$map), 2);
-is($map->{'f.foo'}, 'foo');
-is($map->{'COUNT(*)'}, 'count');
+subtest 'SQL functions' => sub {
+    $stmt = ns();
+    $stmt->add_select('f.foo' => 'foo');
+    $stmt->add_select('f.bar');
+    $stmt->add_select('COUNT(*)' => 'count');
+    $stmt->from([ qw( baz ) ]);
+    is($stmt->as_sql, "SELECT f.foo, f.bar, COUNT(*) count\nFROM baz\n");
+    my $map = $stmt->select_map;
+    is(scalar(keys %$map), 2);
+    is($map->{'f.foo'}, 'foo');
+    is($map->{'COUNT(*)'}, 'count');
+
+    $stmt = ns();
+    $stmt->add_select('count(foo)');
+    $stmt->add_select('count(bar)');
+    $stmt->add_select('count(baz)', 'bazcount');
+    $stmt->from([qw( baz )]);
+    is($stmt->as_sql, "SELECT count(foo), count(bar), count(baz) bazcount\nFROM baz\n");
+    my $map = $stmt->select_map;
+    is(scalar(keys %$map), 1);
+    is_deeply($map, {'count(baz)' => 'bazcount'}, 'right map');
+
+    $stmt = ns();
+    $stmt->add_select('count(foo)', 'count1');
+    $stmt->add_select('count(bar)', 'count2');
+    $stmt->from([qw( baz )]);
+    is($stmt->as_sql, "SELECT count(foo) count1, count(bar) count2\nFROM baz\n");
+    my $map = $stmt->select_map;
+    is(scalar(keys %$map), 2);
+    is_deeply($map, {'count(foo)' => 'count1', 'count(bar)' => 'count2'}, 'right map');
+};
 
 # HAVING
 $stmt = ns();
