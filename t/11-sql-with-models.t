@@ -36,7 +36,7 @@ EOF
 subtest 'subquery in select clause' => sub {
 
     subtest 'case1' => sub {
-        my $stmt = Recipe->driver->prepare_statement('Recipe', [{ title => 'title1' }, {}], {});
+        my $stmt = Recipe->driver->prepare_statement('Recipe', [{ title => 'title1' }], {});
         $stmt->add_select(Ingredient->driver->prepare_statement(
             'Ingredient',
             [{ recipe_id => \'= recipes.recipe_id' }, { col1 => 'sub1' }], { fetchonly => ['id'] }));
@@ -59,7 +59,7 @@ EOF
     };
 
     subtest 'with alias' => sub {
-        my $stmt     = Recipe->driver->prepare_statement('Recipe', [{}, {}], {});
+        my $stmt     = Recipe->driver->prepare_statement('Recipe', [], {});
         my $subquery = Ingredient->driver->prepare_statement(
             'Ingredient',
             [{ recipe_id => \'= recipes.recipe_id' }], { fetchonly => ['id'] });
@@ -86,7 +86,7 @@ EOF
 subtest 'subquery in from clause' => sub {
 
     subtest 'case1' => sub {
-        my $stmt     = Recipe->driver->prepare_statement('Recipe', [{ title => 'title1' }, {}], {});
+        my $stmt     = Recipe->driver->prepare_statement('Recipe', [{ title => 'title1' }], {});
         my $subquery = Ingredient->driver->prepare_statement(
             'Ingredient',
             [{ recipe_id => \'= recipes.recipe_id' }, { col1 => 'sub1' }], { fetchonly => ['id'] });
@@ -110,7 +110,7 @@ EOF
     };
 
     subtest 'with alias' => sub {
-        my $stmt     = Recipe->driver->prepare_statement('Recipe', [{}, {}], {});
+        my $stmt     = Recipe->driver->prepare_statement('Recipe', [], {});
         my $subquery = Ingredient->driver->prepare_statement(
             'Ingredient',
             [{ recipe_id => \'= recipes.recipe_id' }], { fetchonly => ['id'] });
