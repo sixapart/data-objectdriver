@@ -4,340 +4,355 @@ use strict;
 use warnings;
 
 use lib 't/lib';
-use lib 't/lib/cached';
-use Data::ObjectDriver::SQL;
+use lib 't/lib/sql';
 use Test::More tests => 6;
 use DodTestUtil;
+use Blog;
+use Entry;
+use Tie::IxHash;
 
 BEGIN { DodTestUtil->check_driver }
 
-use Recipe;
-use Ingredient;
+sub ordered_hashref {
+    tie my %params, Tie::IxHash::, @_;
+    return \%params;
+}
 
 setup_dbs({
-    global => [ qw( recipes ingredients ) ],
+    global => [qw( blog entry )],
 });
 
+my $blog1 = Blog->new(name => 'blog1');
+$blog1->save;
+my $blog2 = Blog->new(parent_id => $blog1->id, name => 'blog2');
+$blog2->save;
+my $entry11 = Entry->new(blog_id => $blog1->id, title => 'title11', text => 'first');
+$entry11->save;
+my $entry12 = Entry->new(blog_id => $blog1->id, title => 'title12', text => 'second');
+$entry12->save;
+my $entry21 = Entry->new(blog_id => $blog2->id, title => 'title21', text => 'first');
+$entry21->save;
+my $entry22 = Entry->new(blog_id => $blog2->id, title => 'title22', text => 'second');
+$entry22->save;
+
 subtest 'as_subquery' => sub {
-    my $stmt = Ingredient->driver->prepare_statement('Ingredient', { col1 => 'sub1' }, { fetchonly => ['id'] });
+    my $stmt = Blog->driver->prepare_statement('Blog', { name => 'foo' }, { fetchonly => ['id'] });
 
     is(sql_normalize($stmt->as_subquery), sql_normalize(<<'EOF'), 'right sql');
-(SELECT ingredients.id FROM ingredients WHERE (ingredients.col1 = ?))
+(SELECT blog.id FROM blog WHERE (blog.name = ?))
 EOF
-    is_deeply($stmt->{bind}, ['sub1'], 'right bind values');
+    is_deeply($stmt->{bind}, ['foo'], 'right bind values');
 
     $stmt->as('mysubquery');
 
     is(sql_normalize($stmt->as_subquery), sql_normalize(<<'EOF'), 'right sql');
-(SELECT ingredients.id FROM ingredients WHERE (ingredients.col1 = ?)) AS mysubquery
+(SELECT blog.id FROM blog WHERE (blog.name = ?)) AS mysubquery
 EOF
 };
 
 subtest 'subquery in select clause' => sub {
 
-    subtest 'case1' => sub {
-        my $stmt = Recipe->driver->prepare_statement('Recipe', [{ title => 'title1' }], {});
-        $stmt->add_select(Ingredient->driver->prepare_statement(
-            'Ingredient',
-            [{ recipe_id => \'= recipes.recipe_id' }, { col1 => 'sub1' }], { fetchonly => ['id'] }));
-
-        my $expected = sql_normalize(<<'EOF');
-SELECT
-    recipes.recipe_id,
-    recipes.title,
-    (
-        SELECT ingredients.id
-        FROM ingredients
-        WHERE ((recipe_id = recipes.recipe_id)) AND ((col1 = ?))
-    )
-FROM recipes
-WHERE ((title = ?))
-EOF
-
-        is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
-        is_deeply($stmt->{bind}, ['sub1', 'title1'], 'right bind values');
-    };
-
-    subtest 'with alias' => sub {
-        my $stmt     = Recipe->driver->prepare_statement('Recipe', [], {});
-        my $subquery = Ingredient->driver->prepare_statement(
-            'Ingredient',
-            [{ recipe_id => \'= recipes.recipe_id' }], { fetchonly => ['id'] });
+    subtest 'fetch blogs and include a entry with specific text if any' => sub {
+        my $stmt     = Blog->driver->prepare_statement('Blog', [{ name => $blog1->name }], {});
+        my $subquery = Entry->driver->prepare_statement(
+            'Entry',
+            ordered_hashref(blog_id => \'= blog.id', text => 'second'),
+            { fetchonly => ['id'], limit => 1 });
         $subquery->as('sub_alias');
         $stmt->add_select($subquery);
 
         my $expected = sql_normalize(<<'EOF');
 SELECT
-    recipes.recipe_id,
-    recipes.title,
+    blog.id,
+    blog.parent_id,
+    blog.name,
     (
-        SELECT ingredients.id
-        FROM ingredients
-        WHERE ((recipe_id = recipes.recipe_id))
+        SELECT entry.id
+        FROM entry
+        WHERE (entry.blog_id = blog.id) AND (entry.text = ?)
+        LIMIT 1
     ) AS sub_alias
-FROM recipes
+FROM blog
+WHERE ((name = ?))
 EOF
 
         is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
-        is_deeply($stmt->{bind}, [], 'right bind values');
+        is_deeply($stmt->{bind}, ['second', $blog1->name], 'right bind values');
+        my @res = search_by_prepared_statement('Blog', $stmt);
+        is scalar(@res),                             1;
+        is scalar(keys %{ $res[0]{column_values} }), 4;
+        is($res[0]{column_values}{id},        $blog1->id);
+        is($res[0]{column_values}{sub_alias}, $entry12->id);
+    };
+
+    subtest 'error occurs without alias' => sub {
+        my $stmt     = Blog->driver->prepare_statement('Blog', [], {});
+        my $subquery = Entry->driver->prepare_statement(
+            'Entry',
+            [{ blog_id => \'= blog.id' }], { fetchonly => ['id'], limit => 1 });
+        eval { $stmt->add_select($subquery) };
+        like $@, qr/requires an alias/;
     };
 };
 
 subtest 'subquery in from clause' => sub {
 
-    subtest 'case1' => sub {
-        my $stmt     = Recipe->driver->prepare_statement('Recipe', [{ title => 'title1' }], {});
-        my $subquery = Ingredient->driver->prepare_statement(
-            'Ingredient',
-            [{ recipe_id => \'= recipes.recipe_id' }, { col1 => 'sub1' }], { fetchonly => ['id'] });
+    subtest 'blogs that has entries with specific text' => sub {
+        my $subquery = Entry->driver->prepare_statement(
+            'Entry',
+            { text => 'second' }, { fetchonly => ['id', 'blog_id', 'text'] });
+        $subquery->as('sub');
+        my $stmt = Blog->driver->prepare_statement(
+            'Blog', [
+                { 'blog.id'  => \'= sub.blog_id' },
+                { 'blog.id'  => [$blog1->id, $blog2->id] },    # FIXME: table prefix should be added automatically (MTC-30879)
+                { 'sub.text' => 'second' },
+            ],
+            {});
         push @{ $stmt->from }, $subquery;
 
         my $expected = sql_normalize(<<'EOF');
 SELECT
-    recipes.recipe_id,
-    recipes.title
-FROM recipes,
+    blog.id,
+    blog.parent_id,
+    blog.name
+FROM blog,
     (
-        SELECT ingredients.id
-        FROM ingredients
-        WHERE ((recipe_id = recipes.recipe_id)) AND ((col1 = ?))
-    )
-WHERE ((title = ?))
+        SELECT entry.id, entry.blog_id, entry.text
+        FROM entry
+        WHERE (entry.text = ?)
+    ) AS sub
+WHERE ((blog.id = sub.blog_id)) AND ((blog.id IN (?,?))) AND ((sub.text = ?))
 EOF
 
         is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
-        is_deeply($stmt->{bind}, ['sub1', 'title1'], 'right bind values');
+        is_deeply($stmt->{bind}, ['second', $blog1->id, $blog2->id, 'second'], 'right bind values');
+        my @res = search_by_prepared_statement('Blog', $stmt);
+        is scalar(@res),                             2;
+        is scalar(keys %{ $res[0]{column_values} }), 3;
+        is($res[0]{column_values}{id}, $blog1->id);
     };
 
-    subtest 'with alias' => sub {
-        my $stmt     = Recipe->driver->prepare_statement('Recipe', [], {});
-        my $subquery = Ingredient->driver->prepare_statement(
-            'Ingredient',
-            [{ recipe_id => \'= recipes.recipe_id' }], { fetchonly => ['id'] });
-        $subquery->as('sub_alias');
+    subtest 'select list includes sub query result' => sub {
+        my $subquery = Entry->driver->prepare_statement(
+            'Entry',
+            { text => 'second' }, { fetchonly => ['id', 'blog_id'] });
+        # $subquery->add_select('max(id)', 'max_entry_id');
+        $subquery->as('sub');
+        my $stmt = Blog->driver->prepare_statement(
+            'Blog', [
+                { 'blog.id' => \'= sub.blog_id' },            # FIXME: table prefix should be added automatically (MTC-30879)
+                { 'blog.id' => [$blog1->id, $blog2->id] },    # FIXME: table prefix should be added automatically (MTC-30879)
+            ],
+            {});
         push @{ $stmt->from }, $subquery;
+        $stmt->add_select('sub.id', 'entry_id');
 
         my $expected = sql_normalize(<<'EOF');
 SELECT
-    recipes.recipe_id,
-    recipes.title
-FROM recipes,
+    blog.id,
+    blog.parent_id,
+    blog.name,
+    sub.id entry_id
+FROM blog,
     (
-        SELECT ingredients.id
-        FROM ingredients
-        WHERE ((recipe_id = recipes.recipe_id))
-    ) AS sub_alias
+        SELECT entry.id, entry.blog_id
+        FROM entry
+        WHERE (entry.text = ?)
+    ) AS sub
+WHERE ((blog.id = sub.blog_id)) AND ((blog.id IN (?,?)))
 EOF
 
         is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
-        is_deeply($stmt->{bind}, [], 'right bind values');
+        is_deeply($stmt->{bind}, ['second', $blog1->id, $blog2->id], 'right bind values');
+        my @res = search_by_prepared_statement('Blog', $stmt);
+        is scalar(@res),                             2;
+        is scalar(keys %{ $res[0]{column_values} }), 4;
+        is($res[0]{column_values}{entry_id}, $entry12->id);
+        is($res[1]{column_values}{entry_id}, $entry22->id);
     };
 };
 
 subtest 'subquery in where clause' => sub {
 
-    subtest 'case1' => sub {
-        my $stmt = Recipe->driver->prepare_statement(
-            'Recipe', [
-                { title => 'title1' },
-                {
-                    recipe_id => {
-                        op    => 'IN',
-                        value => Ingredient->driver->prepare_statement(
-                            'Ingredient',
-                            { col1      => { op => 'LIKE', value => 'sub1', escape => '!' } },
-                            { fetchonly => ['id'], limit => 2 }) }
-                },
-            ],
+    subtest 'entries that belongs to subquery blogs' => sub {
+        my $stmt = Entry->driver->prepare_statement(
+            'Entry',
+            ordered_hashref(
+                text    => 'first',
+                blog_id => {
+                    op    => 'IN',
+                    value => Blog->driver->prepare_statement(
+                        'Blog',
+                        { name      => { op => 'LIKE', value => 'blog1', escape => '!' } },
+                        { fetchonly => ['id'], limit => 2 }
+                    ),
+                }
+            ),
             { limit => 4 });
 
         my $expected = sql_normalize(<<'EOF');
 SELECT 
-    recipes.recipe_id, recipes.title
+    entry.id, entry.blog_id, entry.title, entry.text
 FROM
-    recipes
+    entry
 WHERE
-    ((title = ?))
+    (entry.text = ?)
     AND
-    ((recipe_id IN (SELECT ingredients.id FROM ingredients WHERE (ingredients.col1 LIKE ? ESCAPE '!') LIMIT 2)))
+    (entry.blog_id IN (SELECT blog.id FROM blog WHERE (blog.name LIKE ? ESCAPE '!') LIMIT 2))
 LIMIT 4
 EOF
         is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
-        is_deeply($stmt->{bind}, ['title1', 'sub1'], 'right bind values');
+        is_deeply($stmt->{bind}, ['first', 'blog1'], 'right bind values');
+        my @res = search_by_prepared_statement('Blog', $stmt);
+        is scalar(@res),                             1;
+        is scalar(keys %{ $res[0]{column_values} }), 4;
+        is($res[0]{column_values}{id}, $blog1->id);
     };
 
     subtest 'case2' => sub {
-        my $stmt = Recipe->driver->prepare_statement(
-            'Recipe',
+        my $stmt = Entry->driver->prepare_statement(
+            'Entry',
             [[
-                    { title => 'title1' },
+                    { text => 'first' },
                     '-or',
                     {
-                        recipe_id => {
+                        blog_id => {
                             op    => 'IN',
-                            value => Ingredient->driver->prepare_statement(
-                                'Ingredient', [
-                                    { col1 => { op => 'LIKE', value => 'sub1', escape => '!' } },
-                                    { col2 => { op => 'LIKE', value => 'sub2', escape => '!' } },
+                            value => Blog->driver->prepare_statement(
+                                'Blog', [
+                                    { name => { op => 'LIKE', value => 'blog!%', escape => '!' } },
+                                    { name => { op => 'LIKE', value => '!%2',    escape => '!' } },
                                 ],
                                 { fetchonly => ['id'], limit => 2 }) }
                     },
                     '-or',
-                    { title => 'title2' },
+                    { text => 'second' },
                 ],
-                { title3 => 'title3' },
+                { id => [$entry11->id, $entry12->id] },
             ],
             { limit => 4 });
 
         my $expected = sql_normalize(<<'EOF');
 SELECT
-    recipes.recipe_id, recipes.title
+    entry.id, entry.blog_id, entry.title, entry.text
 FROM
-    recipes
+    entry
 WHERE
     (
-        ((title = ?))
+        ((text = ?))
         OR
-        ((recipe_id IN (
-            SELECT ingredients.id
-            FROM ingredients
-            WHERE ((col1 LIKE ? ESCAPE '!')) AND ((col2 LIKE ? ESCAPE '!'))
+        ((blog_id IN (
+            SELECT blog.id
+            FROM blog
+            WHERE ((name LIKE ? ESCAPE '!')) AND ((name LIKE ? ESCAPE '!'))
             LIMIT 2
         )))
         OR
-        ((title = ?))
+        ((text = ?))
     ) AND (
-        (title3 = ?)
+        (id IN (?,?))
     )
 LIMIT 4
 EOF
         is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
-        is_deeply($stmt->{bind}, ['title1', 'sub1', 'sub2', 'title2', 'title3'], 'right bind values');
+        is_deeply($stmt->{bind}, ['first', 'blog!%', '!%2', 'second', $blog1->id, $blog2->id], 'right bind values');
+        my @res = search_by_prepared_statement('Blog', $stmt);
+        is scalar(@res),                             2;
+        is scalar(keys %{ $res[0]{column_values} }), 4;
+        is($res[0]{column_values}{id}, $blog1->id);
+        is($res[1]{column_values}{id}, $blog2->id);
     };
 };
 
 subtest 'subquery in multiple clauses' => sub {
-    my $sub1 = Ingredient->driver->prepare_statement('Ingredient', { id => 1 }, { fetchonly => ['id'] });
-    my $sub2 = Ingredient->driver->prepare_statement('Ingredient', { id => 2 }, { fetchonly => ['id'] });
-    my $sub3 = Ingredient->driver->prepare_statement('Ingredient', { id => 3 }, { fetchonly => ['id'] });
+    my $sub1 = Entry->driver->prepare_statement(
+        'Entry',
+        ordered_hashref(blog_id => \'= blog.id', id => { op => '<', value => 99 }), { fetchonly => ['id'] });
+    $sub1->select(['max(id)']);
+    my $sub2 = Entry->driver->prepare_statement('Entry', { text => 'second' }, { fetchonly => ['id'] });
+    my $sub3 = Entry->driver->prepare_statement('Entry', { text => 'second' }, { fetchonly => ['blog_id'] });
     $sub1->as('sub1');
     $sub2->as('sub2');
-    $sub3->as('sub3');
-    my $stmt = Recipe->driver->prepare_statement('Recipe', { recipe_id => { op => '=', value => $sub3 } }, {});
+    $sub3->as('sub3');    # this will be ommitted in where clause
+    my $stmt = Blog->driver->prepare_statement('Blog', { id => { op => 'IN', value => $sub3 } }, {});
     $stmt->add_select($sub1);
     push @{ $stmt->from }, $sub2;
 
     my $expected = sql_normalize(<<'EOF');
 SELECT
-    recipes.recipe_id,
-    recipes.title,
-    (SELECT ingredients.id FROM ingredients WHERE (ingredients.id = ?)) AS sub1
+    blog.id,
+    blog.parent_id,
+    blog.name,
+    (SELECT max(id) FROM entry WHERE (entry.blog_id = blog.id) AND (entry.id < ?)) AS sub1
 FROM 
-    recipes,
-    (SELECT  ingredients.id FROM ingredients WHERE (ingredients.id = ?)) AS sub2
+    blog,
+    (SELECT entry.id FROM entry WHERE (entry.text = ?)) AS sub2
 WHERE
-    (recipes.recipe_id = (SELECT  ingredients.id FROM ingredients WHERE (ingredients.id = ?)) AS sub3)
+    (blog.id IN (SELECT entry.blog_id FROM entry WHERE (entry.text = ?)))
 EOF
     is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
-    is_deeply($stmt->{bind}, ['1', '2', '3'], 'right bind values');
+    is_deeply($stmt->{bind}, ['99', 'second', 'second'], 'right bind values');
+    my @res = search_by_prepared_statement('Blog', $stmt);
+    is scalar(@res), 4;
+    is($res[0]{column_values}{id},   $blog1->id);
+    is($res[0]{column_values}{sub1}, $entry12->id);
+    is($res[1]{column_values}{id},   $blog1->id);
+    is($res[1]{column_values}{sub1}, $entry12->id);
+    is($res[2]{column_values}{id},   $blog2->id);
+    is($res[2]{column_values}{sub1}, $entry22->id);
+    is($res[3]{column_values}{id},   $blog2->id);
+    is($res[3]{column_values}{sub1}, $entry22->id);
 };
 
-subtest 'subquery in select list actually works' => sub {
-
-    require Data::ObjectDriver::Driver::DBI;
-    my $prepare_statement_org = \&Data::ObjectDriver::Driver::DBI::prepare_statement;
-
-    {
-        my $r = Recipe->new;
-        $r->title('MyRecipe1');
-        $r->save;
-        my $i = Ingredient->new;
-        $i->recipe_id($r->recipe_id);
-        $i->name('salt');
-        $i->save;
+sub search_by_prepared_statement {
+    my ($class, $stmt) = @_;
+    my $driver = $class->driver;
+    my $rec    = {};
+    my $sql    = $stmt->as_sql;
+    my @bind;
+    my $map = $stmt->select_map;
+    for my $col (@{ $stmt->select }) {
+        push @bind, \$rec->{ $map->{$col} || $col };
     }
 
-    subtest 'case1' => sub {
-        my $stmt;
-        my $sub_stmt;
-        local *Data::ObjectDriver::Driver::DBI::prepare_statement = sub {
-            $stmt     = $prepare_statement_org->(@_);
-            $sub_stmt = $prepare_statement_org->(
-                Ingredient->driver,
-                'Ingredient',
-                [{ 'ingredients.recipe_id' => \'= recipes.recipe_id' }], { fetchonly => ['name'] });
-            $sub_stmt->as('ingredient_name');
-            $stmt->add_select($sub_stmt);
-            return $stmt;
-        };
+    my $dbh = $driver->r_handle($class->properties->{db});
+    $driver->start_query($sql, $stmt->{bind});
 
-        my @recipes = eval { Recipe->search({}, {}) };
+    my $sth = $dbh->prepare($sql);
+    $sth->execute(@{ $stmt->{bind} });
+    $sth->bind_columns(undef, @bind);
 
-        is sql_normalize($stmt->as_sql), sql_normalize(<<'EOF'), 'right sql';
-SELECT 
-    recipes.recipe_id,
-    recipes.title,
-    (
-        SELECT ingredients.name
-        FROM ingredients
-        WHERE ((ingredients.recipe_id = recipes.recipe_id))
-    ) AS ingredient_name
-FROM recipes
-EOF
-
-        is_deeply(
-            $stmt->select_map, {
-                'recipes.recipe_id' => 'recipe_id',
-                'recipes.title'     => 'title',
-                "$sub_stmt"         => 'ingredient_name',
-            },
-            'right select map'
-        );
-        ok(!$@, 'no error') || note $@;
-        is scalar(@recipes),                            1,      'right number of results';
-        is $recipes[0]{column_values}{ingredient_name}, 'salt', 'right ingredient_name';     # XXX is it expected?
+    my $iter = sub {
+        my $d = $driver;
+        unless ($sth->fetch) {
+            _close_sth($sth);
+            $driver->end_query($sth);
+            return;
+        }
+        return $driver->load_object_from_rec($class, $rec);
     };
 
-    subtest 'without alias' => sub {
-        my $stmt;
-        my $sub_stmt;
-        local *Data::ObjectDriver::Driver::DBI::prepare_statement = sub {
-            $stmt     = $prepare_statement_org->(@_);
-            $sub_stmt = $prepare_statement_org->(
-                Ingredient->driver,
-                'Ingredient',
-                [{ 'ingredients.recipe_id' => \'= recipes.recipe_id' }], { fetchonly => ['name'] });
-            $stmt->add_select($sub_stmt);
-            return $stmt;
-        };
-
-        my @recipes = eval { Recipe->search({}, {}) };
-
-        is sql_normalize($stmt->as_sql), sql_normalize(<<'EOF'), 'right sql';
-SELECT 
-    recipes.recipe_id,
-    recipes.title,
-    (
-        SELECT ingredients.name
-        FROM ingredients
-        WHERE ((ingredients.recipe_id = recipes.recipe_id))
-    )
-FROM recipes
-EOF
-
-        is_deeply(
-            $stmt->select_map, {
-                'recipes.recipe_id' => 'recipe_id',
-                'recipes.title'     => 'title',
-                "$sub_stmt"         => undef,
-            },
-            'right select map'
+    if (wantarray) {
+        my @objs = ();
+        while (my $obj = $iter->()) {
+            push @objs, $obj;
+        }
+        return @objs;
+    } else {
+        my $iterator = Data::ObjectDriver::Iterator->new(
+            $iter, sub { _close_sth($sth); $driver->end_query($sth) },
         );
-        ok(!$@, 'no error') || note $@;
-        is scalar(@recipes),                        1,      'right number of results';
-        is $recipes[0]{column_values}{"$sub_stmt"}, 'salt', 'right ingredient_name';     # XXX is it expected?
-    };
-};
+        return $iterator;
+    }
+    return;
+}
+
+sub _close_sth {
+    my $sth = shift;
+    $sth->finish;
+    undef $sth;
+}
 
 sub sql_normalize {
     my $sql = shift;
@@ -350,6 +365,6 @@ sub sql_normalize {
 }
 
 END {
-    disconnect_all(qw/Recipe Ingredient/);
+    disconnect_all(qw/Blog Entry/);
     teardown_dbs(qw( global ));
 }
