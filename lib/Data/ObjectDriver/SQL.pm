@@ -37,6 +37,7 @@ sub add_select {
     $col ||= $term;
     push @{ $stmt->select }, $term;
     if (blessed($term) && $col->isa('Data::ObjectDriver::SQL')) {
+        die 'Sub-query requires an alias by setting $stmt->as(...)' unless $term->as;
         $stmt->select_map->{$term} = $term->as;
     } else {
         $stmt->select_map->{$term} = $col;
