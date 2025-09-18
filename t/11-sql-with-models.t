@@ -292,7 +292,7 @@ subtest 'subquery in multiple clauses' => sub {
     $sub3->as('sub3');    # this will be ommitted in where clause
     my $stmt = Blog->driver->prepare_statement(
         'Blog', { id => { op => 'IN', value => $sub3 } },
-        { sort => [{ column => 'id' }, { column => 'sub1' }] });
+        { sort => [{ column => 'blog.id' }, { column => 'sub1' }] });
     $stmt->add_select($sub1);
     push @{ $stmt->from }, $sub2;
 
@@ -307,7 +307,7 @@ FROM
     (SELECT entry.id FROM entry WHERE (entry.text = ?)) AS sub2
 WHERE
     (blog.id IN (SELECT entry.blog_id FROM entry WHERE (entry.text = ?)))
-ORDER BY id ASC, sub1 ASC
+ORDER BY blog.id ASC, sub1 ASC
 EOF
     is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
     is_deeply($stmt->{bind}, ['99', 'second', 'second'], 'right bind values');
