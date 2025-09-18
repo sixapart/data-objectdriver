@@ -50,6 +50,21 @@ EOF
 EOF
 };
 
+subtest 'do not aggregate bind twice' => sub {
+
+    my $stmt     = Blog->driver->prepare_statement('Blog', [{ name => $blog1->name }], {});
+    my $subquery = Entry->driver->prepare_statement(
+        'Entry',
+        ordered_hashref(blog_id => \'= blog.id', text => 'second'),
+        { fetchonly => ['id'], limit => 1 });
+    $subquery->as('sub');
+    $stmt->add_select($subquery);
+    $stmt->as_sql;
+    is scalar(@{ $stmt->bind }), 2;
+    $stmt->as_sql;
+    is scalar(@{ $stmt->bind }), 2;
+};
+
 subtest 'subquery in select clause' => sub {
 
     subtest 'fetch blogs and include a entry with specific text if any' => sub {
