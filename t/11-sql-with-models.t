@@ -7,11 +7,12 @@ use lib 't/lib';
 use lib 't/lib/sql';
 use Test::More tests => 6;
 use DodTestUtil;
-use Blog;
-use Entry;
 use Tie::IxHash;
 
 BEGIN { DodTestUtil->check_driver }
+
+use Blog;
+use Entry;
 
 sub ordered_hashref {
     tie my %params, Tie::IxHash::, @_;
