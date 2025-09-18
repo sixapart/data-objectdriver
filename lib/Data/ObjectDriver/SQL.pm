@@ -76,8 +76,11 @@ sub as_sql {
                 push @bind_for_select, @{ $col->{bind} };
                 $col->as_subquery;
             } else {
-                my $alias = $stmt->select_map->{$_};
-                $alias && /(?:^|\.)\Q$alias\E$/ ? $_ : "$_ $alias";
+                if (my $alias = $stmt->select_map->{$col}) {
+                    /(?:^|\.)\Q$alias\E$/ ? $col : "$col $alias";
+                } else {
+                    $col;
+                }
             }
         } @{ $stmt->select }) . "\n";
     }
