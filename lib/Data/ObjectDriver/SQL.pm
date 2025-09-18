@@ -11,7 +11,7 @@ __PACKAGE__->mk_accessors(qw(
     select distinct select_map select_map_reverse
     from joins where bind limit offset group order
     having where_values column_mutator index_hint
-    comment as
+    comment as aggrigated
 ));
 
 sub new {
@@ -134,7 +134,10 @@ sub as_sql {
         $sql .= "-- $1" if $1;
     }
 
-    @{ $stmt->{bind} } = (@bind_for_select, @bind_for_from, @{ $stmt->{bind} });
+    unless ($stmt->aggrigated) {
+        @{ $stmt->{bind} } = (@bind_for_select, @bind_for_from, @{ $stmt->{bind} });
+        $stmt->aggrigated(1);
+    }
 
     return $sql;
 }
