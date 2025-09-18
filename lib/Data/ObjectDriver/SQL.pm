@@ -327,6 +327,7 @@ sub _mk_term {
             if (ref $value eq 'SCALAR') {
                 $term = "$c $val->{op} " . $$value;
             } elsif (blessed($value) && $value->isa('Data::ObjectDriver::SQL')) {
+                local $value->{as} = undef;
                 $term = "$c $val->{op} ". $value->as_subquery;
                 push @bind, @{$value->{bind}};
             } else {
