@@ -201,7 +201,7 @@ subtest 'subquery in where clause' => sub {
                     value => Blog->driver->prepare_statement(
                         'Blog',
                         { name      => { op => 'LIKE', value => 'blog1', escape => '!' } },
-                        { fetchonly => ['id'], limit => 2 }
+                        { fetchonly => ['id'] }
                     ),
                 }
             ),
@@ -215,7 +215,7 @@ FROM
 WHERE
     (entry.text = ?)
     AND
-    (entry.blog_id IN (SELECT blog.id FROM blog WHERE (blog.name LIKE ? ESCAPE '!') LIMIT 2))
+    (entry.blog_id IN (SELECT blog.id FROM blog WHERE (blog.name LIKE ? ESCAPE '!')))
 LIMIT 4
 EOF
         is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
@@ -240,7 +240,7 @@ EOF
                                     { name => { op => 'LIKE', value => 'blog!%', escape => '!' } },
                                     { name => { op => 'LIKE', value => '!%2',    escape => '!' } },
                                 ],
-                                { fetchonly => ['id'], limit => 2 }) }
+                                { fetchonly => ['id'] }) }
                     },
                     '-or',
                     { text => 'second' },
@@ -262,7 +262,6 @@ WHERE
             SELECT blog.id
             FROM blog
             WHERE ((name LIKE ? ESCAPE '!')) AND ((name LIKE ? ESCAPE '!'))
-            LIMIT 2
         )))
         OR
         ((text = ?))
