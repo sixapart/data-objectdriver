@@ -3,7 +3,7 @@
 use strict;
 
 use Data::ObjectDriver::SQL;
-use Test::More tests => 110;
+use Test::More;
 
 my $stmt = ns();
 ok($stmt, 'Created SQL object');
@@ -406,3 +406,5 @@ is(
 );
 
 sub ns { Data::ObjectDriver::SQL->new }
+
+done_testing;

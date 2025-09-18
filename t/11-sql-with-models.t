@@ -5,7 +5,7 @@ use warnings;
 
 use lib 't/lib';
 use lib 't/lib/sql';
-use Test::More tests => 6;
+use Test::More;
 use DodTestUtil;
 use Tie::IxHash;
 
@@ -384,3 +384,5 @@ END {
     disconnect_all(qw/Blog Entry/);
     teardown_dbs(qw( global ));
 }
+
+done_testing;
