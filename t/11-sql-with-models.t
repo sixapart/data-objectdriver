@@ -53,7 +53,7 @@ EOF
 
 subtest 'do not aggregate bind twice' => sub {
 
-    my $stmt     = Blog->driver->prepare_statement('Blog', [{ name => $blog1->name }], {});
+    my $stmt     = Blog->driver->prepare_statement('Blog', { name => $blog1->name }, {});
     my $subquery = Entry->driver->prepare_statement(
         'Entry',
         ordered_hashref(blog_id => \'= blog.id', text => 'second'),
@@ -69,7 +69,7 @@ subtest 'do not aggregate bind twice' => sub {
 subtest 'subquery in select clause' => sub {
 
     subtest 'fetch blogs and include a entry with specific text if any' => sub {
-        my $stmt     = Blog->driver->prepare_statement('Blog', [{ name => $blog1->name }], {});
+        my $stmt     = Blog->driver->prepare_statement('Blog', { name => $blog1->name }, {});
         my $subquery = Entry->driver->prepare_statement(
             'Entry',
             ordered_hashref(blog_id => \'= blog.id', text => 'second'),
@@ -89,7 +89,7 @@ SELECT
         LIMIT 1
     ) AS sub_alias
 FROM blog
-WHERE ((name = ?))
+WHERE (blog.name = ?)
 EOF
 
         is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
@@ -111,7 +111,7 @@ EOF
     };
 
     subtest 'set alias by add_select argument' => sub {
-        my $stmt     = Blog->driver->prepare_statement('Blog', [{ name => $blog1->name }], {});
+        my $stmt     = Blog->driver->prepare_statement('Blog', { name => $blog1->name }, {});
         my $subquery = Entry->driver->prepare_statement(
             'Entry',
             ordered_hashref(blog_id => \'= blog.id', text => 'second'),
@@ -130,7 +130,7 @@ SELECT
         LIMIT 1
     ) AS sub_alias
 FROM blog
-WHERE ((name = ?))
+WHERE (blog.name = ?)
 EOF
 
         is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
@@ -181,7 +181,6 @@ subtest 'subquery in from clause' => sub {
             'Blog', [
                 { 'blog.id'  => \'= sub.blog_id' },
                 { 'blog.id'  => [$blog1->id, $blog2->id] },    # FIXME: table prefix should be added automatically (MTC-30879)
-                { 'sub.text' => 'second' },
             ],
             {});
         push @{ $stmt->from }, $subquery;
@@ -197,11 +196,11 @@ FROM blog,
         FROM entry
         WHERE (entry.text = ?)
     ) AS sub
-WHERE ((blog.id = sub.blog_id)) AND ((blog.id IN (?,?))) AND ((sub.text = ?))
+WHERE ((blog.id = sub.blog_id)) AND ((blog.id IN (?,?)))
 EOF
 
         is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
-        is_deeply($stmt->{bind}, ['second', $blog1->id, $blog2->id, 'second'], 'right bind values');
+        is_deeply($stmt->{bind}, ['second', $blog1->id, $blog2->id], 'right bind values');
         my @res = Blog->driver->search('Blog', $stmt);
         is scalar(@res),                             2;
         is scalar(keys %{ $res[0]{column_values} }), 3;
@@ -285,7 +284,7 @@ EOF
         is($res[0]{column_values}{id}, $blog1->id);
     };
 
-    subtest 'case2' => sub {
+    subtest 'subquery surrounded by other placeholders' => sub {
         my $stmt = Entry->driver->prepare_statement(
             'Entry',
             [[
