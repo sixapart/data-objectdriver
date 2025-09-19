@@ -278,8 +278,12 @@ sub add_having {
 #    Carp::croak("Invalid/unsafe column name $col") unless $col =~ /^[\w\.]+$/;
 
     if (my $orig = $stmt->select_map_reverse->{$col}) {
+        if (blessed($orig) && $orig->isa('Data::ObjectDriver::SQL')) {
+            # do nothins
+        } else {
             $col = $orig;
         }
+    }
 
     my($term, $bind) = $stmt->_mk_term($col, $val);
     push @{ $stmt->{having} }, "($term)";
