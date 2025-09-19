@@ -109,6 +109,38 @@ EOF
         eval { $stmt->add_select($subquery) };
         like $@, qr/requires an alias/;
     };
+
+    subtest 'set alias by add_select argument' => sub {
+        my $stmt     = Blog->driver->prepare_statement('Blog', [{ name => $blog1->name }], {});
+        my $subquery = Entry->driver->prepare_statement(
+            'Entry',
+            ordered_hashref(blog_id => \'= blog.id', text => 'second'),
+            { fetchonly => ['id'], limit => 1 });
+        $stmt->add_select($subquery, 'sub_alias');
+
+        my $expected = sql_normalize(<<'EOF');
+SELECT
+    blog.id,
+    blog.parent_id,
+    blog.name,
+    (
+        SELECT entry.id
+        FROM entry
+        WHERE (entry.blog_id = blog.id) AND (entry.text = ?)
+        LIMIT 1
+    ) AS sub_alias
+FROM blog
+WHERE ((name = ?))
+EOF
+
+        is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
+        is_deeply($stmt->{bind}, ['second', $blog1->name], 'right bind values');
+        my @res = search_by_prepared_statement('Blog', $stmt);
+        is scalar(@res),                             1;
+        is scalar(keys %{ $res[0]{column_values} }), 4;
+        is($res[0]{column_values}{id},        $blog1->id);
+        is($res[0]{column_values}{sub_alias}, $entry12->id);
+    };
 };
 
 subtest 'subquery in from clause' => sub {

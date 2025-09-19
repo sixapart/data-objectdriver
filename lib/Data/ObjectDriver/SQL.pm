@@ -34,12 +34,14 @@ sub new {
 sub add_select {
     my $stmt = shift;
     my($term, $col) = @_;
-    $col ||= $term;
     push @{ $stmt->select }, $term;
-    if (blessed($term) && $col->isa('Data::ObjectDriver::SQL')) {
-        die 'Sub-query requires an alias by setting $stmt->as(...)' unless $term->as;
-        $stmt->select_map->{$term} = $term->as;
+    if (blessed($term) && $term->isa('Data::ObjectDriver::SQL')) {
+        my $alias = $col || $term->as;
+        die 'Sub-query requires an alias by setting $stmt->as(...)' unless $alias;
+        $stmt->select_map->{$term} = $alias;
+        $stmt->select_map_reverse->{$alias} = $term;
     } else {
+        $col ||= $term;
         $stmt->select_map->{$term} = $col;
         $stmt->select_map_reverse->{$col} = $term;
     }
@@ -71,13 +73,15 @@ sub as_sql {
     if (@{ $stmt->select }) {
         $sql .= 'SELECT ';
         $sql .= 'DISTINCT ' if $stmt->distinct;
+        my $select_map = $stmt->select_map;
         $sql .= join(', ',  map {
             my $col = $_;
+            my $alias = $select_map->{$col};
             if (blessed($col) && $col->isa('Data::ObjectDriver::SQL')) {
                 push @bind_for_select, @{ $col->{bind} };
-                $col->as_subquery;
+                $col->as_subquery($alias);
             } else {
-                if (my $alias = $stmt->select_map->{$col}) {
+                if ($alias) {
                     /(?:^|\.)\Q$alias\E$/ ? $col : "$col $alias";
                 } else {
                     $col;
@@ -144,10 +148,11 @@ sub as_sql {
 }
 
 sub as_subquery {
-    my $stmt     = shift;
-    my $subquery = '('. $stmt->as_sql. ')';
-    if ($stmt->as) {
-        $subquery .= ' AS ' . $stmt->as;
+    my ($stmt, $alias) = @_;
+    my $subquery = '(' . $stmt->as_sql . ')';
+    $alias ||= $stmt->as;
+    if ($alias) {
+        $subquery .= ' AS ' . $alias;
     }
     $subquery;
 }
@@ -273,8 +278,8 @@ sub add_having {
 #    Carp::croak("Invalid/unsafe column name $col") unless $col =~ /^[\w\.]+$/;
 
     if (my $orig = $stmt->select_map_reverse->{$col}) {
-        $col = $orig;
-    }
+            $col = $orig;
+        }
 
     my($term, $bind) = $stmt->_mk_term($col, $val);
     push @{ $stmt->{having} }, "($term)";
