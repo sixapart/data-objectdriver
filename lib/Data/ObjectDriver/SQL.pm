@@ -11,7 +11,7 @@ __PACKAGE__->mk_accessors(qw(
     select distinct select_map select_map_reverse
     from joins where bind limit offset group order
     having where_values column_mutator index_hint
-    comment as aggrigated
+    comment as is_bind_contatinated
 ));
 
 sub new {
@@ -139,9 +139,9 @@ sub as_sql {
         $sql .= "-- $1" if $1;
     }
 
-    unless ($stmt->aggrigated) {
+    unless ($stmt->is_bind_contatinated) {
         @{ $stmt->{bind} } = (@bind_for_select, @bind_for_from, @{ $stmt->{bind} });
-        $stmt->aggrigated(1);
+        $stmt->is_bind_contatinated(1);
     }
 
     return $sql;
