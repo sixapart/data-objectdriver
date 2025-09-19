@@ -8,7 +8,7 @@ use Scalar::Util 'blessed';
 use base qw( Class::Accessor::Fast );
 
 __PACKAGE__->mk_accessors(qw(
-    select distinct select_map select_map_reverse
+    select distinct select_map_reverse
     from joins where bind limit offset group order
     having where_values column_mutator index_hint
     comment as aggrigated
@@ -19,7 +19,6 @@ sub new {
     my $stmt = $class->SUPER::new(@_);
     $stmt->select([]);
     $stmt->distinct(0);
-    $stmt->select_map({});
     $stmt->select_map_reverse({});
     $stmt->bind([]);
     $stmt->from([]);
@@ -31,17 +30,20 @@ sub new {
     $stmt;
 }
 
+sub select_map {
+    return { $_[0]->{select_map_reverse} ? reverse %{ $_[0]->{select_map_reverse} } : () }; 
+}
+
 sub add_select {
     my $stmt = shift;
     my($term, $col) = @_;
-    $col ||= $term;
     push @{ $stmt->select }, $term;
-    if (blessed($term) && $col->isa('Data::ObjectDriver::SQL')) {
-        die 'Sub-query requires an alias by setting $stmt->as(...)' unless $term->as;
-        $stmt->select_map->{$term} = $term->as;
+    if (blessed($term) && $term->isa('Data::ObjectDriver::SQL')) {
+        my $alias = $col || $term->as;
+        die 'Sub-query requires an alias by setting $stmt->as(...)' unless $alias;
+        $stmt->select_map_reverse->{$alias} = $term;
     } else {
-        $stmt->select_map->{$term} = $col;
-        $stmt->select_map_reverse->{$col} = $term;
+        $stmt->select_map_reverse->{$col || $term} = $term;
     }
 }
 
@@ -71,13 +73,15 @@ sub as_sql {
     if (@{ $stmt->select }) {
         $sql .= 'SELECT ';
         $sql .= 'DISTINCT ' if $stmt->distinct;
+        my $select_map = $stmt->select_map;
         $sql .= join(', ',  map {
             my $col = $_;
+            my $alias = $select_map->{$col};
             if (blessed($col) && $col->isa('Data::ObjectDriver::SQL')) {
                 push @bind_for_select, @{ $col->{bind} };
-                $col->as_subquery;
+                $col->as_subquery($alias);
             } else {
-                if (my $alias = $stmt->select_map->{$col}) {
+                if ($alias) {
                     /(?:^|\.)\Q$alias\E$/ ? $col : "$col $alias";
                 } else {
                     $col;
@@ -144,10 +148,11 @@ sub as_sql {
 }
 
 sub as_subquery {
-    my $stmt     = shift;
-    my $subquery = '('. $stmt->as_sql. ')';
-    if ($stmt->as) {
-        $subquery .= ' AS ' . $stmt->as;
+    my ($stmt, $alias) = @_;
+    my $subquery = '(' . $stmt->as_sql . ')';
+    $alias ||= $stmt->as;
+    if ($alias) {
+        $subquery .= ' AS ' . $alias;
     }
     $subquery;
 }
@@ -273,8 +278,8 @@ sub add_having {
 #    Carp::croak("Invalid/unsafe column name $col") unless $col =~ /^[\w\.]+$/;
 
     if (my $orig = $stmt->select_map_reverse->{$col}) {
-        $col = $orig;
-    }
+            $col = $orig;
+        }
 
     my($term, $bind) = $stmt->_mk_term($col, $val);
     push @{ $stmt->{having} }, "($term)";
@@ -429,15 +434,9 @@ The database columns to select in a C<SELECT> query.
 
 Whether the C<SELECT> query should return DISTINCT rows only.
 
-=head2 C<select_map> (hashref)
-
-The map of database column names to object fields in a C<SELECT> query. Use
-this mapping to convert members of the C<select> list to column names.
-
 =head2 C<select_map_reverse> (hashref)
 
-The map of object fields to database column names in a C<SELECT> query. Use
-this map to reverse the C<select_map> mapping where needed.
+The map of object fields to database column names in a C<SELECT> query.
 
 =head2 C<from> (arrayref)
 
@@ -568,7 +567,7 @@ Creates a new, empty SQL statement.
 
 Adds the database column C<$column> to the list of fields to return in a
 C<SELECT> query. The requested object member will be indicated to be C<$term>
-in the statement's C<select_map> and C<select_map_reverse> attributes.
+in the statement's C<select_map_reverse> attributes.
 
 C<$term> is optional, and defaults to the same value as C<$column>.
 
