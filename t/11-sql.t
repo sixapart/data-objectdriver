@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use Data::ObjectDriver::SQL;
-use Test::More tests => 112;
+use Test::More;
 
 my $stmt = ns();
 ok($stmt, 'Created SQL object');
@@ -281,15 +281,34 @@ $stmt->add_select('bar');
 $stmt->from([ qw( baz ) ]);
 is($stmt->as_sql, "SELECT foo, bar\nFROM baz\n");
 
-$stmt = ns();
-$stmt->add_select('f.foo' => 'foo');
-$stmt->add_select('COUNT(*)' => 'count');
-$stmt->from([ qw( baz ) ]);
-is($stmt->as_sql, "SELECT f.foo, COUNT(*) count\nFROM baz\n");
-my $map = $stmt->select_map;
-is(scalar(keys %$map), 2);
-is($map->{'f.foo'}, 'foo');
-is($map->{'COUNT(*)'}, 'count');
+subtest 'SQL functions' => sub {
+    $stmt = ns();
+    $stmt->add_select('f.foo' => 'foo');
+    $stmt->add_select('COUNT(*)' => 'count');
+    $stmt->from([ qw( baz ) ]);
+    is($stmt->as_sql, "SELECT f.foo, COUNT(*) count\nFROM baz\n");
+    my $map = $stmt->select_map;
+    is(scalar(keys %$map), 2);
+    is_deeply($map, {'f.foo' => 'foo', 'COUNT(*)' => 'count'}, 'right map');
+
+    $stmt = ns();
+    $stmt->add_select('count(foo)');
+    $stmt->add_select('count(bar)');
+    $stmt->from([qw( baz )]);
+    is($stmt->as_sql, "SELECT count(foo), count(bar)\nFROM baz\n");
+    my $map = $stmt->select_map;
+    is(scalar(keys %$map), 2);
+    is_deeply($map, {'count(foo)' => 'count(foo)', 'count(bar)' => 'count(bar)'}, 'right map');
+
+    $stmt = ns();
+    $stmt->add_select('count(foo)', 'count1');
+    $stmt->add_select('count(bar)', 'count2');
+    $stmt->from([qw( baz )]);
+    is($stmt->as_sql, "SELECT count(foo) count1, count(bar) count2\nFROM baz\n");
+    my $map = $stmt->select_map;
+    is(scalar(keys %$map), 2);
+    is_deeply($map, {'count(foo)' => 'count1', 'count(bar)' => 'count2'}, 'right map');
+};
 
 # HAVING
 $stmt = ns();
@@ -407,3 +426,5 @@ subtest 'scalar reference' => sub {
 };
 
 sub ns { Data::ObjectDriver::SQL->new }
+
+done_testing;
