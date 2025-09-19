@@ -184,7 +184,7 @@ sub fetch {
     my @bind;
     my $map = $stmt->select_map;
     for my $col (@{ $stmt->select }) {
-        push @bind, \$rec->{ $map->{$col} || $col };
+        push @bind, \$rec->{ $map->{$col} };
     }
 
     my $dbh = $driver->r_handle($class->properties->{db});
