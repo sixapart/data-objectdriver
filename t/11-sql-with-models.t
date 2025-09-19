@@ -143,6 +143,33 @@ EOF
     };
 };
 
+subtest 'select_map used in add_having' => sub {
+    my $stmt = Entry->driver->prepare_statement('Entry', {}, {});
+    $stmt->add_select('count(*)', 'count');
+    $stmt->group({column => 'blog_id'});
+    $stmt->add_having(count => 2);
+    is sql_normalize($stmt->as_sql), sql_normalize(<<'EOF');
+SELECT entry.id, entry.blog_id, entry.title, entry.text, count(*) count
+FROM entry
+GROUP BY blog_id
+HAVING (count(*) = ?)
+EOF
+    is_deeply($stmt->{bind}, ['2'], 'right bind values');
+
+    my $subquery = Blog->driver->prepare_statement('Blog', {}, {});
+    $stmt->add_select($subquery, 'sub');
+    $stmt->add_having(sub => 3);
+    is sql_normalize($stmt->as_sql), sql_normalize(<<'EOF');
+SELECT
+    entry.id, entry.blog_id, entry.title, entry.text, count(*) count,
+    (SELECT blog.id, blog.parent_id, blog.name FROM blog) AS sub
+FROM entry
+GROUP BY blog_id
+HAVING (count(*) = ?) AND (sub = ?)
+EOF
+    is_deeply($stmt->{bind}, ['2', '3'], 'right bind values');
+};
+
 subtest 'subquery in from clause' => sub {
 
     subtest 'blogs that has entries with specific text' => sub {
