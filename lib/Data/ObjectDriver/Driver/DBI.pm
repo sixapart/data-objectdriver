@@ -12,6 +12,7 @@ use Data::ObjectDriver::Errors;
 use Data::ObjectDriver::SQL;
 use Data::ObjectDriver::Driver::DBD;
 use Data::ObjectDriver::Iterator;
+use Scalar::Util 'blessed';
 
 my $ForkSafe = _is_fork_safe();
 my %Handles;
@@ -172,14 +173,20 @@ sub prepare_fetch {
 
 sub fetch {
     my $driver = shift;
-    my($rec, $class, $orig_terms, $orig_args) = @_;
+    my ($rec, $class, $terms_or_stmt, $orig_args) = @_;
+    my ($sql, $stmt);
 
-    if ($Data::ObjectDriver::RESTRICT_IO) {
-        use Data::Dumper;
-        die "Attempted DBI I/O while in restricted mode: fetch() " . Dumper($orig_terms, $orig_args);
+    if (blessed($terms_or_stmt) && $terms_or_stmt->isa('Data::ObjectDriver::SQL')) {
+        $sql  = $terms_or_stmt->as_sql;
+        $stmt = $terms_or_stmt;
+    } else {
+        if ($Data::ObjectDriver::RESTRICT_IO) {
+            use Data::Dumper;
+            die "Attempted DBI I/O while in restricted mode: fetch() " . Dumper($terms_or_stmt, $orig_args);
+        }
+
+        ($sql, undef, $stmt) = $driver->prepare_fetch($class, $terms_or_stmt, $orig_args);
     }
-
-    my ($sql, $bind, $stmt) = $driver->prepare_fetch($class, $orig_terms, $orig_args);
 
     my @bind;
     my $map = $stmt->select_map;
@@ -218,11 +225,11 @@ sub load_object_from_rec {
 }
 
 sub search {
-    my($driver) = shift;
-    my($class, $terms, $args) = @_;
+    my ($driver) = shift;
+    my ($class, $terms_or_stmt, $args) = @_;
 
     my $rec = {};
-    my $sth = $driver->fetch($rec, $class, $terms, $args);
+    my $sth = $driver->fetch($rec, $class, $terms_or_stmt, $args);
 
     my $iter = sub {
         ## This is kind of a hack--we need $driver to stay in scope,

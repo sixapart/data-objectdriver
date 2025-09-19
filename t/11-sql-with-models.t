@@ -94,7 +94,7 @@ EOF
 
         is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
         is_deeply($stmt->{bind}, ['second', $blog1->name], 'right bind values');
-        my @res = search_by_prepared_statement('Blog', $stmt);
+        my @res = Blog->driver->search('Blog', $stmt);
         is scalar(@res),                             1;
         is scalar(keys %{ $res[0]{column_values} }), 4;
         is($res[0]{column_values}{id},        $blog1->id);
@@ -135,7 +135,7 @@ EOF
 
         is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
         is_deeply($stmt->{bind}, ['second', $blog1->name], 'right bind values');
-        my @res = search_by_prepared_statement('Blog', $stmt);
+        my @res = Blog->driver->search('Blog', $stmt);
         is scalar(@res),                             1;
         is scalar(keys %{ $res[0]{column_values} }), 4;
         is($res[0]{column_values}{id},        $blog1->id);
@@ -202,7 +202,7 @@ EOF
 
         is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
         is_deeply($stmt->{bind}, ['second', $blog1->id, $blog2->id, 'second'], 'right bind values');
-        my @res = search_by_prepared_statement('Blog', $stmt);
+        my @res = Blog->driver->search('Blog', $stmt);
         is scalar(@res),                             2;
         is scalar(keys %{ $res[0]{column_values} }), 3;
         is($res[0]{column_values}{id}, $blog1->id);
@@ -240,7 +240,7 @@ EOF
 
         is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
         is_deeply($stmt->{bind}, ['second', $blog1->id, $blog2->id], 'right bind values');
-        my @res = search_by_prepared_statement('Blog', $stmt);
+        my @res = Blog->driver->search('Blog', $stmt);
         is scalar(@res),                             2;
         is scalar(keys %{ $res[0]{column_values} }), 4;
         is($res[0]{column_values}{entry_id}, $entry12->id);
@@ -279,7 +279,7 @@ LIMIT 4
 EOF
         is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
         is_deeply($stmt->{bind}, ['first', 'blog1'], 'right bind values');
-        my @res = search_by_prepared_statement('Blog', $stmt);
+        my @res = Blog->driver->search('Blog', $stmt);
         is scalar(@res),                             1;
         is scalar(keys %{ $res[0]{column_values} }), 4;
         is($res[0]{column_values}{id}, $blog1->id);
@@ -331,7 +331,7 @@ LIMIT 4
 EOF
         is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
         is_deeply($stmt->{bind}, ['first', 'blog!%', '!%2', 'second', $blog1->id, $blog2->id], 'right bind values');
-        my @res = search_by_prepared_statement('Blog', $stmt);
+        my @res = Blog->driver->search('Blog', $stmt);
         is scalar(@res),                             2;
         is scalar(keys %{ $res[0]{column_values} }), 4;
         is($res[0]{column_values}{id}, $blog1->id);
@@ -370,7 +370,7 @@ ORDER BY blog.id ASC, sub1 ASC
 EOF
     is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
     is_deeply($stmt->{bind}, ['99', 'second', 'second'], 'right bind values');
-    my @res = search_by_prepared_statement('Blog', $stmt);
+    my @res = Blog->driver->search('Blog', $stmt);
     is scalar(@res), 4;
     is($res[0]{column_values}{id},   $blog1->id);
     is($res[0]{column_values}{sub1}, $entry12->id);
@@ -381,55 +381,6 @@ EOF
     is($res[3]{column_values}{id},   $blog2->id);
     is($res[3]{column_values}{sub1}, $entry22->id);
 };
-
-sub search_by_prepared_statement {
-    my ($class, $stmt) = @_;
-    my $driver = $class->driver;
-    my $rec    = {};
-    my $sql    = $stmt->as_sql;
-    my @bind;
-    my $map = $stmt->select_map;
-    for my $col (@{ $stmt->select }) {
-        push @bind, \$rec->{ $map->{$col} };
-    }
-
-    my $dbh = $driver->r_handle($class->properties->{db});
-    $driver->start_query($sql, $stmt->{bind});
-
-    my $sth = $dbh->prepare($sql);
-    $sth->execute(@{ $stmt->{bind} });
-    $sth->bind_columns(undef, @bind);
-
-    my $iter = sub {
-        my $d = $driver;
-        unless ($sth->fetch) {
-            _close_sth($sth);
-            $driver->end_query($sth);
-            return;
-        }
-        return $driver->load_object_from_rec($class, $rec);
-    };
-
-    if (wantarray) {
-        my @objs = ();
-        while (my $obj = $iter->()) {
-            push @objs, $obj;
-        }
-        return @objs;
-    } else {
-        my $iterator = Data::ObjectDriver::Iterator->new(
-            $iter, sub { _close_sth($sth); $driver->end_query($sth) },
-        );
-        return $iterator;
-    }
-    return;
-}
-
-sub _close_sth {
-    my $sth = shift;
-    $sth->finish;
-    undef $sth;
-}
 
 sub sql_normalize {
     my $sql = shift;
