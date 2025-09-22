@@ -11,7 +11,7 @@ __PACKAGE__->mk_accessors(qw(
     select distinct select_map select_map_reverse
     from joins where bind limit offset group order
     having where_values column_mutator index_hint
-    comment as is_bind_contatinated
+    comment as bind_parameters_are_merged
 ));
 
 sub new {
@@ -139,9 +139,9 @@ sub as_sql {
         $sql .= "-- $1" if $1;
     }
 
-    unless ($stmt->is_bind_contatinated) {
+    unless ($stmt->bind_parameters_are_merged) {
         @{ $stmt->{bind} } = (@bind_for_select, @bind_for_from, @{ $stmt->{bind} });
-        $stmt->is_bind_contatinated(1);
+        $stmt->bind_parameters_are_merged(1);
     }
 
     return $sql;
