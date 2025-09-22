@@ -176,15 +176,15 @@ sub fetch {
     my ($rec, $class, $terms_or_stmt, $orig_args) = @_;
     my ($sql, $stmt);
 
+    if ($Data::ObjectDriver::RESTRICT_IO) {
+        use Data::Dumper;
+        die "Attempted DBI I/O while in restricted mode: fetch() " . Dumper($terms_or_stmt, $orig_args);
+    }
+
     if (blessed($terms_or_stmt) && $terms_or_stmt->isa('Data::ObjectDriver::SQL')) {
         $sql  = $terms_or_stmt->as_sql;
         $stmt = $terms_or_stmt;
     } else {
-        if ($Data::ObjectDriver::RESTRICT_IO) {
-            use Data::Dumper;
-            die "Attempted DBI I/O while in restricted mode: fetch() " . Dumper($terms_or_stmt, $orig_args);
-        }
-
         ($sql, undef, $stmt) = $driver->prepare_fetch($class, $terms_or_stmt, $orig_args);
     }
 
