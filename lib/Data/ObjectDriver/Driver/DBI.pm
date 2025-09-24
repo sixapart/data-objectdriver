@@ -188,10 +188,10 @@ sub fetch {
         ($sql, undef, $stmt) = $driver->prepare_fetch($class, $terms_or_stmt, $orig_args);
     }
 
-    my @bind;
+    my @columns;
     my $map = $stmt->select_map;
     for my $col (@{ $stmt->select }) {
-        push @bind, \$rec->{ $map->{$col} };
+        push @columns, \$rec->{ $map->{$col} };
     }
 
     my $dbh = $driver->r_handle($class->properties->{db});
@@ -199,7 +199,7 @@ sub fetch {
 
     my $sth = $orig_args->{no_cached_prepare} ? $dbh->prepare($sql) : $driver->_prepare_cached($dbh, $sql);
     $sth->execute(@{ $stmt->{bind} });
-    $sth->bind_columns(undef, @bind);
+    $sth->bind_columns(undef, @columns);
 
     # need to slurp 'offset' rows for DBs that cannot do it themselves
     if (!$driver->dbd->offset_implemented && $orig_args->{offset}) {
