@@ -104,15 +104,6 @@ EOF
         is($res[0]{column_values}{sub_alias}, $entry12->id);
     };
 
-    subtest 'error occurs without alias' => sub {
-        my $stmt     = Blog->driver->prepare_statement('Blog', [], {});
-        my $subquery = Entry->driver->prepare_statement(
-            'Entry',
-            [{ blog_id => \'= blog.id' }], { fetchonly => ['id'], limit => 1 });
-        eval { $stmt->add_select($subquery) };
-        like $@, qr/requires an alias/;
-    };
-
     subtest 'set alias by add_select argument' => sub {
         my $stmt     = Blog->driver->prepare_statement('Blog', { name => $blog1->name }, {});
         my $subquery = Entry->driver->prepare_statement(
