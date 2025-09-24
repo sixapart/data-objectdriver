@@ -64,9 +64,6 @@ subtest 'do not aggregate bind twice' => sub {
     is scalar(@{ $stmt->bind }), 2;
     $stmt->as_sql;
     is scalar(@{ $stmt->bind }), 2;
-
-    $subquery->as_sql;
-    is scalar(@{ $subquery->bind }), 1;
 };
 
 subtest 'subquery in select clause' => sub {

@@ -11,7 +11,7 @@ __PACKAGE__->mk_accessors(qw(
     select distinct select_map select_map_reverse
     from joins where bind limit offset group order
     having where_values column_mutator index_hint
-    comment as bind_parameters_are_merged
+    comment as
 ));
 
 sub new {
@@ -78,6 +78,7 @@ sub as_sql {
             my $alias = $select_map->{$col};
             if (blessed($col) && $col->isa('Data::ObjectDriver::SQL')) {
                 push @bind_for_select, @{ $col->{bind} };
+                @{ $col->{bind} } = ();
                 $col->as_subquery($alias);
             } else {
                 if ($alias) {
@@ -118,6 +119,7 @@ sub as_sql {
             my $from = $_;
             if (blessed($from) && $from->isa('Data::ObjectDriver::SQL')) {
                 push @bind_for_from, @{$from->{bind}};
+                @{$from->{bind}} = ();
                 $from->as_subquery;
             } else {
                 $stmt->_add_index_hint($from);
@@ -138,10 +140,7 @@ sub as_sql {
         $sql .= "-- $1" if $1;
     }
 
-    unless ($stmt->bind_parameters_are_merged) {
-        @{ $stmt->{bind} } = (@bind_for_select, @bind_for_from, @{ $stmt->{bind} });
-        $stmt->bind_parameters_are_merged(1);
-    }
+    @{ $stmt->{bind} } = (@bind_for_select, @bind_for_from, @{ $stmt->{bind} });
 
     return $sql;
 }
