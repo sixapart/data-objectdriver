@@ -196,9 +196,28 @@ sub create_sql {
             add_drop_table => $drop_table,
         );
         $sql = $sqlt->translate(\$sql) or die $sqlt->error;
-        return split /;\s*/s, $sql;
+        return split_sql($sql);
     }
     $sql;
+}
+
+sub split_sql {
+    my ($sql) = @_;
+    my @ret;
+    while ($sql) {
+        (my $minimal, my $block, $sql) = split /\s*((?:\bDECLARE\b.*?)?\bBEGIN\b.*?\bEND;)\s*/s, $sql, 2;
+        if ($minimal) {
+            push @ret, split /;\s*/s, $minimal;
+        }
+        if ($block) {
+            if (@ret && $minimal !~ /;\z/) {
+                $ret[-1] .= $block;
+            } else {
+                push @ret, $block;
+            }
+        }
+    }
+    return @ret;
 }
 
 1;
