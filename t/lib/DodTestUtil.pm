@@ -196,9 +196,15 @@ sub create_sql {
             add_drop_table => $drop_table,
         );
         $sql = $sqlt->translate(\$sql) or die $sqlt->error;
+        return split_sql_for_oracle($sql) if $driver eq 'Oracle';
         return split_sql($sql);
     }
     $sql;
+}
+
+sub split_sql_for_oracle {
+    my ($sql) = @_;
+    return map { split_sql($_) } split(/\s*\/\s*/, $sql);
 }
 
 sub split_sql {
