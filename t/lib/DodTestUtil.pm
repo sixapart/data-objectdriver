@@ -196,10 +196,23 @@ sub create_sql {
             add_drop_table => $drop_table,
         );
         $sql = $sqlt->translate(\$sql) or die $sqlt->error;
-        return split_sql_for_oracle($sql) if $driver eq 'Oracle';
+        return split_sql_for_oracle(patch_oracle_drop($sql)) if $driver eq 'Oracle';
         return split_sql($sql);
     }
     $sql;
+}
+
+sub patch_oracle_drop {
+    my $sql = shift;
+    $sql =~ s{(DROP (TABLE|SEQUENCE) "(.+)".*);}{
+        BEGIN
+            EXECUTE IMMEDIATE '$1';
+        EXCEPTION
+            WHEN OTHERS THEN IF SQLCODE != -942 AND SQLCODE != -2289 THEN RAISE; END IF;
+        END;
+        /
+    }g;
+    return $sql;
 }
 
 sub split_sql_for_oracle {
