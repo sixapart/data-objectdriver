@@ -92,6 +92,10 @@ FROM BLOG
 WHERE (BLOG.NAME = ?)
 EOF
 
+        $expected = sql_normalize(<<'EOF') if DodTestUtil->driver eq 'Oracle';
+SELECT BLOG.ID, BLOG.PARENT_ID, BLOG.NAME, (SELECT * FROM (SELECT ENTRY.ID FROM ENTRY WHERE (ENTRY.BLOG_ID = BLOG.ID) AND (ENTRY.TEXT = ?)) WHERE rownum <= 1) AS SUB_ALIAS FROM BLOG WHERE (BLOG.NAME = ?)
+EOF
+
         is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
         is_deeply($stmt->{bind}, ['second', $blog1->NAME], 'right bind values');
         my @res = Blog->driver->search('Blog', $stmt);
@@ -122,6 +126,10 @@ SELECT
     ) AS SUB_ALIAS
 FROM BLOG
 WHERE (BLOG.NAME = ?)
+EOF
+
+        $expected = sql_normalize(<<'EOF') if DodTestUtil->driver eq 'Oracle';
+SELECT BLOG.ID, BLOG.PARENT_ID, BLOG.NAME, (SELECT * FROM (SELECT ENTRY.ID FROM ENTRY WHERE (ENTRY.BLOG_ID = BLOG.ID) AND (ENTRY.TEXT = ?)) WHERE rownum <= 1) AS SUB_ALIAS FROM BLOG WHERE (BLOG.NAME = ?)
 EOF
 
         is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
@@ -267,6 +275,11 @@ WHERE
     (ENTRY.BLOG_ID IN (SELECT BLOG.ID FROM BLOG WHERE (BLOG.NAME LIKE ? ESCAPE '!')))
 LIMIT 4
 EOF
+
+        $expected = sql_normalize(<<'EOF') if DodTestUtil->driver eq 'Oracle';
+SELECT * FROM (SELECT ENTRY.ID, ENTRY.BLOG_ID, ENTRY.TITLE, ENTRY.TEXT FROM ENTRY WHERE (ENTRY.TEXT = ?) AND (ENTRY.BLOG_ID IN (SELECT BLOG.ID FROM BLOG WHERE (BLOG.NAME LIKE ? ESCAPE '!')))) WHERE rownum <= 4
+EOF
+
         is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
         is_deeply($stmt->{bind}, ['first', 'blog1'], 'right bind values');
         my @res = Blog->driver->search('Blog', $stmt);
@@ -319,6 +332,11 @@ WHERE
     )
 LIMIT 4
 EOF
+
+        $expected = sql_normalize(<<'EOF') if DodTestUtil->driver eq 'Oracle';
+SELECT * FROM (SELECT ENTRY.ID, ENTRY.BLOG_ID, ENTRY.TITLE, ENTRY.TEXT FROM ENTRY WHERE (((TEXT = ?)) OR ((BLOG_ID IN (SELECT BLOG.ID FROM BLOG WHERE ((NAME LIKE ? ESCAPE '!')) AND ((NAME LIKE ? ESCAPE '!'))))) OR ((TEXT = ?))) AND ((ID IN (?,?)))) WHERE rownum <= 4
+EOF
+
         is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
         is_deeply($stmt->{bind}, ['first', 'blog!%', '!%2', 'second', $blog1->ID, $blog2->ID], 'right bind values');
         my @res = Blog->driver->search('Blog', $stmt);
