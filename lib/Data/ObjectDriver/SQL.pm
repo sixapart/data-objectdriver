@@ -79,7 +79,7 @@ sub as_sql {
             if (blessed($col) && $col->isa('Data::ObjectDriver::SQL')) {
                 push @bind_for_select, @{ $col->{bind} };
                 @{ $col->{bind} } = ();
-                $col->as_subquery($alias);
+                $col->as_subquery(1, $alias);
             } else {
                 if ($alias) {
                     /(?:^|\.)\Q$alias\E$/ ? $col : "$col $alias";
@@ -120,7 +120,7 @@ sub as_sql {
             if (blessed($from) && $from->isa('Data::ObjectDriver::SQL')) {
                 push @bind_for_from, @{$from->{bind}};
                 @{$from->{bind}} = ();
-                $from->as_subquery;
+                $from->as_subquery(0);
             } else {
                 $stmt->_add_index_hint($from);
             }
@@ -146,11 +146,12 @@ sub as_sql {
 }
 
 sub as_subquery {
-    my ($stmt, $alias) = @_;
+    my ($stmt, $use_as, $alias) = @_;
     my $subquery = '(' . $stmt->as_sql . ')';
     $alias ||= $stmt->as;
     if ($alias) {
-        $subquery .= ' AS ' . $alias;
+        $subquery .= ' AS' if $use_as;
+        $subquery .= ' '. $alias;
     }
     $subquery;
 }
@@ -335,7 +336,7 @@ sub _mk_term {
                 $term = "$c $val->{op} " . $$value;
             } elsif (blessed($value) && $value->isa('Data::ObjectDriver::SQL')) {
                 local $value->{as} = undef;
-                $term = "$c $val->{op} ". $value->as_subquery;
+                $term = "$c $val->{op} ". $value->as_subquery(0);
                 push @bind, @{$value->{bind}};
             } else {
                 $term = "$c $val->{op} ?";
