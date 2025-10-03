@@ -196,13 +196,13 @@ sub create_sql {
             add_drop_table => $drop_table,
         );
         $sql = $sqlt->translate(\$sql) or die $sqlt->error;
-        return split_sql_for_oracle(patch_oracle_drop($sql)) if $driver eq 'Oracle';
+        return split_sql_for_oracle(patch_oracle_sql($sql)) if $driver eq 'Oracle';
         return split_sql($sql);
     }
     $sql;
 }
 
-sub patch_oracle_drop {
+sub patch_oracle_sql {
     my $sql = shift;
     $sql =~ s{(DROP (TABLE|SEQUENCE) "(.+)".*);}{
         BEGIN
@@ -212,6 +212,7 @@ sub patch_oracle_drop {
         END;
         /
     }g;
+    $sql =~ s/"\bsq_(\w+)"/'"'. $1. '_seq"'/ge;
     return $sql;
 }
 
