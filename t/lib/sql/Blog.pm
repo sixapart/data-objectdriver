@@ -11,9 +11,9 @@ my $username = DodTestUtil::env('DOD_TEST_USER', 'blog');
 my $password = DodTestUtil::env('DOD_TEST_PASS', 'blog');
 
 __PACKAGE__->install_properties({
-    columns => ['id', 'parent_id', 'name'],
-    datasource  => 'blog',
-    primary_key => 'id',
+    columns => ['ID', 'PARENT_ID', 'NAME'],
+    datasource  => 'BLOG',
+    primary_key => 'ID',
     driver      => Data::ObjectDriver::Driver::DBI->new(
         dsn => DodTestUtil::dsn('global'),
         $username ? (username => $username) : (),

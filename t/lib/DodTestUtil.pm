@@ -182,7 +182,7 @@ sub create_sql {
     my($table) = @_;
     my $driver = driver();
     $driver = 'MySQL' if $driver eq 'MariaDB';
-    my $file = File::Spec->catfile('t', 'schemas', $table . '.sql');
+    my $file = File::Spec->catfile('t', 'schemas', lc($table) . '.sql');
     open my $fh, $file or die "Can't open $file: $!";
     my $sql = do { local $/; <$fh> };
     close $fh;

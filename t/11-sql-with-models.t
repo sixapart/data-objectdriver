@@ -20,45 +20,45 @@ sub ordered_hashref {
 }
 
 setup_dbs({
-    global => [qw( blog entry )],
+    global => [qw( BLOG ENTRY )],
 });
 
-my $blog1 = Blog->new(name => 'blog1');
+my $blog1 = Blog->new(NAME => 'blog1');
 $blog1->save;
-my $blog2 = Blog->new(parent_id => $blog1->id, name => 'blog2');
+my $blog2 = Blog->new(PARENT_ID => $blog1->ID, NAME => 'blog2');
 $blog2->save;
-my $entry11 = Entry->new(blog_id => $blog1->id, title => 'title11', text => 'first');
+my $entry11 = Entry->new(BLOG_ID => $blog1->ID, TITLE => 'title11', TEXT => 'first');
 $entry11->save;
-my $entry12 = Entry->new(blog_id => $blog1->id, title => 'title12', text => 'second');
+my $entry12 = Entry->new(BLOG_ID => $blog1->ID, TITLE => 'title12', TEXT => 'second');
 $entry12->save;
-my $entry21 = Entry->new(blog_id => $blog2->id, title => 'title21', text => 'first');
+my $entry21 = Entry->new(BLOG_ID => $blog2->ID, TITLE => 'title21', TEXT => 'first');
 $entry21->save;
-my $entry22 = Entry->new(blog_id => $blog2->id, title => 'title22', text => 'second');
+my $entry22 = Entry->new(BLOG_ID => $blog2->ID, TITLE => 'title22', TEXT => 'second');
 $entry22->save;
 
 subtest 'as_subquery' => sub {
-    my $stmt = Blog->driver->prepare_statement('Blog', { name => 'foo' }, { fetchonly => ['id'] });
+    my $stmt = Blog->driver->prepare_statement('Blog', { NAME => 'foo' }, { fetchonly => ['ID'] });
 
     is(sql_normalize($stmt->as_subquery), sql_normalize(<<'EOF'), 'right sql');
-(SELECT blog.id FROM blog WHERE (blog.name = ?))
+(SELECT BLOG.ID FROM BLOG WHERE (BLOG.NAME = ?))
 EOF
     is_deeply($stmt->{bind}, ['foo'], 'right bind values');
 
     $stmt->as('mysubquery');
 
     is(sql_normalize($stmt->as_subquery), sql_normalize(<<'EOF'), 'right sql');
-(SELECT blog.id FROM blog WHERE (blog.name = ?)) AS mysubquery
+(SELECT BLOG.ID FROM BLOG WHERE (BLOG.NAME = ?)) AS mysubquery
 EOF
 };
 
 subtest 'do not aggregate bind twice' => sub {
 
-    my $stmt     = Blog->driver->prepare_statement('Blog', { name => $blog1->name }, {});
+    my $stmt     = Blog->driver->prepare_statement('Blog', { NAME => $blog1->NAME }, {});
     my $subquery = Entry->driver->prepare_statement(
         'Entry',
-        ordered_hashref(blog_id => \'= blog.id', text => 'second'),
-        { fetchonly => ['id'], limit => 1 });
-    $subquery->as('sub');
+        ordered_hashref(BLOG_ID => \'= BLOG.ID', TEXT => 'second'),
+        { fetchonly => ['ID'], limit => 1 });
+    $subquery->as('SUB');
     $stmt->add_select($subquery);
     $stmt->as_sql;
     is scalar(@{ $stmt->bind }), 2;
@@ -69,94 +69,94 @@ subtest 'do not aggregate bind twice' => sub {
 subtest 'subquery in select clause' => sub {
 
     subtest 'fetch blogs and include a entry with specific text if any' => sub {
-        my $stmt     = Blog->driver->prepare_statement('Blog', { name => $blog1->name }, {});
+        my $stmt     = Blog->driver->prepare_statement('Blog', { NAME => $blog1->NAME }, {});
         my $subquery = Entry->driver->prepare_statement(
             'Entry',
-            ordered_hashref(blog_id => \'= blog.id', text => 'second'),
-            { fetchonly => ['id'], limit => 1 });
-        $subquery->as('sub_alias');
+            ordered_hashref(BLOG_ID => \'= BLOG.ID', TEXT => 'second'),
+            { fetchonly => ['ID'], limit => 1 });
+        $subquery->as('SUB_ALIAS');
         $stmt->add_select($subquery);
 
         my $expected = sql_normalize(<<'EOF');
 SELECT
-    blog.id,
-    blog.parent_id,
-    blog.name,
+    BLOG.ID,
+    BLOG.PARENT_ID,
+    BLOG.NAME,
     (
-        SELECT entry.id
-        FROM entry
-        WHERE (entry.blog_id = blog.id) AND (entry.text = ?)
+        SELECT ENTRY.ID
+        FROM ENTRY
+        WHERE (ENTRY.BLOG_ID = BLOG.ID) AND (ENTRY.TEXT = ?)
         LIMIT 1
-    ) AS sub_alias
-FROM blog
-WHERE (blog.name = ?)
+    ) AS SUB_ALIAS
+FROM BLOG
+WHERE (BLOG.NAME = ?)
 EOF
 
         is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
-        is_deeply($stmt->{bind}, ['second', $blog1->name], 'right bind values');
+        is_deeply($stmt->{bind}, ['second', $blog1->NAME], 'right bind values');
         my @res = Blog->driver->search('Blog', $stmt);
         is scalar(@res),                             1;
         is scalar(keys %{ $res[0]{column_values} }), 4;
-        is($res[0]{column_values}{id},        $blog1->id);
-        is($res[0]{column_values}{sub_alias}, $entry12->id);
+        is($res[0]{column_values}{ID},        $blog1->ID);
+        is($res[0]{column_values}{SUB_ALIAS}, $entry12->ID);
     };
 
     subtest 'set alias by add_select argument' => sub {
-        my $stmt     = Blog->driver->prepare_statement('Blog', { name => $blog1->name }, {});
+        my $stmt     = Blog->driver->prepare_statement('Blog', { NAME => $blog1->NAME }, {});
         my $subquery = Entry->driver->prepare_statement(
             'Entry',
-            ordered_hashref(blog_id => \'= blog.id', text => 'second'),
-            { fetchonly => ['id'], limit => 1 });
-        $stmt->add_select($subquery, 'sub_alias');
+            ordered_hashref(BLOG_ID => \'= BLOG.ID', TEXT => 'second'),
+            { fetchonly => ['ID'], limit => 1 });
+        $stmt->add_select($subquery, 'SUB_ALIAS');
 
         my $expected = sql_normalize(<<'EOF');
 SELECT
-    blog.id,
-    blog.parent_id,
-    blog.name,
+    BLOG.ID,
+    BLOG.PARENT_ID,
+    BLOG.NAME,
     (
-        SELECT entry.id
-        FROM entry
-        WHERE (entry.blog_id = blog.id) AND (entry.text = ?)
+        SELECT ENTRY.ID
+        FROM ENTRY
+        WHERE (ENTRY.BLOG_ID = BLOG.ID) AND (ENTRY.TEXT = ?)
         LIMIT 1
-    ) AS sub_alias
-FROM blog
-WHERE (blog.name = ?)
+    ) AS SUB_ALIAS
+FROM BLOG
+WHERE (BLOG.NAME = ?)
 EOF
 
         is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
-        is_deeply($stmt->{bind}, ['second', $blog1->name], 'right bind values');
+        is_deeply($stmt->{bind}, ['second', $blog1->NAME], 'right bind values');
         my @res = Blog->driver->search('Blog', $stmt);
         is scalar(@res),                             1;
         is scalar(keys %{ $res[0]{column_values} }), 4;
-        is($res[0]{column_values}{id},        $blog1->id);
-        is($res[0]{column_values}{sub_alias}, $entry12->id);
+        is($res[0]{column_values}{ID},        $blog1->ID);
+        is($res[0]{column_values}{SUB_ALIAS}, $entry12->ID);
     };
 };
 
 subtest 'select_map used in add_having' => sub {
     my $stmt = Entry->driver->prepare_statement('Entry', {}, {});
-    $stmt->add_select('count(*)', 'count');
-    $stmt->group({column => 'blog_id'});
-    $stmt->add_having(count => 2);
+    $stmt->add_select('count(*)', 'COUNT');
+    $stmt->group({column => 'BLOG_ID'});
+    $stmt->add_having(COUNT => 2);
     is sql_normalize($stmt->as_sql), sql_normalize(<<'EOF');
-SELECT entry.id, entry.blog_id, entry.title, entry.text, count(*) count
-FROM entry
-GROUP BY blog_id
+SELECT ENTRY.ID, ENTRY.BLOG_ID, ENTRY.TITLE, ENTRY.TEXT, count(*) COUNT
+FROM ENTRY
+GROUP BY BLOG_ID
 HAVING (count(*) = ?)
 EOF
     is_deeply($stmt->{bind}, ['2'], 'right bind values');
 
     my $subquery = Blog->driver->prepare_statement('Blog', {}, {});
-    $stmt->add_select($subquery, 'sub');
-    $stmt->add_having(sub => 3);
+    $stmt->add_select($subquery, 'SUB');
+    $stmt->add_having(SUB => 3);
     is sql_normalize($stmt->as_sql), sql_normalize(<<'EOF');
 SELECT
-    entry.id, entry.blog_id, entry.title, entry.text, count(*) count,
-    (SELECT blog.id, blog.parent_id, blog.name FROM blog) AS sub
-FROM entry
-GROUP BY blog_id
-HAVING (count(*) = ?) AND (sub = ?)
+    ENTRY.ID, ENTRY.BLOG_ID, ENTRY.TITLE, ENTRY.TEXT, count(*) COUNT,
+    (SELECT BLOG.ID, BLOG.PARENT_ID, BLOG.NAME FROM BLOG) AS SUB
+FROM ENTRY
+GROUP BY BLOG_ID
+HAVING (count(*) = ?) AND (SUB = ?)
 EOF
     is_deeply($stmt->{bind}, ['2', '3'], 'right bind values');
 };
@@ -166,75 +166,75 @@ subtest 'subquery in from clause' => sub {
     subtest 'blogs that has entries with specific text' => sub {
         my $subquery = Entry->driver->prepare_statement(
             'Entry',
-            { text => 'second' }, { fetchonly => ['id', 'blog_id', 'text'] });
-        $subquery->as('sub');
+            { TEXT => 'second' }, { fetchonly => ['ID', 'BLOG_ID', 'TEXT'] });
+        $subquery->as('SUB');
         my $stmt = Blog->driver->prepare_statement(
             'Blog', [
-                { 'blog.id'  => \'= sub.blog_id' },
-                { 'blog.id'  => [$blog1->id, $blog2->id] },    # FIXME: table prefix should be added automatically (MTC-30879)
+                { 'BLOG.ID'  => \'= SUB.BLOG_ID' },
+                { 'BLOG.ID'  => [$blog1->ID, $blog2->ID] },    # FIXME: table prefix should be added automatically (MTC-30879)
             ],
             {});
         push @{ $stmt->from }, $subquery;
 
         my $expected = sql_normalize(<<'EOF');
 SELECT
-    blog.id,
-    blog.parent_id,
-    blog.name
-FROM blog,
+    BLOG.ID,
+    BLOG.PARENT_ID,
+    BLOG.NAME
+FROM BLOG,
     (
-        SELECT entry.id, entry.blog_id, entry.text
-        FROM entry
-        WHERE (entry.text = ?)
-    ) AS sub
-WHERE ((blog.id = sub.blog_id)) AND ((blog.id IN (?,?)))
+        SELECT ENTRY.ID, ENTRY.BLOG_ID, ENTRY.TEXT
+        FROM ENTRY
+        WHERE (ENTRY.TEXT = ?)
+    ) AS SUB
+WHERE ((BLOG.ID = sub.BLOG_ID)) AND ((BLOG.ID IN (?,?)))
 EOF
 
         is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
-        is_deeply($stmt->{bind}, ['second', $blog1->id, $blog2->id], 'right bind values');
+        is_deeply($stmt->{bind}, ['second', $blog1->ID, $blog2->ID], 'right bind values');
         my @res = Blog->driver->search('Blog', $stmt);
         is scalar(@res),                             2;
         is scalar(keys %{ $res[0]{column_values} }), 3;
-        is($res[0]{column_values}{id}, $blog1->id);
+        is($res[0]{column_values}{ID}, $blog1->ID);
     };
 
     subtest 'select list includes sub query result' => sub {
         my $subquery = Entry->driver->prepare_statement(
             'Entry',
-            { text => 'second' }, { fetchonly => ['id', 'blog_id'] });
-        # $subquery->add_select('max(id)', 'max_entry_id');
-        $subquery->as('sub');
+            { TEXT => 'second' }, { fetchonly => ['ID', 'BLOG_ID'] });
+        # $subquery->add_select('max(ID)', 'max_entry_id');
+        $subquery->as('SUB');
         my $stmt = Blog->driver->prepare_statement(
             'Blog', [
-                { 'blog.id' => \'= sub.blog_id' },            # FIXME: table prefix should be added automatically (MTC-30879)
-                { 'blog.id' => [$blog1->id, $blog2->id] },    # FIXME: table prefix should be added automatically (MTC-30879)
+                { 'BLOG.ID' => \'= SUB.BLOG_ID' },            # FIXME: table prefix should be added automatically (MTC-30879)
+                { 'BLOG.ID' => [$blog1->ID, $blog2->ID] },    # FIXME: table prefix should be added automatically (MTC-30879)
             ],
             {});
         push @{ $stmt->from }, $subquery;
-        $stmt->add_select('sub.id', 'entry_id');
+        $stmt->add_select('SUB.ID', 'ENTRY_ID');
 
         my $expected = sql_normalize(<<'EOF');
 SELECT
-    blog.id,
-    blog.parent_id,
-    blog.name,
-    sub.id entry_id
-FROM blog,
+    BLOG.ID,
+    BLOG.PARENT_ID,
+    BLOG.NAME,
+    SUB.ID ENTRY_ID
+FROM BLOG,
     (
-        SELECT entry.id, entry.blog_id
-        FROM entry
-        WHERE (entry.text = ?)
-    ) AS sub
-WHERE ((blog.id = sub.blog_id)) AND ((blog.id IN (?,?)))
+        SELECT ENTRY.ID, ENTRY.BLOG_ID
+        FROM ENTRY
+        WHERE (ENTRY.TEXT = ?)
+    ) AS SUB
+WHERE ((BLOG.ID = SUB.BLOG_ID)) AND ((BLOG.ID IN (?,?)))
 EOF
 
         is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
-        is_deeply($stmt->{bind}, ['second', $blog1->id, $blog2->id], 'right bind values');
+        is_deeply($stmt->{bind}, ['second', $blog1->ID, $blog2->ID], 'right bind values');
         my @res = Blog->driver->search('Blog', $stmt);
         is scalar(@res),                             2;
         is scalar(keys %{ $res[0]{column_values} }), 4;
-        is($res[0]{column_values}{entry_id}, $entry12->id);
-        is($res[1]{column_values}{entry_id}, $entry22->id);
+        is($res[0]{column_values}{ENTRY_ID}, $entry12->ID);
+        is($res[1]{column_values}{ENTRY_ID}, $entry22->ID);
     };
 };
 
@@ -244,13 +244,13 @@ subtest 'subquery in where clause' => sub {
         my $stmt = Entry->driver->prepare_statement(
             'Entry',
             ordered_hashref(
-                text    => 'first',
-                blog_id => {
+                TEXT    => 'first',
+                BLOG_ID => {
                     op    => 'IN',
                     value => Blog->driver->prepare_statement(
                         'Blog',
-                        { name      => { op => 'LIKE', value => 'blog1', escape => '!' } },
-                        { fetchonly => ['id'] }
+                        { NAME      => { op => 'LIKE', value => 'blog1', escape => '!' } },
+                        { fetchonly => ['ID'] }
                     ),
                 }
             ),
@@ -258,13 +258,13 @@ subtest 'subquery in where clause' => sub {
 
         my $expected = sql_normalize(<<'EOF');
 SELECT 
-    entry.id, entry.blog_id, entry.title, entry.text
+    ENTRY.ID, ENTRY.BLOG_ID, ENTRY.TITLE, ENTRY.TEXT
 FROM
-    entry
+    ENTRY
 WHERE
-    (entry.text = ?)
+    (ENTRY.TEXT = ?)
     AND
-    (entry.blog_id IN (SELECT blog.id FROM blog WHERE (blog.name LIKE ? ESCAPE '!')))
+    (ENTRY.BLOG_ID IN (SELECT BLOG.ID FROM BLOG WHERE (BLOG.NAME LIKE ? ESCAPE '!')))
 LIMIT 4
 EOF
         is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
@@ -272,104 +272,104 @@ EOF
         my @res = Blog->driver->search('Blog', $stmt);
         is scalar(@res),                             1;
         is scalar(keys %{ $res[0]{column_values} }), 4;
-        is($res[0]{column_values}{id}, $blog1->id);
+        is($res[0]{column_values}{ID}, $blog1->ID);
     };
 
     subtest 'subquery surrounded by other placeholders' => sub {
         my $stmt = Entry->driver->prepare_statement(
             'Entry',
             [[
-                    { text => 'first' },
+                    { TEXT => 'first' },
                     '-or',
                     {
-                        blog_id => {
+                        BLOG_ID => {
                             op    => 'IN',
                             value => Blog->driver->prepare_statement(
                                 'Blog', [
-                                    { name => { op => 'LIKE', value => 'blog!%', escape => '!' } },
-                                    { name => { op => 'LIKE', value => '!%2',    escape => '!' } },
+                                    { NAME => { op => 'LIKE', value => 'blog!%', escape => '!' } },
+                                    { NAME => { op => 'LIKE', value => '!%2',    escape => '!' } },
                                 ],
-                                { fetchonly => ['id'] }) }
+                                { fetchonly => ['ID'] }) }
                     },
                     '-or',
-                    { text => 'second' },
+                    { TEXT => 'second' },
                 ],
-                { id => [$entry11->id, $entry12->id] },
+                { ID => [$entry11->ID, $entry12->ID] },
             ],
             { limit => 4 });
 
         my $expected = sql_normalize(<<'EOF');
 SELECT
-    entry.id, entry.blog_id, entry.title, entry.text
+    ENTRY.ID, ENTRY.BLOG_ID, ENTRY.TITLE, ENTRY.TEXT
 FROM
-    entry
+    ENTRY
 WHERE
     (
-        ((text = ?))
+        ((TEXT = ?))
         OR
-        ((blog_id IN (
-            SELECT blog.id
-            FROM blog
-            WHERE ((name LIKE ? ESCAPE '!')) AND ((name LIKE ? ESCAPE '!'))
+        ((BLOG_ID IN (
+            SELECT BLOG.ID
+            FROM BLOG
+            WHERE ((NAME LIKE ? ESCAPE '!')) AND ((NAME LIKE ? ESCAPE '!'))
         )))
         OR
-        ((text = ?))
+        ((TEXT = ?))
     ) AND (
-        (id IN (?,?))
+        (ID IN (?,?))
     )
 LIMIT 4
 EOF
         is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
-        is_deeply($stmt->{bind}, ['first', 'blog!%', '!%2', 'second', $blog1->id, $blog2->id], 'right bind values');
+        is_deeply($stmt->{bind}, ['first', 'blog!%', '!%2', 'second', $blog1->ID, $blog2->ID], 'right bind values');
         my @res = Blog->driver->search('Blog', $stmt);
         is scalar(@res),                             2;
         is scalar(keys %{ $res[0]{column_values} }), 4;
-        is($res[0]{column_values}{id}, $blog1->id);
-        is($res[1]{column_values}{id}, $blog2->id);
+        is($res[0]{column_values}{ID}, $blog1->ID);
+        is($res[1]{column_values}{ID}, $blog2->ID);
     };
 };
 
 subtest 'subquery in multiple clauses' => sub {
     my $sub1 = Entry->driver->prepare_statement(
         'Entry',
-        ordered_hashref(blog_id => \'= blog.id', id => { op => '<', value => 99 }), { fetchonly => ['id'] });
-    $sub1->select(['max(id)']);
-    my $sub2 = Entry->driver->prepare_statement('Entry', { text => 'second' }, { fetchonly => ['id'] });
-    my $sub3 = Entry->driver->prepare_statement('Entry', { text => 'second' }, { fetchonly => ['blog_id'] });
-    $sub1->as('sub1');
-    $sub2->as('sub2');
-    $sub3->as('sub3');    # this will be ommitted in where clause
+        ordered_hashref(BLOG_ID => \'= BLOG.ID', ID => { op => '<', value => 99 }), { fetchonly => ['ID'] });
+    $sub1->select(['max(ID)']);
+    my $sub2 = Entry->driver->prepare_statement('Entry', { TEXT => 'second' }, { fetchonly => ['ID'] });
+    my $sub3 = Entry->driver->prepare_statement('Entry', { TEXT => 'second' }, { fetchonly => ['BLOG_ID'] });
+    $sub1->as('SUB1');
+    $sub2->as('SUB2');
+    $sub3->as('SUB3');    # this will be ommitted in where clause
     my $stmt = Blog->driver->prepare_statement(
-        'Blog', { id => { op => 'IN', value => $sub3 } },
-        { sort => [{ column => 'blog.id' }, { column => 'sub1' }] });
+        'Blog', { ID => { op => 'IN', value => $sub3 } },
+        { sort => [{ column => 'BLOG.ID' }, { column => 'SUB1' }] });
     $stmt->add_select($sub1);
     push @{ $stmt->from }, $sub2;
 
     my $expected = sql_normalize(<<'EOF');
 SELECT
-    blog.id,
-    blog.parent_id,
-    blog.name,
-    (SELECT max(id) FROM entry WHERE (entry.blog_id = blog.id) AND (entry.id < ?)) AS sub1
+    BLOG.ID,
+    BLOG.PARENT_ID,
+    BLOG.NAME,
+    (SELECT max(ID) FROM ENTRY WHERE (ENTRY.BLOG_ID = BLOG.ID) AND (ENTRY.ID < ?)) AS SUB1
 FROM 
-    blog,
-    (SELECT entry.id FROM entry WHERE (entry.text = ?)) AS sub2
+    BLOG,
+    (SELECT ENTRY.ID FROM ENTRY WHERE (ENTRY.TEXT = ?)) AS SUB2
 WHERE
-    (blog.id IN (SELECT entry.blog_id FROM entry WHERE (entry.text = ?)))
-ORDER BY blog.id ASC, sub1 ASC
+    (BLOG.ID IN (SELECT ENTRY.BLOG_ID FROM ENTRY WHERE (ENTRY.TEXT = ?)))
+ORDER BY BLOG.ID ASC, SUB1 ASC
 EOF
     is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
     is_deeply($stmt->{bind}, ['99', 'second', 'second'], 'right bind values');
     my @res = Blog->driver->search('Blog', $stmt);
     is scalar(@res), 4;
-    is($res[0]{column_values}{id},   $blog1->id);
-    is($res[0]{column_values}{sub1}, $entry12->id);
-    is($res[1]{column_values}{id},   $blog1->id);
-    is($res[1]{column_values}{sub1}, $entry12->id);
-    is($res[2]{column_values}{id},   $blog2->id);
-    is($res[2]{column_values}{sub1}, $entry22->id);
-    is($res[3]{column_values}{id},   $blog2->id);
-    is($res[3]{column_values}{sub1}, $entry22->id);
+    is($res[0]{column_values}{ID},   $blog1->ID);
+    is($res[0]{column_values}{SUB1}, $entry12->ID);
+    is($res[1]{column_values}{ID},   $blog1->ID);
+    is($res[1]{column_values}{SUB1}, $entry12->ID);
+    is($res[2]{column_values}{ID},   $blog2->ID);
+    is($res[2]{column_values}{SUB1}, $entry22->ID);
+    is($res[3]{column_values}{ID},   $blog2->ID);
+    is($res[3]{column_values}{SUB1}, $entry22->ID);
 };
 
 sub sql_normalize {
