@@ -195,9 +195,13 @@ sub create_sql {
             no_comments    => 1,
             add_drop_table => $drop_table,
         );
-        $sql = $sqlt->translate(\$sql) or die $sqlt->error;
-        return split_sql_for_oracle(patch_oracle_sql($sql)) if $driver eq 'Oracle';
-        return split_sql($sql);
+        if ($driver eq 'Oracle') {
+            my @sqls = $sqlt->translate(\$sql) or die $sqlt->error;
+            return map { split_sql(patch_oracle_sql($_)) } @sqls;
+        } else {
+            $sql = $sqlt->translate(\$sql) or die $sqlt->error;
+            return split_sql($sql);
+        }
     }
     $sql;
 }
@@ -210,15 +214,9 @@ sub patch_oracle_sql {
         EXCEPTION
             WHEN OTHERS THEN IF SQLCODE != -942 AND SQLCODE != -2289 THEN RAISE; END IF;
         END;
-        /
     }g;
     $sql =~ s/"\bsq_(\w+)"/'"'. $1. '_seq"'/ge;
     return $sql;
-}
-
-sub split_sql_for_oracle {
-    my ($sql) = @_;
-    return map { split_sql($_) } split(/\s*\/\s*/, $sql);
 }
 
 sub split_sql {
