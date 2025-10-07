@@ -39,15 +39,19 @@ $entry22->save;
 subtest 'as_subquery' => sub {
     my $stmt = Blog->driver->prepare_statement('Blog', { name => 'foo' }, { fetchonly => ['id'] });
 
-    is(sql_normalize($stmt->as_subquery), sql_normalize(<<'EOF'), 'right sql');
+    is(sql_normalize($stmt->as_subquery(1)), sql_normalize(<<'EOF'), 'right sql');
 (SELECT blog.id FROM blog WHERE (blog.name = ?))
 EOF
     is_deeply($stmt->{bind}, ['foo'], 'right bind values');
 
     $stmt->as('mysubquery');
 
-    is(sql_normalize($stmt->as_subquery), sql_normalize(<<'EOF'), 'right sql');
+    is(sql_normalize($stmt->as_subquery(1)), sql_normalize(<<'EOF'), 'right sql');
 (SELECT blog.id FROM blog WHERE (blog.name = ?)) AS mysubquery
+EOF
+
+    is(sql_normalize($stmt->as_subquery(0)), sql_normalize(<<'EOF'), 'right sql');
+(SELECT blog.id FROM blog WHERE (blog.name = ?)) mysubquery
 EOF
 };
 
@@ -186,7 +190,7 @@ FROM blog,
         SELECT entry.id, entry.blog_id, entry.text
         FROM entry
         WHERE (entry.text = ?)
-    ) AS sub
+    ) sub
 WHERE ((blog.id = sub.blog_id)) AND ((blog.id IN (?,?)))
 EOF
 
@@ -224,7 +228,7 @@ FROM blog,
         SELECT entry.id, entry.blog_id
         FROM entry
         WHERE (entry.text = ?)
-    ) AS sub
+    ) sub
 WHERE ((blog.id = sub.blog_id)) AND ((blog.id IN (?,?)))
 EOF
 
@@ -353,7 +357,7 @@ SELECT
     (SELECT max(id) FROM entry WHERE (entry.blog_id = blog.id) AND (entry.id < ?)) AS sub1
 FROM 
     blog,
-    (SELECT entry.id FROM entry WHERE (entry.text = ?)) AS sub2
+    (SELECT entry.id FROM entry WHERE (entry.text = ?)) sub2
 WHERE
     (blog.id IN (SELECT entry.blog_id FROM entry WHERE (entry.text = ?)))
 ORDER BY blog.id ASC, sub1 ASC
