@@ -39,18 +39,14 @@ $entry22->save;
 subtest 'as_subquery' => sub {
     my $stmt = Blog->driver->prepare_statement('Blog', { NAME => 'foo' }, { fetchonly => ['ID'] });
 
-    is(sql_normalize($stmt->as_subquery(1)), sql_normalize(<<'EOF'), 'right sql');
+    is(sql_normalize($stmt->as_subquery), sql_normalize(<<'EOF'), 'right sql');
 (SELECT BLOG.ID FROM BLOG WHERE (BLOG.NAME = ?))
 EOF
     is_deeply($stmt->{bind}, ['foo'], 'right bind values');
 
     $stmt->as('mysubquery');
 
-    is(sql_normalize($stmt->as_subquery(1)), sql_normalize(<<'EOF'), 'right sql');
-(SELECT BLOG.ID FROM BLOG WHERE (BLOG.NAME = ?)) AS mysubquery
-EOF
-
-    is(sql_normalize($stmt->as_subquery(0)), sql_normalize(<<'EOF'), 'right sql');
+    is(sql_normalize($stmt->as_subquery), sql_normalize(<<'EOF'), 'right sql');
 (SELECT BLOG.ID FROM BLOG WHERE (BLOG.NAME = ?)) mysubquery
 EOF
 };
@@ -91,13 +87,13 @@ SELECT
         FROM ENTRY
         WHERE (ENTRY.BLOG_ID = BLOG.ID) AND (ENTRY.TEXT = ?)
         LIMIT 1
-    ) AS SUB_ALIAS
+    ) SUB_ALIAS
 FROM BLOG
 WHERE (BLOG.NAME = ?)
 EOF
 
         $expected = sql_normalize(<<'EOF') if DodTestUtil->driver eq 'Oracle';
-SELECT BLOG.ID, BLOG.PARENT_ID, BLOG.NAME, (SELECT * FROM (SELECT ENTRY.ID FROM ENTRY WHERE (ENTRY.BLOG_ID = BLOG.ID) AND (ENTRY.TEXT = ?)) WHERE rownum <= 1) AS SUB_ALIAS FROM BLOG WHERE (BLOG.NAME = ?)
+SELECT BLOG.ID, BLOG.PARENT_ID, BLOG.NAME, (SELECT * FROM (SELECT ENTRY.ID FROM ENTRY WHERE (ENTRY.BLOG_ID = BLOG.ID) AND (ENTRY.TEXT = ?)) WHERE rownum <= 1) SUB_ALIAS FROM BLOG WHERE (BLOG.NAME = ?)
 EOF
 
         is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
@@ -127,13 +123,13 @@ SELECT
         FROM ENTRY
         WHERE (ENTRY.BLOG_ID = BLOG.ID) AND (ENTRY.TEXT = ?)
         LIMIT 1
-    ) AS SUB_ALIAS
+    ) SUB_ALIAS
 FROM BLOG
 WHERE (BLOG.NAME = ?)
 EOF
 
         $expected = sql_normalize(<<'EOF') if DodTestUtil->driver eq 'Oracle';
-SELECT BLOG.ID, BLOG.PARENT_ID, BLOG.NAME, (SELECT * FROM (SELECT ENTRY.ID FROM ENTRY WHERE (ENTRY.BLOG_ID = BLOG.ID) AND (ENTRY.TEXT = ?)) WHERE rownum <= 1) AS SUB_ALIAS FROM BLOG WHERE (BLOG.NAME = ?)
+SELECT BLOG.ID, BLOG.PARENT_ID, BLOG.NAME, (SELECT * FROM (SELECT ENTRY.ID FROM ENTRY WHERE (ENTRY.BLOG_ID = BLOG.ID) AND (ENTRY.TEXT = ?)) WHERE rownum <= 1) SUB_ALIAS FROM BLOG WHERE (BLOG.NAME = ?)
 EOF
 
         is sql_normalize($stmt->as_sql), sql_normalize($expected), 'right sql';
@@ -165,7 +161,7 @@ EOF
     is sql_normalize($stmt->as_sql), sql_normalize(<<'EOF');
 SELECT
     ENTRY.ID, ENTRY.BLOG_ID, ENTRY.TITLE, ENTRY.TEXT, count(*) COUNT,
-    (SELECT BLOG.ID, BLOG.PARENT_ID, BLOG.NAME FROM BLOG) AS SUB
+    (SELECT BLOG.ID, BLOG.PARENT_ID, BLOG.NAME FROM BLOG) SUB
 FROM ENTRY
 GROUP BY BLOG_ID
 HAVING (count(*) = ?) AND (SUB = ?)
@@ -372,7 +368,7 @@ SELECT
     BLOG.ID,
     BLOG.PARENT_ID,
     BLOG.NAME,
-    (SELECT max(ID) FROM ENTRY WHERE (ENTRY.BLOG_ID = BLOG.ID) AND (ENTRY.ID < ?)) AS SUB1
+    (SELECT max(ID) FROM ENTRY WHERE (ENTRY.BLOG_ID = BLOG.ID) AND (ENTRY.ID < ?)) SUB1
 FROM 
     BLOG,
     (SELECT ENTRY.ID FROM ENTRY WHERE (ENTRY.TEXT = ?)) SUB2
