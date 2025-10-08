@@ -39,18 +39,14 @@ $entry22->save;
 subtest 'as_subquery' => sub {
     my $stmt = Blog->driver->prepare_statement('Blog', { name => 'foo' }, { fetchonly => ['id'] });
 
-    is(sql_normalize($stmt->as_subquery(1)), sql_normalize(<<'EOF'), 'right sql');
+    is(sql_normalize($stmt->as_subquery), sql_normalize(<<'EOF'), 'right sql');
 (SELECT blog.id FROM blog WHERE (blog.name = ?))
 EOF
     is_deeply($stmt->{bind}, ['foo'], 'right bind values');
 
     $stmt->as('mysubquery');
 
-    is(sql_normalize($stmt->as_subquery(1)), sql_normalize(<<'EOF'), 'right sql');
-(SELECT blog.id FROM blog WHERE (blog.name = ?)) AS mysubquery
-EOF
-
-    is(sql_normalize($stmt->as_subquery(0)), sql_normalize(<<'EOF'), 'right sql');
+    is(sql_normalize($stmt->as_subquery), sql_normalize(<<'EOF'), 'right sql');
 (SELECT blog.id FROM blog WHERE (blog.name = ?)) mysubquery
 EOF
 };
@@ -91,7 +87,7 @@ SELECT
         FROM entry
         WHERE (entry.blog_id = blog.id) AND (entry.text = ?)
         LIMIT 1
-    ) AS sub_alias
+    ) sub_alias
 FROM blog
 WHERE (blog.name = ?)
 EOF
@@ -123,7 +119,7 @@ SELECT
         FROM entry
         WHERE (entry.blog_id = blog.id) AND (entry.text = ?)
         LIMIT 1
-    ) AS sub_alias
+    ) sub_alias
 FROM blog
 WHERE (blog.name = ?)
 EOF
@@ -157,7 +153,7 @@ EOF
     is sql_normalize($stmt->as_sql), sql_normalize(<<'EOF');
 SELECT
     entry.id, entry.blog_id, entry.title, entry.text, count(*) count,
-    (SELECT blog.id, blog.parent_id, blog.name FROM blog) AS sub
+    (SELECT blog.id, blog.parent_id, blog.name FROM blog) sub
 FROM entry
 GROUP BY blog_id
 HAVING (count(*) = ?) AND (sub = ?)
@@ -354,7 +350,7 @@ SELECT
     blog.id,
     blog.parent_id,
     blog.name,
-    (SELECT max(id) FROM entry WHERE (entry.blog_id = blog.id) AND (entry.id < ?)) AS sub1
+    (SELECT max(id) FROM entry WHERE (entry.blog_id = blog.id) AND (entry.id < ?)) sub1
 FROM 
     blog,
     (SELECT entry.id FROM entry WHERE (entry.text = ?)) sub2
