@@ -182,7 +182,7 @@ sub create_sql {
     my($table) = @_;
     my $driver = driver();
     $driver = 'MySQL' if $driver eq 'MariaDB';
-    my $file = File::Spec->catfile('t', 'schemas', $table . '.sql');
+    my $file = File::Spec->catfile('t', 'schemas', lc($table) . '.sql');
     open my $fh, $file or die "Can't open $file: $!";
     my $sql = do { local $/; <$fh> };
     close $fh;
@@ -195,10 +195,47 @@ sub create_sql {
             no_comments    => 1,
             add_drop_table => $drop_table,
         );
-        $sql = $sqlt->translate(\$sql) or die $sqlt->error;
-        return split /;\s*/s, $sql;
+        if ($driver eq 'Oracle') {
+            my @sqls = $sqlt->translate(\$sql) or die $sqlt->error;
+            return map { split_sql(patch_oracle_sql($_)) } @sqls;
+        } else {
+            $sql = $sqlt->translate(\$sql) or die $sqlt->error;
+            return split_sql($sql);
+        }
     }
     $sql;
+}
+
+sub patch_oracle_sql {
+    my $sql = shift;
+    $sql =~ s{(DROP (TABLE|SEQUENCE) "(.+)".*);}{
+        BEGIN
+            EXECUTE IMMEDIATE '$1';
+        EXCEPTION
+            WHEN OTHERS THEN IF SQLCODE != -942 AND SQLCODE != -2289 THEN RAISE; END IF;
+        END;
+    }g;
+    $sql =~ s/"\bsq_(\w+)"/'"'. $1. '_seq"'/ge;
+    return $sql;
+}
+
+sub split_sql {
+    my ($sql) = @_;
+    my @ret;
+    while ($sql) {
+        (my $minimal, my $block, $sql) = split /\s*((?:\bDECLARE\b.*?)?\bBEGIN\b.*?\bEND;)\s*/s, $sql, 2;
+        if ($minimal) {
+            push @ret, split /;\s*/s, $minimal;
+        }
+        if ($block) {
+            if (@ret && $minimal !~ /;\z/) {
+                $ret[-1] .= $block;
+            } else {
+                push @ret, $block;
+            }
+        }
+    }
+    return @ret;
 }
 
 1;

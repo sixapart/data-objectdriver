@@ -43,6 +43,7 @@ sub fetch_id {
     my $dbd = shift;
     my ($class, $dbh, $sth, $driver) = @_;
     my $seq = $dbd->sequence_name($class, $driver);
+    $seq = $dbh->quote_identifier($seq);
     my ($last_insert_id) = $dbh->selectrow_array("SELECT $seq.CURRVAL "
                                                   . " FROM DUAL");
     return $last_insert_id;

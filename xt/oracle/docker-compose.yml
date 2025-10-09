@@ -1,0 +1,26 @@
+services:
+    dod:
+        image: movabletype/test:oracle8
+        volumes:
+            - ../../:/dod
+        read_only: false
+        working_dir: /dod
+        entrypoint: ''
+        environment:
+            - DOD_TEST_DSN=dbi:Oracle:sid=global;user=system;password=test;host=oracle;port=1521
+            - DOD_TEST_USER=system
+            - DOD_TEST_PASS=test
+            - DOD_TEST_DRIVER=Oracle
+        command: bash -c "cpanm --installdeps . && tail -f /dev/null"
+        stdin_open: true
+        tty: true
+    oracle:
+        image: "oracle/database:${ORACLE_VERSION:-19.3.0-ee}"
+        environment:
+            ORACLE_SID: global
+            ORACLE_PWD: test
+        ports:
+            - 1521:1521
+        tty: true
+        stdin_open: true
+        restart: always

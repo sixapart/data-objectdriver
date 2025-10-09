@@ -150,7 +150,7 @@ sub as_subquery {
     my $subquery = '(' . $stmt->as_sql . ')';
     $alias ||= $stmt->as;
     if ($alias) {
-        $subquery .= ' AS ' . $alias;
+        $subquery .= ' '. $alias;
     }
     $subquery;
 }
