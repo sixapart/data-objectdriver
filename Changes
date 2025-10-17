@@ -1,5 +1,8 @@
 {{$NEXT}}
 
+0.26 2025-10-17T02:16:46Z
+    - Add an ability to accept subqueries with SQL objects #57 #59
+
 0.25 2025-04-15T04:37:59Z
     - Do not add empty where expressions #47
     - Remove __is_stored flag if the object is removed from the database #43

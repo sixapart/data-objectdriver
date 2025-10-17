@@ -125,6 +125,7 @@
       },
       "test" : {
          "requires" : {
+            "Tie::IxHash" : "0",
             "version" : "0"
          }
       }
@@ -141,7 +142,7 @@
          "web" : "https://github.com/sixapart/data-objectdriver"
       }
    },
-   "version" : "0.25",
+   "version" : "0.26",
    "x_authority" : "cpan:SIXAPART",
    "x_contributors" : [
       "Adam Thomason <athomason@sixapart.com>",
