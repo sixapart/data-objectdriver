@@ -8,7 +8,7 @@ use lib 't/lib';
 $Data::ObjectDriver::DEBUG = 0;
 use Test::More;
 use DodTestUtil;
-BEGIN { eval { require Crypt::URandom; 1 } or plan skip_all => 'requires Crypt::URandom' }
+BEGIN { eval { require Digest::SHA; 1 } or plan skip_all => 'requires Digest::SHA' }
 
 BEGIN { DodTestUtil->check_driver }
 
@@ -26,7 +26,7 @@ $wine->name("Saumur Champigny, Le Grand Clos 2001");
 $wine->rating(4);
 
 ## generate some binary data (SQL_BLOB / MEDIUMBLOB)
-my $binary = Crypt::URandom::urandom(300);
+my $binary = Digest::SHA::sha1("binary");
 $wine->content($binary);
 ok($wine->save, 'Object saved successfully');
 

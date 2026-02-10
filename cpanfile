@@ -23,7 +23,7 @@ on develop => sub {
 on test => sub {
     requires 'version';
     requires 'Tie::IxHash';
-    requires 'Crypt::URandom';
+    requires 'Digest::SHA';
 };
 
 feature 'test_sqlite', 'Test SQLite' => sub {
