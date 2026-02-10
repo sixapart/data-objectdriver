@@ -12,7 +12,7 @@ BEGIN { eval { require Digest::SHA; 1 } or plan skip_all => 'requires Digest::SH
 
 BEGIN { DodTestUtil->check_driver }
 
-plan tests => 3;
+plan tests => 5;
 
 setup_dbs({
     global => [ qw( wines ) ],
@@ -40,7 +40,13 @@ $wine = Wine->lookup($wine_id);
 ok $wine;
 ok $wine->content eq $binary;
 
-# TODO: bulk_insert doesn't support blob yet. We need to change some of its API so that we can call column_def in each dbd's bulk_insert
+my @names = qw(Margaux Latour);
+Wine->bulk_insert([qw(name content)], [ map {[$_, Digest::SHA::sha1($_)]} @names ]);
+
+for my $name (@names) {
+    my ($found) = Wine->search({name => $name});
+    ok $found->content eq Digest::SHA::sha1($name);
+}
 
 disconnect_all($wine);
 teardown_dbs(qw( global ));
