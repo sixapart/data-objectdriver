@@ -709,7 +709,7 @@ Returns the SQL fully representing the SQL statement C<$sql>.
 
 =head2 C<$sql-E<gt>as_subquery($alias)>
 
-Returns a string representing the SQL statement for subquery. C<$alias> is optional.
+Returns a string representation of C<$sql> as a subquery. C<$alias> is optional.
 
 =head2 C<$sql-E<gt>as_sql_having()>
 
@@ -731,7 +731,7 @@ statement C<$sql>. Reasonable values of C<$set> are C<ORDER> and C<GROUP>.
 
 =head2 C<$sql-E<gt>as_escape()>
 
-Returns a string representing the C<ESCAPE> clause for use within C<LIKE> predicates.
+Returns a string representing the C<ESCAPE> clause for C<LIKE> predicates.
 
 =head1 DIAGNOSTICS
 
