@@ -55,7 +55,7 @@ jobs:
       - name: perl -V
         run: perl -V
       - name: setup mariadb repo
-        run: curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash
+        run: curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=12.1.2
       - name: apt-get
         run: sudo apt-get update && sudo apt-get install -y libmariadb-dev libmariadb-dev-compat mariadb-server
       - name: Install dependencies
