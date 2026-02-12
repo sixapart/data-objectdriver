@@ -3,7 +3,7 @@ requires 'Class::Data::Inheritable';
 requires 'Class::Trigger';
 requires 'DBI';
 requires 'List::Util';
-requires 'perl', '5.006001';
+requires 'perl', '5.008001';
 recommends 'Text::SimpleTable';
 
 on configure => sub {

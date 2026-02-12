@@ -120,11 +120,12 @@
             "Class::Trigger" : "0",
             "DBI" : "0",
             "List::Util" : "0",
-            "perl" : "5.006001"
+            "perl" : "5.008001"
          }
       },
       "test" : {
          "requires" : {
+            "Digest::SHA" : "0",
             "Tie::IxHash" : "0",
             "version" : "0"
          }
