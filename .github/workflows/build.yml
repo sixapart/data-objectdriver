@@ -74,3 +74,15 @@ jobs:
         run: curl -sL https://git.io/cpm | sudo perl - install -g --with-recommends --with-test --with-configure --show-build-log-on-failure --feature=test_postgresql --feature=test_fork
       - name: Run tests
         run: DOD_TEST_DRIVER=PostgreSQL prove -lr -j4 t
+
+  xt-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: perl -V
+        run: perl -V
+      - name: Install dependencies
+        run: curl -sL https://git.io/cpm | sudo perl - install -g --with-recommends --with-test --with-configure --show-build-log-on-failure
+      - name: Run tests
+        run: prove -lr xt
