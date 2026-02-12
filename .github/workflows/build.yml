@@ -54,10 +54,8 @@ jobs:
       - uses: actions/checkout@v1
       - name: perl -V
         run: perl -V
-      - name: setup mariadb repo
-        run: curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash
       - name: apt-get
-        run: sudo apt-get update && sudo apt-get install -y libmariadb-dev libmariadb-dev-compat mariadb-server
+        run: sudo apt-get update && sudo apt-get install -y libmariadb-dev libmariadb-dev-compat mariadb-client mariadb-server
       - name: Install dependencies
         run: curl -sL https://git.io/cpm | sudo perl - install -g --with-recommends --with-test --with-configure --show-build-log-on-failure --feature=test_mariadb --feature=test_fork
       - name: Run tests
