@@ -73,23 +73,21 @@ sub dsn {
                 $dsn;
             };
         }
-        if ($driver eq 'MySQL') {
-            *Test::mysqld::wait_for_stop = sub {
-                my $self = shift;
-                local $?;    # waitpid may change this value :/
-                my $ct = 0;
-                # XXX: modified
-                while (waitpid($self->pid, POSIX::WNOHANG()) <= 0) {
-                    sleep 1;
-                    if ($ct++ > 10) {
-                        kill 9, $self->pid;
-                    }
+        *Test::mysqld::wait_for_stop = sub {
+            my $self = shift;
+            local $?;    # waitpid may change this value :/
+            my $ct = 0;
+            # XXX: modified
+            while (waitpid($self->pid, POSIX::WNOHANG()) <= 0) {
+                sleep 1;
+                if ($ct++ > 10) {
+                    kill 9, $self->pid;
                 }
-                $self->pid(undef);
-                # might remain for example when sending SIGKILL
-                unlink $self->my_cnf->{'pid-file'};
-            };
-        }
+            }
+            $self->pid(undef);
+            # might remain for example when sending SIGKILL
+            unlink $self->my_cnf->{'pid-file'};
+        };
         $TestDB{$dbname} ||= Test::mysqld->new(
             my_cnf => {
                 'skip-networking' => '', # no TCP socket
