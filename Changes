@@ -1,5 +1,8 @@
 {{$NEXT}}
 
+0.27 2026-02-13T04:51:15Z
+    - Fix bulk_insert for binary values #61
+
 0.26 2025-10-17T02:16:46Z
     - Add an ability to accept subqueries with SQL objects #57 #59
 
