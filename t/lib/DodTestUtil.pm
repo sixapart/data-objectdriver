@@ -73,7 +73,8 @@ sub dsn {
                 $dsn;
             };
         }
-        if ($driver eq 'MySQL') {
+        {
+            no warnings 'redefine';
             *Test::mysqld::wait_for_stop = sub {
                 my $self = shift;
                 local $?;    # waitpid may change this value :/
