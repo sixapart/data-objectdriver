@@ -15,7 +15,7 @@ BEGIN {
         plan skip_all => 'Tests require Cache::Memory';
     }
 }
-plan tests => 105;
+plan tests => 106;
 
 setup_dbs({
     global   => [ qw( recipes ingredients ) ],
@@ -185,6 +185,18 @@ ok(! Ingredient->lookup(1), "really deleted");
 
 is($recipe->remove, 1, 'Recipe removed successfully');
 is($recipe2->remove, 1, 'Recipe removed successfully');
+
+# make sure cache is not changed before save
+{
+    my $r = Recipe->new;
+    $r->title('to replace');
+    $r->insert;
+    my $id = $r->recipe_id;
+    my $r1 = Recipe->lookup($id);
+    $r1->title('replaced');
+    my $r2 = Recipe->lookup($id);
+    is $r2->title, 'to replace', 'not replaced yet';
+}
 
 require './t/txn-common.pl';
 
